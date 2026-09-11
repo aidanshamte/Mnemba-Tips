@@ -1,0 +1,81 @@
+CREATE TABLE IF NOT EXISTS countries (id TEXT PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT, continent TEXT, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(provider, external_id));
+
+CREATE TABLE IF NOT EXISTS competitions (id TEXT PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, country_id TEXT REFERENCES countries(id), name TEXT NOT NULL, type TEXT, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(provider, external_id));
+
+CREATE TABLE IF NOT EXISTS seasons (id TEXT PRIMARY KEY, competition_id TEXT NOT NULL REFERENCES competitions(id), year INTEGER NOT NULL, current INTEGER NOT NULL DEFAULT 0, coverage TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(competition_id, year));
+
+CREATE TABLE IF NOT EXISTS football_teams (id TEXT PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, name TEXT NOT NULL, country_id TEXT REFERENCES countries(id), payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(provider, external_id));
+
+CREATE TABLE IF NOT EXISTS season_teams (season_id TEXT NOT NULL REFERENCES seasons(id), team_id TEXT NOT NULL REFERENCES football_teams(id), PRIMARY KEY(season_id, team_id));
+
+CREATE TABLE IF NOT EXISTS football_players (id TEXT PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, team_id TEXT REFERENCES football_teams(id), name TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(provider, external_id));
+
+CREATE TABLE IF NOT EXISTS fixtures (id TEXT PRIMARY KEY, provider TEXT NOT NULL, external_id TEXT NOT NULL, competition_id TEXT NOT NULL REFERENCES competitions(id), season_id TEXT NOT NULL REFERENCES seasons(id), home_team_id TEXT NOT NULL REFERENCES football_teams(id), away_team_id TEXT NOT NULL REFERENCES football_teams(id), starts_at INTEGER NOT NULL, status TEXT NOT NULL, home_score INTEGER, away_score INTEGER, label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(provider, external_id));
+
+CREATE TABLE IF NOT EXISTS fixture_events (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE, label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS fixture_statistics (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE, label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS lineups (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE, label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS injuries (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id) ON DELETE CASCADE, label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS standings (id TEXT PRIMARY KEY, season_id TEXT NOT NULL REFERENCES seasons(id), label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS player_form (id TEXT PRIMARY KEY REFERENCES football_players(id), label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS football_appearances (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id), player_id TEXT NOT NULL REFERENCES football_players(id), minutes INTEGER, rating REAL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(fixture_id,player_id));
+
+CREATE TABLE IF NOT EXISTS team_form (id TEXT PRIMARY KEY REFERENCES football_teams(id), label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS head_to_head (id TEXT PRIMARY KEY, home_team_id TEXT NOT NULL REFERENCES football_teams(id), away_team_id TEXT NOT NULL REFERENCES football_teams(id), label TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, UNIQUE(home_team_id, away_team_id));
+
+CREATE TABLE IF NOT EXISTS news_articles (id TEXT PRIMARY KEY, canonical_url TEXT NOT NULL UNIQUE, headline TEXT NOT NULL, publisher TEXT NOT NULL, published_at INTEGER NOT NULL, category TEXT NOT NULL, payload TEXT NOT NULL, updated_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS provider_sync_runs (id TEXT PRIMARY KEY, provider TEXT NOT NULL, job TEXT NOT NULL, status TEXT NOT NULL, started_at INTEGER NOT NULL, finished_at INTEGER, error TEXT);
+
+CREATE TABLE IF NOT EXISTS api_request_usage (provider TEXT NOT NULL, day TEXT NOT NULL, category TEXT NOT NULL, used INTEGER NOT NULL DEFAULT 0 CHECK(used >= 0), PRIMARY KEY(provider, day, category));
+
+CREATE TABLE IF NOT EXISTS provider_limits (provider TEXT NOT NULL, day TEXT NOT NULL, remaining INTEGER NOT NULL CHECK(remaining >= 0), PRIMARY KEY(provider, day));
+
+CREATE TABLE IF NOT EXISTS sync_locks (id TEXT PRIMARY KEY, owner TEXT NOT NULL, expires_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS football_cache (id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER NOT NULL, expires_at INTEGER NOT NULL);
+
+CREATE TABLE IF NOT EXISTS model_predictions (id TEXT PRIMARY KEY, fixture_id TEXT NOT NULL REFERENCES fixtures(id), model_version TEXT NOT NULL, created_at INTEGER NOT NULL, kickoff_at INTEGER NOT NULL, label TEXT NOT NULL, payload TEXT NOT NULL, CHECK(created_at < kickoff_at));
+
+CREATE TABLE IF NOT EXISTS prediction_results (id TEXT PRIMARY KEY REFERENCES model_predictions(id), fixture_id TEXT NOT NULL REFERENCES fixtures(id), evaluated_at INTEGER NOT NULL, brier_score REAL NOT NULL, correct INTEGER NOT NULL, payload TEXT NOT NULL);
+
+CREATE INDEX IF NOT EXISTS idx_football_comp_country ON competitions(country_id, name);
+
+CREATE INDEX IF NOT EXISTS idx_football_seasons_comp ON seasons(competition_id, current, year);
+
+CREATE INDEX IF NOT EXISTS idx_football_teams_name ON football_teams(name);
+
+CREATE INDEX IF NOT EXISTS idx_football_players_team ON football_players(team_id, name);
+
+CREATE INDEX IF NOT EXISTS idx_football_appearance_player ON football_appearances(player_id,fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_football_fixture_date ON fixtures(starts_at, status);
+
+CREATE INDEX IF NOT EXISTS idx_football_fixture_comp_date ON fixtures(competition_id, season_id, starts_at);
+
+CREATE INDEX IF NOT EXISTS idx_football_fixture_home ON fixtures(home_team_id, starts_at);
+
+CREATE INDEX IF NOT EXISTS idx_football_fixture_away ON fixtures(away_team_id, starts_at);
+
+CREATE INDEX IF NOT EXISTS idx_fixture_events_fixture ON fixture_events(fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_fixture_statistics_fixture ON fixture_statistics(fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_lineups_fixture ON lineups(fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_injuries_fixture ON injuries(fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_news_date ON news_articles(published_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_news_category_date ON news_articles(category, published_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_sync_provider_date ON provider_sync_runs(provider, started_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_prediction_fixture_date ON model_predictions(fixture_id, created_at DESC);

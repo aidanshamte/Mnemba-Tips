@@ -1,0 +1,5 @@
+import {DatabaseSync,backup} from 'node:sqlite';
+import {readdirSync,mkdirSync} from 'node:fs';
+import {resolve,join} from 'node:path';
+export async function backupLocal(){const root=resolve('.wrangler/state'),files=[];function walk(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())walk(p);else if(e.name.endsWith('.sqlite'))files.push(p);}}walk(root);mkdirSync('.sites-runtime/backups',{recursive:true});const outputs=[];for(const path of files){const db=new DatabaseSync(path,{readOnly:true});try{if(!db.prepare("SELECT name FROM sqlite_master WHERE name='fixtures'").get())continue;const target=resolve('.sites-runtime/backups',`football-${new Date().toISOString().replace(/[:.]/g,'-')}.sqlite`);await backup(db,target);outputs.push(target);}finally{db.close();}}if(!outputs.length)throw new Error('No migrated football database found');return outputs;}
+if(process.argv[1]?.endsWith('backup-local.mjs'))console.log(JSON.stringify({backups:await backupLocal()}));

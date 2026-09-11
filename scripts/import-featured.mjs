@@ -1,0 +1,5 @@
+// Optional live import; automated tests never invoke this command.
+const origin='http://127.0.0.1:8787';
+const {files}=await(await fetch(origin+'/api/intelligence?view=files')).json();
+const patterns=[[/football.json/,/2026-27\/en\.1\.json$/],[/football.json/,/2025-26\/en\.1\.json$/],[/^world$/,/saudi-arabia/],[/champions-league/,/2025-26\/cl\.txt$/],[/champions-league/,/2025-26\/elq\.txt$/],[/champions-league/,/2025-26\/confq\.txt$/],[/south-america/,/2026_copal/],[/south-america/,/2025_copas/],[/internationals/,/^african_cup_of_nations\/2026/],[/^worldcup.json$/,/2026\/worldcup\.json$/]];
+for(const [repo,path] of patterns){const file=files.find(f=>repo.test(f.repository)&&path.test(f.path));if(!file){console.log(JSON.stringify({pattern:String(path),status:'not-published'}));continue;}try{const r=await fetch(origin+'/api/intelligence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job:'history',fileId:file.id}),signal:AbortSignal.timeout(540000)});console.log(JSON.stringify({file:file.path,...await r.json()}));}catch(e){console.log(JSON.stringify({file:file.path,error:e.message}));}}

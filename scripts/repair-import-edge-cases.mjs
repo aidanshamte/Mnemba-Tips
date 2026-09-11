@@ -1,0 +1,12 @@
+// Repairs only malformed records introduced by the v4 parser edge case.
+import {DatabaseSync} from 'node:sqlite';
+import {readdirSync} from 'node:fs';
+import {join} from 'node:path';
+const walk=p=>readdirSync(p,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(join(p,e.name)):e.name.endsWith('.sqlite')?[join(p,e.name)]:[]);
+for(const path of walk('.wrangler/state')){const db=new DatabaseSync(path);if(!db.prepare("SELECT name FROM sqlite_master WHERE name='source_registry'").get()){db.close();continue;}
+ if(db.prepare('SELECT id FROM sync_locks WHERE expires_at>?').get(Date.now()))throw new Error('Wait for the active synchronization before repair');
+ const referenced=new Set(db.prepare('SELECT evidence_ids FROM prematch_snapshots').all().flatMap(r=>JSON.parse(r.evidence_ids)));
+ const bad=db.prepare("SELECT id,payload FROM fixtures WHERE provider='openfootball'").all().filter(r=>{const f=JSON.parse(r.payload);return f.sourceUrl==='https://raw.githubusercontent.com/openfootball/world/master/middle-east/saudi-arabia/2024-25_sa1.txt'&&/\s(?:v|vs\.?)\s/.test(f.home.name)&&/^\(?\d/.test(f.away.name);});
+ db.exec('PRAGMA foreign_keys=ON; BEGIN IMMEDIATE');try{for(const row of bad){if(db.prepare('SELECT id FROM prematch_snapshots WHERE fixture_id=?').get(row.id))throw new Error('Immutable fixture snapshot exists; manual review required');for(const c of db.prepare('SELECT id FROM field_claims WHERE entity_id=?').all(row.id)){if(referenced.has(c.id))db.prepare("UPDATE field_claims SET verification='rejected-parser-error',expires_at=?,valid_to=? WHERE id=?").run(Date.now(),Date.now(),c.id);else db.prepare('DELETE FROM field_claims WHERE id=?').run(c.id);}db.prepare('DELETE FROM fixture_identities WHERE fixture_id=?').run(row.id);db.prepare('DELETE FROM fixtures WHERE id=?').run(row.id);}
+ let teams=0;for(const t of db.prepare("SELECT id,name FROM football_teams WHERE provider='openfootball'").all()){if(!(/\s(?:v|vs\.?)\s/.test(t.name)||/^\(?\d+[-:]\d+\)?$/.test(t.name)||/^[A-L][1-4]$|^[WL]\d+$|^[123][A-L](?:\/[A-L])*$/.test(t.name)))continue;if(db.prepare('SELECT id FROM fixtures WHERE home_team_id=? OR away_team_id=?').get(t.id,t.id))continue;db.prepare('DELETE FROM season_teams WHERE team_id=?').run(t.id);db.prepare('DELETE FROM team_form WHERE id=?').run(t.id);db.prepare('DELETE FROM football_teams WHERE id=?').run(t.id);teams++;}
+ db.exec('COMMIT');console.log(JSON.stringify({removedMalformedFixtures:bad.length,removedUnreferencedPlaceholderTeams:teams}));}catch(e){db.exec('ROLLBACK');throw e;}finally{db.close();}}

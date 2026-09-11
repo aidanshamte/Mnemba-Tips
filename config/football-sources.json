@@ -1,0 +1,6 @@
+{
+  "feeds": [],
+  "notes": "Additional RSS/Atom feeds require explicit automationAllowed, storageAllowed, termsUrl, licenseUrl, permissionEvidence and articleHosts. Unknown permissions fail closed. Credentials belong only in .env.local.",
+  "documents": [],
+  "documentInstructions": "Reviewed ICS, sitemap or JSON-LD endpoints: id, name, homeUrl, url, format (ics/sitemap/jsonld), termsUrl, licenseUrl, automationAllowed, storageAllowed, permissionEvidence and retentionDays. Facts enter verification queue; linked pages are never crawled automatically."
+}
