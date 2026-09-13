@@ -18,8 +18,8 @@ Access enabled. Verify these dashboard settings separately from the source confi
    or convert the live SQLite file. Keep at least one verified backup permanently.
 3. Run `python3 scripts/prepare-d1-transfer.py BACKUP.sqlite .sites-runtime/NEW_EXPORT_DIR`.
    It applies all SQL migrations to a temporary database, checks foreign keys,
-   compares every exported cell, and emits a count manifest. Provider caches and
-   local locks are excluded; provider quota usage, source state and audit data remain.
+   compares every exported cell, and emits a count manifest. Disposable provider caches and
+   local locks are excluded; the saved public-badges catalog is preserved; provider quota usage, source state and audit data remain.
    SQL is bounded below 100 KB, files around 4 MB. Large saved evidence uses ordered
    staging chunks and a single INSERT, preserving immutable prediction triggers.
 4. Run `pnpm db:migrate:production`. Wrangler versions all migrations, including

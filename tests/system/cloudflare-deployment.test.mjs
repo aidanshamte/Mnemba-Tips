@@ -44,3 +44,25 @@ test('deadline prevents writes after timeout',async()=>{
   const {db,sqlite}=database();let expired=false;
   try {const bounded=boundedDatabase(db,()=>{if(expired)throw Error('Deadline');});const stmt=bounded.prepare('CREATE TABLE should_not_exist(id TEXT)');expired=true;assert.throws(()=>stmt.run(),/Deadline/);assert.equal(sqlite.prepare("SELECT name FROM sqlite_master WHERE name='should_not_exist'").get(),undefined);}finally{sqlite.close();}
 });
+
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {spawnSync} from 'node:child_process';
+test('transfer retains saved badge metadata while excluding disposable cache rows',()=>{
+  const root=mkdtempSync(join(tmpdir(),'mnemba-export-')),path=join(root,'source.sqlite');
+  const db=new DatabaseSync(path);
+  try {
+    for(const file of migrations)db.exec(readFileSync('drizzle/'+file,'utf8'));
+    db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('public-badges','{"badges":{"test":{"url":"https://www.thesportsdb.com/images/media/team/badge/test.png"}}}',1,2);
+    db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('temporary','{}',1,2);
+    db.close();
+    const result=spawnSync('python3',['scripts/prepare-d1-transfer.py',path,join(root,'export')],{encoding:'utf8'});
+    assert.equal(result.status,0,result.stderr);
+    const manifest=JSON.parse(readFileSync(join(root,'export','manifest.json'),'utf8'));
+    assert.equal(manifest.local.football_cache,2);
+    assert.equal(manifest.exported.football_cache,1);
+    assert.equal(manifest.skipped.football_cache.count,1);
+    assert.equal(manifest.verified.football_cache,1);
+  }finally{if(db.isOpen)db.close();rmSync(root,{recursive:true,force:true});}
+});

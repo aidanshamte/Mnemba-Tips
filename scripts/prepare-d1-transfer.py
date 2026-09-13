@@ -19,7 +19,9 @@ def literal(value):
     return str(value)
 tables = [r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%' ORDER BY name")]
 # Cache bodies may contain credential-bearing provider URLs; regenerate in production.
-excluded = {'football_cache': 'rebuildable local cache', 'http_response_cache': 'rebuildable provider response cache', 'sync_locks': 'local process leases'}
+excluded = {'http_response_cache': 'rebuildable provider response cache', 'sync_locks': 'local process leases'}
+# Badge metadata is currently stored only in this cache row; it is durable content.
+filters = {'football_cache': " WHERE id='public-badges'"}
 counts = {t: db.execute('SELECT count(*) FROM '+quote_id(t)).fetchone()[0] for t in tables}
 # Parents precede children. No foreign keys are disabled in the verification DB.
 ordered=[]
@@ -31,6 +33,9 @@ def visit(t, visiting):
     ordered.append(t)
 for t in tables: visit(t,set())
 manifest={'source':str(source),'bytes':source.stat().st_size,'local':counts,'exported':{},'skipped':{t:{'count':counts[t],'reason':why} for t,why in excluded.items()},'failed':0,'files':[]}
+if 'football_cache' in counts:
+    kept = db.execute("SELECT count(*) FROM football_cache WHERE id='public-badges'").fetchone()[0]
+    manifest['skipped']['football_cache'] = {'count': counts['football_cache']-kept, 'reason': 'rebuildable caches; saved public badge metadata retained'}
 with tempfile.TemporaryDirectory(prefix='mnemba-transfer-') as temp:
     check=sqlite3.connect(pathlib.Path(temp)/'verify.sqlite')
     check.execute('PRAGMA foreign_keys=ON')
@@ -49,7 +54,7 @@ with tempfile.TemporaryDirectory(prefix='mnemba-transfer-') as temp:
     for t in ordered:
         columns=[r[1] for r in db.execute('PRAGMA table_info('+quote_id(t)+')')]
         inserted=0
-        for row in db.execute('SELECT * FROM '+quote_id(t)):
+        for row in db.execute('SELECT * FROM '+quote_id(t)+filters.get(t,'')):
             values=[literal(v) for v in row]
             prefix='INSERT INTO '+quote_id(t)+'('+','.join(map(quote_id,columns))+') VALUES('
             statement=prefix+','.join(values)+')'
@@ -79,7 +84,7 @@ with tempfile.TemporaryDirectory(prefix='mnemba-transfer-') as temp:
     # Compare every cell, including large immutable prediction/evidence fields.
     for t in ordered:
         columns=[r[1] for r in db.execute('PRAGMA table_info('+quote_id(t)+')')]
-        query='SELECT * FROM '+quote_id(t)+' ORDER BY '+','.join(map(quote_id,columns))
+        query='SELECT * FROM '+quote_id(t)+filters.get(t,'')+' ORDER BY '+','.join(map(quote_id,columns))
         for a,b in zip(db.execute(query),check.execute(query),strict=True):
             assert a==b, 'Data differs: '+t
     check.close()
