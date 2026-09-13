@@ -1,5 +1,5 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "mnemba-tips",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -18,9 +18,13 @@
     "typecheck": "tsc --noEmit",
     "sync": "node scripts/update-local.mjs",
     "backup": "node scripts/backup-local.mjs",
-    "test:browser": "node scripts/browser-smoke.mjs",
+    "test:browser": "npx --yes --package=playwright@1.63.0 node scripts/browser-smoke.mjs",
     "test:live": "node scripts/inspect-keyless.mjs",
-    "tasks:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-tasks.ps1"
+    "tasks:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-tasks.ps1",
+    "schedule": "node scripts/schedule-local.mjs",
+    "import:priority": "node scripts/import-priority.mjs",
+    "db:migrate:production": "wrangler d1 migrations apply mnemba-tips-db --remote --config wrangler.jsonc",
+    "deploy:production": "wrangler deploy --config dist/server/wrangler.json"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

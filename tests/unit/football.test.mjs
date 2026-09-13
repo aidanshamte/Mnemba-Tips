@@ -52,11 +52,11 @@ test('head-to-head reverses home and away accurately and excludes future/nonfina
 });
 test('projected lineup requires complete positional evidence and excludes unavailable players',()=>{
  const positions=['GK',...Array(4).fill('DEF'),...Array(3).fill('MID'),...Array(3).fill('FWD')];const players=positions.map((position,id)=>({id,position,minutes:900,rating:7,availability:'unknown'}));
- assert.equal(predictedLineup(players).label,'PitchPredict model projection');assert.equal(predictedLineup(players).players.length,11);players[0].availability='suspended';assert.equal(predictedLineup(players).label,'Unavailable');assert.equal(predictedLineup([]).players.length,0);
+ assert.equal(predictedLineup(players).label,'Mnemba Tips model estimate');assert.equal(predictedLineup(players).players.length,11);players[0].availability='suspended';assert.equal(predictedLineup(players).label,'Unavailable');assert.equal(predictedLineup([]).players.length,0);
 });
 test('prediction omits unavailable signals and final-result evaluation does not use provider predictions',()=>{
  const history=Array.from({length:8},(_,i)=>normalizeFixture('api-football',apiFixture(i,'FT',`2026-01-${String(i+1).padStart(2,'0')}T00:00:00Z`,i%2?20:10,i%2?10:20)));
- const f=normalizeFixture('api-football',apiFixture(99));const prediction=project(f,history);assert.equal(prediction.label,'PitchPredict model projection');assert.ok(Math.abs(prediction.probabilities.reduce((a,b)=>a+b,0)-1)<1e-9);assert.ok(prediction.missing.includes('expectedGoals'));assert.equal(evaluate(prediction,f),null);assert.ok(evaluate(prediction,{...f,status:'FT',homeScore:1,awayScore:0}).brier>=0);assert.equal(project(f,[]).label,'Unavailable');
+ const f=normalizeFixture('api-football',apiFixture(99));const prediction=project(f,history);assert.equal(prediction.label,'Mnemba Tips model estimate');assert.ok(Math.abs(prediction.probabilities.reduce((a,b)=>a+b,0)-1)<1e-9);assert.ok(prediction.missing.includes('expectedGoals'));assert.equal(evaluate(prediction,f),null);assert.ok(evaluate(prediction,{...f,status:'FT',homeScore:1,awayScore:0}).brier>=0);assert.equal(project(f,[]).label,'Unavailable');
 });
 test('news allowlist rejects spoofed hosts, invalid dates, script URLs and full content fields',()=>{
  const source=FEEDS[0];assert.equal(canonicalUrl('https://bbc.co.uk.attacker.com/news',source),null);assert.equal(canonicalUrl('javascript:alert(1)',source),null);

@@ -1,2 +1,2 @@
-import FootballWorkspace from '@/components/football-workspace';
-export default function ClassicFootballPage(){return <FootballWorkspace/>;}
+import {redirect} from 'next/navigation';
+export default function RetiredPage(){redirect('/football');}

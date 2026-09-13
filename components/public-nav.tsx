@@ -1,0 +1,2 @@
+import {TimePreference} from './local-time';
+export default function PublicNav(){return <><nav className="match-nav" aria-label="Main navigation"><a href="/football">M· Mnemba Tips</a><a href="/football">Predictions</a><a href="/football?tab=Fixtures">Fixtures</a><a href="/football?tab=Leagues">Leagues</a><a href="/football/search?kind=player">Teams &amp; Players</a><a href="/football?tab=News">News</a><a href="/football/predictions">History</a><a href="/football/shortlists">Saved picks</a><a href="/football/markets">Markets</a></nav><TimePreference/></>;}

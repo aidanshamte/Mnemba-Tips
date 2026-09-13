@@ -1,3 +1,6 @@
+import {rejectOtherServer,acquireServerLease} from './local-origin.mjs';
+await rejectOtherServer(5173);
+await acquireServerLease('http://127.0.0.1:8787');
 import './sites-env.mjs';
 import {fileURLToPath} from 'node:url';
 import {spawn} from 'node:child_process';

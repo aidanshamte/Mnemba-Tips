@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mnemba-tips",
+  "main": "./worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "mnemba-tips-db",
+    "database_id": "9bd94397-cfba-4174-940f-e34fec53e1f5",
+    "migrations_dir": "./drizzle"
+  }],
+  "triggers": {"crons": ["0 * * * *", "20 */3 * * *", "40 3 * * *"]},
+  "observability": {"enabled": true}
+}

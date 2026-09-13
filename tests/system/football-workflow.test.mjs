@@ -19,7 +19,7 @@ test('complete mocked API workflow: discover, cache, predict before kickoff, upd
  assert.equal((await service.job('catalog:api-football')).status,'success');assert.equal((await service.job('today')).status,'success');
  const catalog=await service.read(new URLSearchParams({view:'catalog'}));assert.equal(catalog.competitions[0].name,'Regional Cup');
  const page=await service.read(new URLSearchParams({view:'fixtures',competition:'api-football:777'}));assert.equal(page.fixtures.length,7);
- let match=await service.read(new URLSearchParams({view:'match',id:'api-football:100'}));assert.equal(match.prediction.label,'PitchPredict model projection');assert.ok(match.prediction.createdAt<match.fixture.startsAt);assert.equal(match.details.lineups.label,'Unavailable');
+ let match=await service.read(new URLSearchParams({view:'match',id:'api-football:100'}));assert.equal(match.prediction.label,'Mnemba Tips model estimate');assert.ok(match.prediction.createdAt<match.fixture.startsAt);assert.equal(match.details.lineups.label,'Unavailable');
  assert.equal((await service.job('today')).status,'cached');assert.equal(calls,2);
  now+=4*3600000;final=true;assert.equal((await service.job('detail:api-football:100')).status,'success');
  const results=await store.all('SELECT * FROM prediction_results');assert.ok(results.length>=1);assert.ok(results[0].brier_score>=0);

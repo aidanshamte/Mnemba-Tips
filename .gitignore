@@ -45,3 +45,17 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Local credentials, database artifacts and deployment exports
+.dev.vars
+.dev.vars.*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.log
+*.tsbuildinfo
+/backups/
+/exports/
+*.key
+credentials.json

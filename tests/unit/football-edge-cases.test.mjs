@@ -56,5 +56,5 @@ test('manual requests use the eight-request pool and are throttled',async()=>{
 });
 test('predictions cannot be inserted at or after kickoff at the SQL boundary',async()=>{
  const {store,sqlite}=database();await store.init();const service=new FootballService(store);const fixture=normalizeFixture('api-football',apiFixture());await service.saveFixtures([fixture]);
- await assert.rejects(store.upsert('model_predictions',{id:'late',fixture_id:fixture.id,model_version:'test',created_at:fixture.startsAt,kickoff_at:fixture.startsAt,label:'PitchPredict model projection',payload:'{}'}),/CHECK/);sqlite.close();
+ await assert.rejects(store.upsert('model_predictions',{id:'late',fixture_id:fixture.id,model_version:'test',created_at:fixture.startsAt,kickoff_at:fixture.startsAt,label:'Mnemba Tips model estimate',payload:'{}'}),/CHECK/);sqlite.close();
 });

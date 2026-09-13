@@ -1,3 +1,4 @@
+import {internalAccess,publicViews} from '@/lib/football/access.mjs';
 import { env } from 'cloudflare:workers';
 import { Store } from '@/lib/football/store.mjs';
 import { IntelligenceService as FootballService } from '@/lib/football/intelligence.mjs';
@@ -11,20 +12,16 @@ function service() {
   initialized ??= store.init().then(()=>registerSources(store,bindings)).catch((error: unknown) => { initialized = undefined; throw error; });
   return { ready: initialized, instance: new FootballService(store, { API_FOOTBALL_KEY: bindings.API_FOOTBALL_KEY, FOOTBALL_DATA_KEY: bindings.FOOTBALL_DATA_KEY, NEWS_API_KEY: bindings.NEWS_API_KEY, NODE_ENV: process.env.NODE_ENV }) };
 }
-function local(request: Request) {
-  const url = new URL(request.url);
-  return ['localhost','127.0.0.1','[::1]'].includes(url.hostname) && (!request.headers.get('origin') || request.headers.get('origin') === url.origin);
-}
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
-    if (params.get('view') === 'diagnostics' && !local(request)) return Response.json({ error: 'Diagnostics are local-only' }, { status: 403 });
+    if (!publicViews.has(params.get('view') ?? 'fixtures') && !internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN)) return Response.json({ error: 'Diagnostics are local-only' }, { status: 403 });
     const { ready, instance } = service(); await ready;
     return Response.json(await instance.read(params), { headers: { 'Cache-Control': 'no-store' } });
   } catch { return Response.json({ error: 'Football data is unavailable. Check the local database and diagnostics.' }, { status: 503 }); }
 }
 export async function POST(request: Request) {
-  if (!local(request) || request.headers.get('content-type') !== 'application/json') return Response.json({ error: 'Synchronization requires a same-origin local request' }, { status: 403 });
+  if (!internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN) || request.headers.get('content-type') !== 'application/json') return Response.json({ error: 'Synchronization requires a same-origin local request' }, { status: 403 });
   try {
     const body = await request.json() as Record<string, unknown>;
     const { ready, instance } = service(); await ready;

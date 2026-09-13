@@ -1,58 +1,49 @@
-// Local-only browser smoke check. Provider requests and synchronization are blocked.
-import {spawn} from 'node:child_process';
-import {mkdirSync,writeFileSync} from 'node:fs';
-import {resolve} from 'node:path';
+import {localOrigin} from './local-origin.mjs';
+// Local app journeys. Playwright handles navigation and isolated browser contexts.
+// External providers are blocked; imports and real refresh checks run separately.
 import assert from 'node:assert/strict';
-const origin='http://127.0.0.1:8787';
-const browser=process.env.PITCHPREDICT_TEST_BROWSER??'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const port=9327;
+import {existsSync,mkdirSync} from 'node:fs';
+import {resolve,delimiter} from 'node:path';
+import {pathToFileURL} from 'node:url';
+let driver;
+try{driver=await import('playwright');}catch{
+ const entry=(process.env.PATH??'').split(delimiter).map(p=>resolve(p,'../playwright/index.mjs')).find(existsSync);
+ if(!entry)throw Error('Run npm run test:browser to provide the pinned Playwright driver.');driver=await import(pathToFileURL(entry).href);
+}
+const origin=await localOrigin();
+const libraries=resolve('.sites-runtime/browser-libs/root/usr/lib/x86_64-linux-gnu');
+const browser=await driver.chromium.launch({headless:true,...(process.env.MNEMBA_TEST_BROWSER?{executablePath:process.env.MNEMBA_TEST_BROWSER}:{}),env:{...process.env,...(existsSync(libraries)?{LD_LIBRARY_PATH:libraries+(process.env.LD_LIBRARY_PATH?':'+process.env.LD_LIBRARY_PATH:'')}:{})}});
 mkdirSync('outputs',{recursive:true});
-const child=spawn(browser,['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',`--remote-debugging-port=${port}`,`--user-data-dir=${resolve('.sites-runtime','browser-smoke')}`,'about:blank'],{stdio:'ignore',windowsHide:true});
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let socket;
-try {
- let target;
- for(let i=0;i<60;i++){try{const response=await fetch(`http://127.0.0.1:${port}/json/new?about:blank`,{method:'PUT'});target=await response.json();break;}catch{await sleep(250);}}
- if(!target)throw new Error('Headless browser failed to start');
- socket=new WebSocket(target.webSocketDebuggerUrl);
- await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
- let id=0;const pending=new Map();const errors=[];
- const command=(method,params={})=>new Promise((resolve,reject)=>{const requestId=++id;pending.set(requestId,{resolve,reject});socket.send(JSON.stringify({id:requestId,method,params}));});
- socket.addEventListener('message',async event=>{
-   const message=JSON.parse(event.data);
-   if(message.id){const p=pending.get(message.id);pending.delete(message.id);message.error?p?.reject(new Error(message.error.message)):p?.resolve(message.result);}
-   if(message.method==='Runtime.exceptionThrown')errors.push(JSON.stringify(message.params.exceptionDetails));
-   if(message.method==='Fetch.requestPaused'){
-     try {
-     const {requestId,request}=message.params;
-     if(!request.url.startsWith(origin)&&!request.url.startsWith('data:')&&request.url!=='about:blank')await command('Fetch.failRequest',{requestId,errorReason:'BlockedByClient'});
-     else if(request.method==='POST'&&/\/api\/(football|intelligence)/.test(request.url))await command('Fetch.fulfillRequest',{requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'application/json'}],body:Buffer.from('{"status":"idle"}').toString('base64')});
-     else await command('Fetch.continueRequest',{requestId});
-     } catch(error) { if(!/Invalid InterceptionId|Invalid requestId|Target closed/i.test(error.message))errors.push(error.message); }
-   }
- });
- await command('Page.enable');await command('Runtime.enable');await command('Fetch.enable',{patterns:[{urlPattern:'*'}]});
- const evaluate=async expression=>(await command('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true})).result.value;
- const visit=async path=>{await command('Page.navigate',{url:origin+path});for(let i=0;i<100;i++){await sleep(100);if(await evaluate("document.readyState==='complete' && !!document.querySelector('h1')"))break;}await sleep(1200);};
- await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
- await visit('/football');assert.match(await evaluate('document.body.innerText'),/Analyze Match/);assert.equal(await evaluate('document.querySelectorAll("select[aria-label=Country],select[aria-label=Competition]").length'),2);
- let screenshot=await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync('outputs/football-desktop.png',Buffer.from(screenshot.data,'base64'));
- for(const view of ['catalog','news','diagnostics','live','upcoming','recent','search']){await visit(`/football/classic?view=${view}`);assert.ok(!(await evaluate('document.body.innerText')).includes('Internal Server Error'));}
- for(const tab of ['Fixtures','Competitions','News','Social','Diagnostics']){await visit('/football');await evaluate(`Array.from(document.querySelectorAll('.intel-sidebar nav button')).find(b=>b.textContent.trim()===${JSON.stringify(tab)}).click()`);await sleep(1200);assert.ok(!(await evaluate('document.body.innerText')).includes('Internal Server Error'));}
- const cached=await (await fetch(`${origin}/api/football?view=fixtures`)).json();
- if(cached.fixtures?.length){await visit(`/football/match/${encodeURIComponent(cached.fixtures[0].id)}`);assert.match(await evaluate('document.body.innerText'),/Prediction center/);assert.match(await evaluate('document.body.innerText'),/Head-to-head timeline/);}
- if(cached.fixtures?.length){await visit('/football/team/'+encodeURIComponent(cached.fixtures[0].home.id));assert.match(await evaluate('document.body.innerText'),/ENTITY PROFILE/);}
- await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await visit('/football');assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth+1'));
- screenshot=await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync('outputs/football-mobile.png',Buffer.from(screenshot.data,'base64'));
-
- await visit('/football');const article=await evaluate("document.querySelector('.intel-news a')?.getAttribute('href')");assert.ok(article?.startsWith('/football/news/'));await visit(article);assert.match(await evaluate('document.body.innerText'),/Publisher feed description/);
- const regression='openfootball:16c2fe8e6275b62fada77d4beef8f5b918e5a96e3939a183fe9792dee7b91a3a';
- await visit('/football/search?q=FC%20Augsburg');assert.match(await evaluate('document.body.innerText'),/FC Augsburg/);
- const teamLink=await evaluate("Array.from(document.querySelectorAll('a')).find(a=>a.href.includes('/football/team/'))?.getAttribute('href')");assert.ok(teamLink);assert.ok(!teamLink.includes('%2520'));await visit(teamLink);assert.match(await evaluate('document.body.innerText'),/FC Augsburg/);
- for(const [width,height,label] of [[1440,1000,'desktop'],[768,1024,'tablet'],[390,844,'mobile']]){await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<700});await visit('/football/match/'+encodeURIComponent(regression));assert.match(await evaluate('document.body.innerText'),/Head-to-head timeline/);assert.match(await evaluate('document.body.innerText'),/Standings comparison/);assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'));const shot=await command('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});writeFileSync('outputs/match-'+label+'.png',Buffer.from(shot.data,'base64'));}
- for(const path of ['/football/admin','/football/predictions','/football/match/statsbomb%3A4020846']){await visit(path);assert.ok(!(await evaluate('document.body.innerText')).includes('Internal Server Error'));assert.ok(await evaluate('document.documentElement.scrollWidth<=innerWidth+1'));}
- await visit('/lab');await evaluate("Array.from(document.querySelectorAll('button')).find(b=>b.textContent.includes('Basketball')).click()");await sleep(500);assert.match(await evaluate('document.body.innerText'),/Projected starting five/);
- assert.equal(errors.length,0,errors.join('\n'));
- console.log('Browser smoke passed: desktop, mobile overflow, all football views, basketball interaction; no provider calls.');
- await command('Browser.close');
-}finally{socket?.close();child.kill();}
+const errors=[];
+const {DatabaseSync}=await import('node:sqlite');const {readdirSync,writeFileSync}=await import('node:fs');
+const root='.wrangler/state/v3/d1/miniflare-D1DatabaseObject/';const db=new DatabaseSync(root+readdirSync(root).find(f=>f.endsWith('.sqlite')),{readOnly:true});
+const historical=JSON.parse(db.prepare("SELECT payload FROM fixtures WHERE json_extract(payload,'$.home.name') LIKE '%Frankfurt%' AND json_extract(payload,'$.away.name') LIKE '%Bayern%' AND json_extract(payload,'$.round')='Matchday 1' ORDER BY starts_at LIMIT 1").get().payload);
+const timed=JSON.parse(db.prepare("SELECT payload FROM fixtures WHERE json_extract(payload,'$.kickoffPrecision') IS NOT 'date' AND starts_at>0 ORDER BY starts_at DESC LIMIT 1").get().payload);db.close();
+const report={historical:historical.id,timed:timed.id,zones:[],badges:[]};
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+ async function visit(path){console.log('Visit '+path);await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:60000});await page.locator('h1').first().waitFor();}
+ async function overflow(){assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Horizontal page overflow at '+page.url());}
+ async function publicOnly(){for(const name of ['Basketball studio','Diagnostics','Prediction Lab','Data Sources','AI Studio'])assert.equal(await page.getByRole('link',{name,exact:false}).count(),0);assert.equal(await page.locator('a[href="/lab"]').count(),0);}
+ for(const path of ['/','/lab','/football/admin','/football/classic?view=diagnostics']){await visit(path);await page.locator('.broadcast-action').waitFor();await publicOnly();if(path!=='/')assert.ok(page.url().endsWith('/football'));}
+ for(const api of ['intelligence','football'])for(const view of ['sources','files','diagnostics','evidence','social','performance']){const r=await fetch(`${origin}/api/${api}?view=${view}`);assert.equal(r.status,403);}
+ assert.equal((await fetch(origin+'/api/intelligence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({job:'fixtures'})})).status,403);
+ assert.equal((await fetch(origin+'/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:'{"matchupId":"arsenal-city"}'})).status,410);
+ await visit('/football');await page.waitForFunction(()=>document.querySelector('.broadcast-image')?.naturalWidth>0);await page.getByRole('heading',{name:'Today’s Match Insights'}).waitFor();assert.ok(!(await page.locator('body').innerText()).includes('Completed predictions: 0'));
+ const first=await page.locator('.broadcast-copy h1').innerText();await page.getByRole('button',{name:'Next featured match',exact:true}).click();assert.notEqual(await page.locator('.broadcast-copy h1').innerText(),first);await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('button',{name:'Motion reduced'}).waitFor();await page.locator('.insight-probabilities').first().waitFor();await page.screenshot({path:'outputs/page-upgrade/after-desktop.png'});
+ for(const tab of ['Fixtures','Leagues','Teams & Players','News']){await page.locator('.intel-sidebar').getByRole('button',{name:tab,exact:true}).click();await publicOnly();await overflow();}
+ await page.setViewportSize({width:390,height:844});await visit('/football');await page.waitForFunction(()=>document.querySelector('.broadcast-image')?.naturalWidth>0);await page.locator('.broadcast-action[href*="/match/"]').waitFor();await page.locator('.insight-probabilities').first().waitFor();await overflow();await page.screenshot({path:'outputs/page-upgrade/after-mobile.png'});
+ await page.getByRole('button',{name:'Competition',exact:true}).click();await page.getByRole('textbox',{name:'Search competitions'}).fill('La Liga');await page.getByRole('dialog').getByRole('button',{name:/La Liga/}).waitFor();assert.equal(await page.getByRole('dialog').getByRole('button',{name:/La Liga/}).count(),1);await page.keyboard.press('Escape');
+ for(const q of ['Messi','Cristiano Ronaldo','Mbappe','Mbape','Haaland','Salah','Kane','Bellingham','Vinicius','Saka']){await visit('/football/search?kind=player&q='+encodeURIComponent(q));await page.locator('a[role=option]').first().waitFor();assert.ok(await page.locator('a[href*="/football/player/"]').count()>0);await overflow();}
+ await page.locator('a[href*="/football/player/"]').first().click();await page.getByRole('heading',{name:'Club association history'}).waitFor();await page.screenshot({path:'outputs/page-upgrade/player-mobile.png'});
+ await visit('/football/match/'+encodeURIComponent(historical.id));await page.getByText('A meaningful pre-match ranking cannot be shown.',{exact:false}).waitFor();assert.equal(await page.locator('table tbody tr').count(),0);assert.equal(await page.getByRole('heading',{name:'Player membership and lineup evidence'}).count(),0);await overflow();await page.screenshot({path:'outputs/page-upgrade/historical-mobile.png'});
+ const overview=await(await fetch(origin+'/api/intelligence?view=overview')).json();await visit('/football/news/'+(await import('../lib/football/consumer.mjs')).routeToken(overview.news[0].id));await page.getByRole('heading',{name:'What happened'}).waitFor();await page.waitForFunction(()=>document.querySelector('.article-figure img')?.naturalWidth>0);await overflow();await page.screenshot({path:'outputs/page-upgrade/news-mobile.png'});
+ const news=await(await fetch(origin+'/api/intelligence?view=news')).json();const videoStory=news.articles.find(n=>n.media?.permission==='publisher-embed');assert.ok(videoStory,'Real video briefing required');await visit('/football/news/'+(await import('../lib/football/consumer.mjs')).routeToken(videoStory.id));await page.getByRole('button',{name:'Play publisher video'}).click();await page.locator('iframe').waitFor();await page.waitForTimeout(3000);report.video={url:videoStory.id,frame:await page.locator('iframe').getAttribute('src'),body:await page.frameLocator('iframe').locator('body').innerText().catch(()=> 'Frame inaccessible')};await page.screenshot({path:'outputs/page-upgrade/video-mobile.png'});await overflow();
+ const catalog=await(await fetch(origin+'/api/intelligence?view=badges')).json();for(const badge of Object.entries(catalog.badges).filter(([,b])=>b.url).slice(0,8)){const r=await fetch(badge[1].url);assert.ok(r.ok);report.badges.push({id:badge[0],status:r.status});}
+ for(const name of ['Arsenal','FC Augsburg','AC Milan','FC Barcelona']){const team=(await(await fetch(origin+'/api/intelligence?view=global-search&kind=team&q='+encodeURIComponent(name))).json()).results[0];assert.ok(team);await visit(team.url);await page.waitForFunction(()=>[...document.querySelectorAll('.match-hero .team-badge img')].some(i=>i.naturalWidth>0));report.badges.push({name,loadedInBrowser:true});await page.screenshot({path:'outputs/page-upgrade/badge-'+name.replaceAll(' ','-')+'.png'});}
+ const {formatKickoff}=await import('../lib/football/timezone.mjs');
+ for(const zone of ['America/New_York','Africa/Dar_es_Salaam','Europe/London']){const c=await browser.newContext({timezoneId:zone,viewport:{width:1440,height:1000}});const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await p.goto(origin+'/football/match/'+encodeURIComponent(timed.id));await p.getByText(formatKickoff(timed,zone),{exact:true}).first().waitFor();report.zones.push({zone,text:formatKickoff(timed,zone)});if(zone==='America/New_York'){await p.getByLabel('Timezone',{exact:true}).selectOption('Africa/Dar_es_Salaam');await p.getByText(formatKickoff(timed,'Africa/Dar_es_Salaam'),{exact:true}).first().waitFor();assert.ok(!p.url().includes('timezone'));await p.reload();await p.getByText(formatKickoff(timed,'Africa/Dar_es_Salaam'),{exact:true}).first().waitFor();await p.getByLabel('Timezone',{exact:true}).selectOption('local');}
+ // Isolated response fixtures exercise midnight and DST rendering; never persisted.
+ for(const instant of ['2026-03-29T00:30:00Z','2026-03-29T01:30:00Z','2026-11-01T06:30:00Z']){await p.route('**/api/intelligence?view=match-context*',async route=>{const response=await route.fetch();const body=await response.json();body.fixture={...body.fixture,startsAt:Date.parse(instant),kickoffPrecision:'instant'};await route.fulfill({json:body});});await p.reload();await p.getByText(formatKickoff({startsAt:Date.parse(instant)},zone),{exact:true}).first().waitFor();await p.unroute('**/api/intelligence?view=match-context*');}await c.close();}
+ assert.deepEqual(errors,[]);writeFileSync('outputs/page-upgrade/browser-evidence.json',JSON.stringify(report,null,2));console.log('PASS: public navigation, redirects, internal access denial, imagery, slideshow, mobile layouts, real player search, historical season opener, news, badges and timezone/DST rendering.');
+}finally{await browser.close();}

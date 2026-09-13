@@ -1,0 +1,10 @@
+import {writeFileSync,readdirSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+import {localOrigin} from './local-origin.mjs';
+const origin=await localOrigin(),get=async p=>{const r=await fetch(origin+'/api/intelligence?'+new URLSearchParams(p));if(!r.ok)throw Error('HTTP '+r.status);return r.json();};
+const root='.wrangler/state/v3/d1/miniflare-D1DatabaseObject/';const db=new DatabaseSync(root+readdirSync(root).find(f=>f.endsWith('.sqlite')),{readOnly:true});
+const counts={};for(const table of ['fixtures','football_teams','football_players','news_articles'])counts[table]=db.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n;counts.distinctFixtures=db.prepare('SELECT COUNT(DISTINCT COALESCE(i.canonical_id,f.id)) n FROM fixtures f LEFT JOIN fixture_identities i ON i.fixture_id=f.id').get().n;
+const f=db.prepare("SELECT id FROM fixtures WHERE json_extract(payload,'$.home.name') LIKE '%Frankfurt%' AND json_extract(payload,'$.away.name') LIKE '%Bayern%' AND json_extract(payload,'$.round')='Matchday 1' ORDER BY starts_at LIMIT 1").get();db.close();
+const match=await get({view:'match-context',id:f.id}),badges=await get({view:'badges'}),insights=await get({view:'insights'}),players=[];
+for(const q of ['Messi','Cristiano Ronaldo','Mbappe','Mbape','Haaland','Salah','Kane','Bellingham','Vinicius','Saka']){const d=await get({view:'global-search',kind:'player',q});players.push({q,results:d.results.map(r=>({id:r.id,name:r.name,url:r.url}))});}
+const report={at:new Date().toISOString(),origin,counts,badges:{covered:badges.covered,total:badges.total,unmatched:badges.total-badges.covered},players,historical:{id:f.id,tableRows:match.table.rows.length,h2h:match.h2h.games,form:match.form.map(t=>({team:t.team.name,games:t.overall.games,earlierFixtures:t.fixtures.length})),probableLineups:match.probableLineups.length},insights:insights.insights.map(i=>({fixture:i.fixture.id,home:i.fixture.home.name,away:i.fixture.away.name,probabilities:i.analysis.probabilities,asOf:i.analysis.asOf}))};writeFileSync('outputs/page-upgrade/release-evidence.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
