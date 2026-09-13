@@ -55,3 +55,13 @@ referee importer or shrinkage model was implemented in this pass. The broader br
 batch retraining/calibration promotion gates, complete per-market grading/card
 presentation and expanded ranking criteria still need further work; this report
 does not claim the entire brief is complete.
+
+## Deployment evidence
+
+Implementation commit `9eb7f00` was pushed to `origin/main` and deployed as Worker
+version `58ccfbbf-e229-42fd-8a47-e046bd8d196a` at
+https://mnemba-tips.kaidan547.workers.dev. The D1 binding and all three Cron schedules
+were preserved. Public desktop/mobile timezone search, persistence and layout
+checks passed. The public history API returned HTTP 503 after deployment; D1 quota
+remains unresolved, so rendered production records and learning metrics could not
+be verified. Public screenshots show the actual unavailable state, not test data.

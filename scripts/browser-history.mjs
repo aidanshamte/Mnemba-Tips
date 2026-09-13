@@ -15,7 +15,7 @@ try{
   assert.equal(await picker.locator('option').count(),5);assert.equal(await page.locator('body').textContent().then(t=>t.includes('Pacific/Auckland')),false);
   await page.getByRole('button',{name:'More timezones',exact:true}).click();await page.getByRole('textbox',{name:'Search timezones'}).fill('Auckland').catch(async e=>{console.log(label,await page.locator('dialog').evaluateAll(nodes=>nodes.map(n=>n.outerHTML.slice(0,500))));await page.screenshot({path:'outputs/history/failure.png'});throw e;});await page.getByRole('button',{name:'Pacific/Auckland',exact:true}).click();assert.equal(await picker.inputValue(),'Pacific/Auckland');
   await page.reload();await page.waitForFunction(()=>document.querySelector('select[aria-label="Timezone"]')?.value==='Pacific/Auckland');
-  await picker.selectOption('local');await page.getByRole('button',{name:'Exploratory previews',exact:true}).click();
+  await picker.selectOption('local');await Promise.all([page.waitForResponse(r=>r.url().includes('view=prediction-history')&&r.url().includes('tab=exploratory')),page.getByRole('button',{name:'Exploratory previews',exact:true}).click()]);
   await page.getByRole('status').waitFor({state:'hidden',timeout:60000});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   await page.screenshot({path:`outputs/history/${label}.png`,fullPage:true});await context.close();
