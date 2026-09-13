@@ -66,3 +66,23 @@ test('transfer retains saved badge metadata while excluding disposable cache row
     assert.equal(manifest.verified.football_cache,1);
   }finally{if(db.isOpen)db.close();rmSync(root,{recursive:true,force:true});}
 });
+
+import {IntelligenceService} from '../../lib/football/intelligence.mjs';
+import {normalizeFixture} from '../../lib/football/providers.mjs';
+import {apiFixture} from '../football-db.mjs';
+import {refreshSearchIndex} from '../../lib/football/search.mjs';
+test('production public reads survive D1 write denial without inventing saved forecasts',async()=>{
+  const {store,db,sqlite}=database();let now=Date.parse('2026-09-10T12:00:00Z');store.now=()=>now;
+  try {
+    await store.init();const service=new IntelligenceService(store);await service.initialize();
+    await service.saveFixtures([1,2,3,4].map(i=>normalizeFixture('api-football',apiFixture(900+i,'FT',`2026-09-0${i}T12:00:00Z`))));
+    const f={...normalizeFixture('api-football',apiFixture(910,'NS','2026-09-11T12:00:00Z')),kickoffPrecision:'date'};
+    await service.saveFixtures([f]);const saved=await service.read(new URLSearchParams({view:'analysis',id:f.id}));assert.ok(saved.analysis.probabilities);
+    await refreshSearchIndex(store,true);now+=3600000;
+    const prepare=db.prepare;db.prepare=sql=>{if(!/^\s*SELECT\b/i.test(sql))throw Error('D1 daily writes exhausted');return prepare(sql);};
+    store.readOnly=true;
+    for(const params of [{view:'fixtures'},{view:'global-search',q:'Team'},{view:'matchday',from:'2026-09-11',to:'2026-09-11',timezone:'UTC'},{view:'match-context',id:f.id},{view:'prediction-history'},{view:'badges'},{view:'news'},{view:'article',id:'missing'}])await service.read(new URLSearchParams(params));
+    const again=await service.read(new URLSearchParams({view:'analysis',id:f.id}));assert.deepEqual(again.analysis.probabilities,saved.analysis.probabilities);assert.equal(again.analysis.asOf,saved.analysis.asOf);
+    assert.equal(sqlite.prepare('SELECT count(*) n FROM exploratory_estimates').get().n,1);
+  }finally{sqlite.close();}
+});

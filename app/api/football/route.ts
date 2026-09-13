@@ -5,18 +5,20 @@ import { IntelligenceService as FootballService } from '@/lib/football/intellige
 import {registerSources} from '@/lib/football/source-registry.mjs';
 
 let initialized: Promise<void> | undefined;
-function service() {
+function service(readOnly = false) {
   const bindings = env as unknown as Record<string, any>;
   if (!bindings.DB) throw new Error('Local D1 database unavailable');
   const store = new Store(bindings.DB);
-  initialized ??= store.init().then(()=>registerSources(store,bindings)).catch((error: unknown) => { initialized = undefined; throw error; });
-  return { ready: initialized, instance: new FootballService(store, { API_FOOTBALL_KEY: bindings.API_FOOTBALL_KEY, FOOTBALL_DATA_KEY: bindings.FOOTBALL_DATA_KEY, NEWS_API_KEY: bindings.NEWS_API_KEY, NODE_ENV: process.env.NODE_ENV }) };
+  const managed = process.env.NODE_ENV === 'production' && bindings.MNEMBA_SCHEMA_MANAGED === '1';
+  store.readOnly = readOnly && managed;
+  if (!managed) initialized ??= store.init().then(()=>registerSources(store,bindings)).catch((error: unknown) => { initialized = undefined; throw error; });
+  return { ready: managed ? Promise.resolve() : initialized, instance: new FootballService(store, bindings) };
 }
 export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     if (!publicViews.has(params.get('view') ?? 'fixtures') && !internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN)) return Response.json({ error: 'Diagnostics are local-only' }, { status: 403 });
-    const { ready, instance } = service(); await ready;
+    const { ready, instance } = service(true); await ready;
     return Response.json(await instance.read(params), { headers: { 'Cache-Control': 'no-store' } });
   } catch { return Response.json({ error: 'Football data is unavailable. Check the local database and diagnostics.' }, { status: 503 }); }
 }

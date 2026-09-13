@@ -71,3 +71,14 @@ Validate with `pnpm typecheck`, `pnpm test`, `pnpm build`, and
 Push the reviewed release to `origin/main` and observe the connected Git build.
 Use `pnpm deploy:production` only after diagnosing a missing automatic deployment.
 Check the real production URL, protected API behavior and remote data after release.
+
+## Public reads and D1 write quotas
+
+Production sets the non-secret `MNEMBA_SCHEMA_MANAGED=1` because schema migrations
+run before deployment. Public GET requests do not create tables, register sources,
+rebuild indexes, acquire synchronization locks, save forecasts, or publish shortlists.
+They use the imported index and existing saved forecasts/estimates. A missing saved
+estimate is reported honestly; the scheduled model job creates eligible new records.
+This keeps browsing available when the account's daily D1 write quota is exhausted.
+Administrative updates and Cron jobs still require available write capacity; their
+failure is not a successful update. Do not upgrade the account plan automatically.

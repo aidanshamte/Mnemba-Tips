@@ -10,6 +10,7 @@
     "database_id": "9bd94397-cfba-4174-940f-e34fec53e1f5",
     "migrations_dir": "./drizzle"
   }],
+  "vars": {"MNEMBA_SCHEMA_MANAGED": "1"},
   "triggers": {"crons": ["0 * * * *", "20 */3 * * *", "40 3 * * *"]},
   "observability": {"enabled": true}
 }
