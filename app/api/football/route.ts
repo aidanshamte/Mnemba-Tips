@@ -1,3 +1,4 @@
+import {publicResponse} from '@/lib/football/public-cache.mjs';
 import {internalAccess,publicViews} from '@/lib/football/access.mjs';
 import { env } from 'cloudflare:workers';
 import { Store } from '@/lib/football/store.mjs';
@@ -18,8 +19,7 @@ export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     if (!publicViews.has(params.get('view') ?? 'fixtures') && !internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN)) return Response.json({ error: 'Diagnostics are local-only' }, { status: 403 });
-    const { ready, instance } = service(true); await ready;
-    return Response.json(await instance.read(params), { headers: { 'Cache-Control': 'no-store' } });
+    return await publicResponse(request, async()=>{const {ready,instance}=service(true);await ready;return instance.read(params);}, process.env.NODE_ENV==='production'&&publicViews.has(params.get('view')??'fixtures')?(caches as unknown as {default:Cache}).default:null);
   } catch { return Response.json({ error: 'Football data is unavailable. Check the local database and diagnostics.' }, { status: 503 }); }
 }
 export async function POST(request: Request) {

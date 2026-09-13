@@ -86,3 +86,17 @@ test('production public reads survive D1 write denial without inventing saved fo
     assert.equal(sqlite.prepare('SELECT count(*) n FROM exploratory_estimates').get().n,1);
   }finally{sqlite.close();}
 });
+
+import {publicResponse} from '../../lib/football/public-cache.mjs';
+test('public cache avoids duplicate reads and never caches authorization-bearing or failed reads',async()=>{
+  const entries=new Map(),cache={match:async r=>entries.get(r.url)?.clone(),put:async(r,v)=>{entries.set(r.url,v.clone());}};
+  let reads=0;const load=async()=>({count:++reads});
+  const url='https://example.test/api?view=fixtures&timezone=UTC';
+  assert.equal((await(await publicResponse(new Request(url),load,cache)).json()).count,1);
+  assert.equal((await(await publicResponse(new Request(url),load,cache)).json()).count,1);
+  await publicResponse(new Request(url+'&date=2026-09-14'),load,cache);assert.equal(reads,2);
+  await publicResponse(new Request(url,{headers:{authorization:'Bearer test-only'}}),load,cache);assert.equal(reads,3);
+  await publicResponse(new Request(url,{headers:{'cache-control':'no-cache'}}),load,cache);assert.equal(reads,4);
+  await assert.rejects(publicResponse(new Request(url+'&failure=1'),async()=>{throw Error('Quota');},cache),/Quota/);
+  assert.equal(entries.size,2);
+});

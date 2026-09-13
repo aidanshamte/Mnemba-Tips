@@ -82,3 +82,10 @@ estimate is reported honestly; the scheduled model job creates eligible new reco
 This keeps browsing available when the account's daily D1 write quota is exhausted.
 Administrative updates and Cron jobs still require available write capacity; their
 failure is not a successful update. Do not upgrade the account plan automatically.
+
+Unauthenticated public GET results use a bounded per-isolate cache (16 responses,
+at most 512 KB each) and Cloudflare's Cache API for 60 seconds to reduce repeat D1 reads. Full query strings (including date/timezone)
+remain separate cache keys. Authorized/internal requests, explicit no-cache requests
+and errors are not cached. A cold cache cannot overcome an exhausted account-wide
+read quota; recovery still requires the platform reset. Monitor real read/write
+usage before assuming the free tier can sustain a particular traffic level.
