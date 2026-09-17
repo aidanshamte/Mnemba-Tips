@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 const origin = process.argv[2];
 const url = new URL(origin);
-if (!(url.protocol==='https:' && url.hostname.endsWith('.azurecontainerapps.io')) && !['localhost','127.0.0.1'].includes(url.hostname)) throw new Error('Expected Azure-generated URL or loopback');
+if (!(url.protocol==='https:' && (url.hostname.endsWith('.azurecontainerapps.io') || url.hostname === 'aidanshamte.me')) && !['localhost','127.0.0.1'].includes(url.hostname)) throw new Error('Expected Azure-generated or canonical domain HTTPS URL, or loopback');
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
 const browser = await chromium.launch({headless:true,env:process.env});
 const output = process.env.MNEMBA_BROWSER_OUTPUT ?? '.sites-runtime/azure-migration/browser';mkdirSync(output,{recursive:true});
