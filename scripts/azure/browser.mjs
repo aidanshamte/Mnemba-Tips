@@ -21,7 +21,7 @@ try {
    const response=await page.goto(origin+path,{waitUntil:'networkidle',timeout:90000});assert.equal(response.status(),200);
    await page.locator('h1').first().waitFor();
    if(path==='/football') { await page.getByRole('status').filter({hasText:'covered matches'}).waitFor({timeout:60000}); await page.locator('.broadcast-action[href*="/match/"]').waitFor({timeout:60000}); }
-   if(path.includes('/news/'))await page.getByRole('heading',{name:'What happened',exact:true}).waitFor();
+   if(path.includes('/news/')) {await page.getByRole('heading',{name:'What happened',exact:true}).waitFor();await page.locator('.article-figure').scrollIntoViewIfNeeded();await page.waitForFunction(()=>{const e=document.querySelector('.article-figure .news-visual');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:!!e?.querySelector('.publisher-placeholder');});assert.equal(await page.locator('.article-figure img[src*="football-night"]').count(),0);}
    if(path.includes('/match/'))await page.locator('.match-score').waitFor();
    if(path.includes('search?'))await page.locator('a[role=option]').first().waitFor();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Overflow '+path);
@@ -29,9 +29,14 @@ try {
   }
   await page.goto(origin+'/football/search?kind=team&q=Arsenal',{waitUntil:'networkidle'});
   await page.locator('a[role=option]').first().click();await page.locator('h1').first().waitFor();assert.match(page.url(),/\/football\/team\//);
+  await page.locator('.team-badge').first().waitFor();
+  await page.waitForFunction(()=>{const e=document.querySelector('.team-badge');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:e?.classList.contains('monogram-shield');});
+  evidence.checks.push({width,teamVisual:await page.locator('.team-badge img').count()?'loaded badge':'labelled monogram'});
   await page.goto(origin+'/football/search?kind=player&q=Messi',{waitUntil:'networkidle'});
   await page.locator('a[role=option]').first().click();await page.getByRole('heading',{name:'Club association history'}).waitFor();
-  const portrait = page.locator('.entity-portrait, .player-portrait, .entity-avatar').first();
+  const portrait = page.locator('.media-avatar').first();await portrait.waitFor();await portrait.scrollIntoViewIfNeeded();
+  await page.waitForFunction(()=>{const e=document.querySelector('.media-avatar');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:!!e?.querySelector('.avatar-initials');});
+  evidence.checks.push({width,playerVisual:await portrait.locator('img').count()?'loaded portrait':'labelled fallback'});
   evidence.checks.push({width,path:new URL(page.url()).pathname,playerProfile:true});
   await page.goto(origin+'/basketball',{waitUntil:'networkidle'});
   await page.getByRole('tab',{name:'Basketball',exact:true}).waitFor();
@@ -46,6 +51,8 @@ try {
   await page.goto(origin+'/lab',{waitUntil:'networkidle'});assert.ok(page.url().endsWith('/football'));
   await context.close();
  }
+ for(const view of ['diagnostics','sources','performance'])assert.equal((await fetch(origin+'/api/intelligence?view='+view)).status,403);
+ const blocked=await fetch(origin+'/api/intelligence',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'source-policy',id:'api-football',enabled:true})});assert.ok([403,503].includes(blocked.status));
  assert.deepEqual(errors,[]);
  evidence.basketball='Existing model scenarios restored at /basketball; demo label, selection and responsive layout verified. No live basketball feed is claimed.';
  writeFileSync(output+'/evidence.json',JSON.stringify(evidence,null,2));console.log('PASS desktop/mobile football, fixtures, search, match, history, news, player profiles, basketball scenarios and legacy lab redirect');
