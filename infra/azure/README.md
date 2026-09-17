@@ -1,117 +1,67 @@
-# Mnemba Tips Azure migration
+# Mnemba Tips on Azure
 
-Status: local rehearsal only. No Azure subscription is authenticated; no Azure resources or DNS records have been changed. Production D1 export is awaiting explicit account/destination confirmation after automatic approval review rejected it. Do not describe local verification as an Azure migration.
+The existing application is deployed to [the Azure-generated HTTPS URL](https://mnemba-web.livelybush-738e4ce5.westus.azurecontainerapps.io). Cloudflare remains deployed. See [the verification report](../../AZURE_MIGRATION_REPORT.md), [baseline record counts](MIGRATION_COUNTS.md), and [exact Namecheap records](DNS_SETTINGS.md). Custom-domain verification is separate from the working generated URL.
 
-## Account actions
+## Account and infrastructure
 
-Azure CLI was installed in `/tmp/mnemba-azure-cli`. Sign in interactively (do not paste credentials into chat):
+Subscription `b55deec1-aecc-443f-8d1c-3401a8a6d190` is Azure for Students, Enabled, spending limit On. The account API confirmed USD 100 remaining credit before provisioning; the student grant expires September 15, 2027. West US is one of the subscription's allowed regions and exposes B1ms PostgreSQL. Container Apps environment quota is one. PostgreSQL's student free-service billing benefit has not been confirmed on an actual usage bill.
 
-```bash
-export AZURE_CONFIG_DIR=/workspaces/Mnemba-Tips/.sites-runtime/azure-cli
-export PATH=/tmp/mnemba-azure-cli/bin:$PATH
-az login --use-device-code
-az account list --query '[].{name:name,id:id,state:state}' -o table
-```
-
-Select the Azure for Students subscription, not Students Starter. Set `AZURE_SUBSCRIPTION_ID` and `AZURE_LOCATION`, then run `bash scripts/azure/preflight.sh`. Inspect allowed-location policies, available B1ms capacity, Microsoft.App quota, provider registrations, role-assignment permission, remaining credit and expiry. No tenant-specific limits have yet been verified. Register missing providers only after selecting the subscription. Deployment needs Contributor plus permission to assign AcrPull (Owner or User Access Administrator).
-
-Azure for Students generally provides $100 for 12 months, subject to eligibility and spending limits. PostgreSQL's 750 B1ms hours + 32 GB data + 32 GB backup free allowance must be confirmed for this subscription, not assumed. See [student offer](https://azure.microsoft.com/en-us/free/students/), [offer conditions](https://azure.microsoft.com/en-us/pricing/offers/ms-azr-0170p/), and [credit expiry](https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/azurestudents-subscription-disabled).
-
-## Exact proposed infrastructure
-
-`main.bicep` is the source of truth; names default to prefix `mnemba`. Region and globally unique PostgreSQL/ACR names must be selected after account checks.
-
-| Resource | Settings |
+| Resource | Deployed configuration |
 |---|---|
-| Resource group | `mnemba-azure`, selected eligible region |
-| Web app | `mnemba-web`, Consumption, 0.5 vCPU / 1 GiB, 0–1 replicas, HTTP concurrency 20 |
-| Ingress | External HTTPS only, container port 3000, Azure-generated hostname |
-| Readiness | `/api/health`, 15-second interval, 5-second timeout |
-| Liveness/startup | TCP port 3000; startup allowance 150 seconds |
-| PostgreSQL | Version 17, Burstable Standard_B1ms, 32 GiB, autogrow disabled, 7-day backup, no HA |
-| Database | `mnemba`; selected verified snapshot schema through `MNEMBA_DATABASE_SCHEMA` |
-| Network | `10.42.0.0/16`; ACA subnet `10.42.0.0/23`; PostgreSQL `10.42.2.0/28`; delegated private DB access; public DB access disabled |
-| Private DNS | `mnemba.postgres.database.azure.com`, VNet linked |
-| Registry | Basic, admin login disabled, user-assigned identity with AcrPull |
-| Logging | No paid Log Analytics ingestion; platform log streaming and database cron records; revisit retention before production |
-| Scheduled jobs | `mnemba-update-0/1/2`, 0.5 vCPU / 1 GiB, parallelism 1, timeout 300 seconds, retry 0 |
-| Job schedules UTC | `0 * * * *`, `20 */3 * * *`, `40 3 * * *` |
-| Staging guards | `enableUpdates=false`, jobs Manual, POST updates blocked, `MNEMBA_ENABLE_UPDATES=0` |
+| Resource group | `mnemba-azure`, `westus` |
+| Container Apps environment | `mnemba-env`, Consumption, VNet integrated |
+| Web | `mnemba-web`, 0.5 vCPU / 1 GiB, 0–1 replicas, HTTP concurrency 20, port 3000, HTTPS-only |
+| Health | `/api/health` checks database availability; startup/liveness TCP probes |
+| PostgreSQL | `mnemba-pg-b55deec1`, PostgreSQL 17, Standard_B1ms, 32 GiB, no HA, autogrow disabled |
+| Database access | Database `mnemba`, schema `production_snapshot`, runtime role `mnemba_app`; private-only connectivity, TLS certificate validation |
+| Recovery | PostgreSQL backup retention 7 days; original SQLite/D1 snapshots in private Blob Storage |
+| Network | VNet `10.42.0.0/16`; ACA `10.42.0.0/23`; delegated PostgreSQL subnet `10.42.2.0/28` |
+| Private DNS | `mnemba.postgres.database.azure.com` linked to VNet |
+| Registry | `mnembab55deec1.azurecr.io`, Basic, admin login disabled, `mnemba-runtime` identity with AcrPull |
+| Backup storage | `mnembabackupb55deec1` / `migration-backups`; public blobs and shared keys disabled, HTTPS/TLS 1.2, soft-delete 7 days |
+| Logs | `mnemba-logs`, 30-day retention, 0.1 GB daily ingestion cap |
+| Budget | `mnemba-monthly`, USD 10/month; actual 50%/100% and forecast 100% alerts to `aidan.shamte@student.fairfield.edu` |
 
-PostgreSQL connections verify TLS certificates. The bootstrap template uses the database administrator connection in an ACA secret; before public production, create separate least-privilege runtime/job roles and replace this secret. Provider keys and internal authorization token must be transferred into ACA secrets, never Docker build arguments, source files, logs or public outputs. Existing keys are deliberately not copied by this work.
+`main.bicep` defines foundation and runtime. Secrets and instantiated parameters are ignored files under `.sites-runtime/azure-migration/`, never source control. Start a new environment with `deployRuntime=false`; push an image, import and verify the data, then deploy runtime. `enableUpdates=false` is the safe staging default. Do not blindly redeploy defaults over the verified environment or overwrite its secrets/image. The separate import job uses administrator access only for migration; the web and scheduled jobs use the limited runtime role. Immutable history triggers remain enforced.
 
-## Build and infrastructure preparation
+## Runtime and data
 
-```bash
-docker build -f Dockerfile.azure -t mnemba-azure:rehearsal .
-az bicep build --file infra/azure/main.bicep --outfile /tmp/mnemba-azure-main.json
-```
+`Dockerfile.azure` builds the existing Next.js application with Node 24 and a non-root standalone server. The Azure build replaces the Cloudflare binding import with `lib/azure/bindings.mjs`. `lib/azure/postgres.mjs` implements the application's D1 statement interface, explicit PostgreSQL SQL translations, transactional batches, and quota concurrency locks. The Cloudflare build still uses the original Worker/D1 bindings.
 
-The Docker build uses the existing app with Next standalone output. The Cloudflare/Vinext build remains available. Credentials, local state and database files are excluded by `.dockerignore`.
+Backups were taken before conversion. A raw remote D1 export is restored in a disposable copy by `scripts/azure/restore-d1-export.py`. `reconcile.py` combines local and remote records without editing either source, retains both row versions in `migration_conflicts`, and checks SQLite integrity and foreign keys. `migrate.mjs` imports in batches, validates every table's row count and ordered content hash, installs immutable-history triggers, and records the source checksum. Running the same snapshot twice verifies existing data rather than duplicating it. A different snapshot is refused in an already migrated schema.
 
-Create a **mode-0600 ignored** ARM parameters file with `location`, `postgresName`, `registryName`, a generated strong `postgresPassword`, and initially `deployRuntime=false`. Pass it as `--parameters @FILE`, never password command arguments. Run `az deployment group what-if` and `validate` before `create`. Bicep compilation has passed; Azure validation has not run because no subscription is signed in. Keep runtime disabled until schema import is verified. Push the tested image to the private registry using interactive/managed Azure credentials, then set `deployRuntime=true`, `databaseSchema` to the verified schema, and keep `enableUpdates=false`.
+Do not rerun the initial snapshot verifier against an actively updating production schema and interpret legitimate new records as migration failure. Preserve the baseline manifest, then audit current counts and job outcomes separately. There is no continuous D1-to-PostgreSQL replication; any Cloudflare writes after the snapshot need separate reconciliation before its eventual retirement.
 
-Private PostgreSQL cannot be imported directly from this Codespace without an authorized private network path. Run the importer inside the ACA environment (a manual migration job or private network runner). Supply the snapshot through a private, encrypted, temporary storage location with narrowly scoped access. Do not include snapshots in the public web image. This private transfer and manual migration job still need provisioning after account access and backup authorization.
+Private evidence and manifests: `.sites-runtime/azure-migration/`. Off-repository copies: `/tmp/mnemba-off-repository-backups/` (ephemeral workspace storage); the private Azure blobs provide the durable copy. Never commit exports, connection strings, SAS links, account tokens, or deployment parameter files.
 
-## Backup and migration workflow
+## Updates
 
-Local SQLite backups and SHA256/count manifests are under `.sites-runtime/azure-migration/` and `.sites-runtime/backups/`, ignored by Git. Two existing local databases were backed up through SQLite's online backup API, so WAL contents are included. Both passed integrity and foreign-key checks. Store a second encrypted copy outside this workspace before cutover; workspace-local copies alone are not disaster recovery.
-
-After remote-backup authorization, export production D1 to a unique filename using `wrangler d1 export mnemba-tips-db --remote --config wrangler.jsonc --output FILE.sql`. Exporting is read-only, but the backup contains application data and must remain private. Restore to a **new** SQLite file:
-
-```bash
-python scripts/azure/restore-d1-export.py REMOTE.sql REMOTE.sqlite
-node scripts/azure/compare-snapshots.mjs LOCAL.sqlite REMOTE.sqlite REPORT.json
-```
-
-Do not replace production with the larger local database. Preserve both snapshots, compare all primary keys, and explicitly resolve conflicting values and immutable historical records. Import separate schemas first. The comparison script reports conflicts without changing either source. Apply missing versioned schema migrations only to a working copy of a snapshot, retaining the raw original.
-
-Set `DATABASE_URL` securely and run:
-
-```bash
-node scripts/azure/migrate.mjs SNAPSHOT.sqlite NEW_SCHEMA MANIFEST.json
-node scripts/azure/verify-counts.mjs MANIFEST.json
-```
-
-The importer requires a new schema; it never truncates or overwrites one. All imports and validation run in one transaction. It copies application tables, keys, indexes, foreign keys and immutable triggers. Integer timestamps use BIGINT; fractional player minutes remain floating point; audit row insertion order is explicitly preserved. It compares per-table counts and content hashes before commit. Cloudflare metadata and D1 migration bookkeeping remain in original backups, not in PostgreSQL application tables. Unknown triggers, cyclic references, invalid source data or hash mismatches abort rather than discard rows.
-
-A local PostgreSQL custom-format dump has been restored into a separate database and checked. For Azure, obtain a verified `pg_dump` and confirm managed point-in-time restore retention. Store backups outside the primary resource group.
-
-## Verification and final synchronization
-
-```bash
-DATABASE_URL=... MNEMBA_DATABASE_SCHEMA=... npm run test:azure
-node scripts/azure/verify-url.mjs https://AZURE-FQDN.azurecontainerapps.io REPORT.json
-PLAYWRIGHT_MODULE=playwright node scripts/azure/browser.mjs https://AZURE-FQDN.azurecontainerapps.io
-```
-
-Do not put actual credentials in shell history when setting environment variables. Integration tests are for isolated rehearsal databases: they write and clean up test leases, quota rows and scheduler runs. Scheduler integration stubs provider network work; it does not prove live feed success. The test URL scripts perform public reads only.
-
-The current checkout has **no public basketball journey**: `/lab` redirects to `/football`; its basketball demo component and model tests remain. Do not report basketball end-to-end acceptance as passed. Decide the intended basketball route before release.
-
-Keep Cloudflare serving throughout staging. Before final import, pause production writers/scheduler briefly while serving cached reads, take a fresh D1 export, reconcile all changes, verify again, and only then activate the single Azure writer. Do not run two independent quota ledgers against the same provider keys. Rollback after Azure writes requires replaying those new writes to D1, not merely changing DNS.
-
-## DNS and TLS — no changes made
-
-Observed on 2026-09-17: `aidanshamte.me` and `www.aidanshamte.me` resolve to GitHub Pages (`185.199.108.153` through `185.199.111.153`), and apex TLS hostname validation fails from this environment. Cloudflare Worker `https://mnemba-tips.kaidan547.workers.dev` returns HTTPS 200 and database ready. Cloudflare account metadata lists no Worker custom domains. Reconcile actual DNS ownership/current routing before any cutover.
-
-First prove HTTPS, database, real fixture/player/team/news journeys, and scheduler on the Azure-generated hostname. Actual Azure hostname/IP/verification ID do not exist yet and must not be invented. The Bicep outputs provide `azureUrl`, `apexIp`, and `domainVerificationId` after deployment.
-
-Future records, **only after acceptance**:
-
-| Type | Name | Value |
+| Azure job | UTC cron | Work |
 |---|---|---|
-| A | `@` | Bicep `apexIp` (Container Apps environment static IP) |
-| TXT | `asuid` | Bicep `domainVerificationId` |
-| CNAME | `www` | Host portion of Bicep `azureUrl`, if www is desired |
-| TXT | `asuid.www` | Same verification ID for www binding |
+| `mnemba-update-0` | `0 * * * *` | Fixtures, results, prediction models, snapshots |
+| `mnemba-update-1` | `20 */3 * * *` | News, video metadata, configured documents |
+| `mnemba-update-2` | `40 3 * * *` | Retention, country/entity reconciliation, search index, calibration, rosters |
 
-Use DNS-only records during Azure managed-certificate validation; preserve the previous exact records and TTL for rollback. Azure's generated domain already has HTTPS. For zero-gap custom-domain HTTPS, pre-bind a valid imported certificate obtained through DNS validation before routing traffic, or explicitly plan the Azure managed-certificate issuance transition. Do not assume the Azure-generated certificate covers `aidanshamte.me`. See [Azure custom domain and managed certificate requirements](https://learn.microsoft.com/en-us/azure/container-apps/custom-domains-managed-certificates). DNS must remain unchanged until Azure-generated HTTPS and journeys pass.
+Each scheduled container uses 0.5 vCPU / 1 GiB, one replica, a 300-second execution timeout, zero automatic retries, and a 240-second cooperative application deadline. A PostgreSQL advisory lock prevents overlapping scheduled executions. `MNEMBA_ENABLE_UPDATES=1` is required. Partial source failures make the job fail visibly; cached records remain available. The `cron_runs` and `update_jobs` tables retain protected details. Check both Azure execution status and these application outcomes: process success alone is insufficient.
 
-## Expected costs (USD; East US illustration, not a subscription quote)
+No API-Football, Football-Data, NewsAPI, or YouTube API keys were available in the local environment or Cloudflare secret inventory. Do not invent or expose them. Existing keyless sources are used; paid-provider coverage is not claimed. Basketball remains the existing labelled model/demo experience, not a live data feed.
 
-Public Azure Retail Prices API checked 2026-09-17: B1ms $0.017/hour × 730 = $12.41; 32 GiB PostgreSQL storage × $0.115 = $3.68; Basic ACR $0.1666/day ≈ $5.07/month. Allow roughly $4–6 for private DNS/public IPv4 and incidental networking, subject to actual metering. A low-traffic scale-to-zero setup is roughly **$25–30/month before student/free-service benefits**, excluding outbound bandwidth, excess backup and build consumption. If the PostgreSQL free allowance applies, roughly **$9–14/month** remains. Budget conservatively and check actual usage.
+## GitHub deployment
 
-ACA monthly grant: 180,000 vCPU-seconds, 360,000 GiB-seconds, 2 million requests shared across this subscription. Active rates: $0.000024/vCPU-second and $0.000003/GiB-second; requests beyond grant $0.40/million. A continuously active 0.5 vCPU / 1 GiB web replica costs about **$34/month after compute grants**, plus jobs and infrastructure. The three schedules launch 33 times/day; at 240 seconds each they consume about 118,800 vCPU-seconds and 237,600 GiB-seconds in 30 days, sharing that grant. Budget around **$60–70/month** for sustained activity, more with egress or other services. $100 student credit does not guarantee a year of operation. Budget alerts (for example $10/$25/$50) are alerts, not spending caps. Keep the student spending limit enabled.
+`.github/workflows/azure-deploy.yml` deploys `aidanshamte/Mnemba-Tips` main. It runs existing regression tests and Azure TypeScript checks, builds/pushes an image tagged with the full Git commit, updates the web and all three jobs, then checks real public HTTPS/database routes and uploads the verification artifact. Documentation-only commits do not redeploy.
 
-Sources: [Retail Prices API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices), [Container Apps pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/), [PostgreSQL pricing](https://azure.microsoft.com/en-us/pricing/details/postgresql/flexible-server/), [scheduled jobs](https://learn.microsoft.com/en-us/azure/container-apps/jobs).
+Authentication uses GitHub OIDC and the user-assigned identity `mnemba-github`; no Azure client secret is stored in GitHub. Client ID: `10f69bfd-aa0b-4ea2-b8ed-1bb43d81c7e7`; tenant: `14b1677f-3a8b-4ca5-b3ce-50d76ab2e4b9`. The federated subject is the repository's actual enhanced subject: `repo:aidanshamte@107291645/Mnemba-Tips@1365963153:ref:refs/heads/main`, issuer `https://token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange`.
+
+Permissions are scoped to existing resources: AcrPush on the registry; Container Apps Contributor on `mnemba-web`; Container Apps Jobs Contributor on each update job. The web-app contributor role does not include job deployment permissions. No resource-group-wide contributor access is necessary. This session's GitHub token cannot administer Actions settings or rerun runs; normal pushes trigger the workflow.
+
+## Cost and account actions
+
+Retail prices checked for West US: PostgreSQL B1ms USD 0.022/hour (~16.06/month at 730 hours), 32 GiB storage at USD 0.138/GiB/month (~4.42), ACR Basic ~5.07/month. Allow about USD 4–6 for private networking/DNS, backups and small ancillary usage. Low-traffic estimate: **USD 30–32/month before PostgreSQL student free-service benefits**, or roughly **USD 9–12/month if that benefit applies**. Traffic, egress, logging and execution time can raise this estimate; taxes are excluded.
+
+Container Apps has a shared monthly free allowance of 180,000 vCPU-seconds, 360,000 GiB-seconds and two million requests. At 240 seconds each, 33 daily scheduled runs consume about 118,800 vCPU-seconds and 237,600 GiB-seconds per 30 days; web usage shares the remaining allowance. An always-active single web replica plus jobs can bring the total to roughly USD 65–70/month before PostgreSQL benefits. Scale-to-zero reduces idle cost but introduces cold starts.
+
+The verified USD 100 credit covers the current limited deployment, not an unconditional year of hosting. At USD 30–32/month it lasts roughly three months. The USD 10 budget sends alerts; it is not a hard cap. The student subscription's spending limit prevents billing beyond its credit while enabled. Confirm PostgreSQL benefit application and review Azure Cost Analysis once metering arrives; do not upgrade to pay-as-you-go automatically.
+
+Official references: [Azure for Students](https://azure.microsoft.com/en-us/free/students/), [Container Apps pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/), [retail price API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices), [managed custom-domain certificates](https://learn.microsoft.com/en-us/azure/container-apps/custom-domains-managed-certificates).
+
+Namecheap account access is required to enter [these exact records](DNS_SETTINGS.md). Once DNS points to Azure, bind both hostnames and provision managed certificates, then verify HTTPS, redirects, database reads, images and jobs. Keep Cloudflare deployed throughout. A working Azure-generated certificate does not prove custom-domain HTTPS.
