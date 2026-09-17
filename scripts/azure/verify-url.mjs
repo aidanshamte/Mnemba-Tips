@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 const origin = process.argv[2];
 const url = new URL(origin);
-if (!(url.protocol === 'https:' && url.hostname.endsWith('.azurecontainerapps.io')) && !['localhost','127.0.0.1'].includes(url.hostname))
-  throw new Error('Use the Azure-generated HTTPS URL or loopback rehearsal URL');
+if (!(url.protocol === 'https:' && (url.hostname.endsWith('.azurecontainerapps.io') || url.hostname === 'aidanshamte.me')) && !['localhost','127.0.0.1'].includes(url.hostname))
+  throw new Error('Use the Azure-generated or canonical domain HTTPS URL, or loopback rehearsal URL');
 const evidence = { origin: url.origin, checkedAt: new Date().toISOString(), checks: [] };
 async function check(path, status=200) {
   const response = await fetch(url.origin+path, { signal: AbortSignal.timeout(90000), redirect:'manual' });

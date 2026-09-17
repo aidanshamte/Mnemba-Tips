@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPool, postgresDatabase, translateSQL } from '../../lib/azure/postgres.mjs';
+import { SourceHttp } from '../../lib/football/http.mjs';
 import { Store } from '../../lib/football/store.mjs';
 import { IntelligenceService } from '../../lib/football/intelligence.mjs';
 import { runScheduled, CRON_JOBS } from '../../lib/football/scheduled.mjs';
@@ -37,6 +38,20 @@ test('PostgreSQL migrated data, public reads, immutable history, transactions an
       await assert.rejects(quotaStore.reserve('live'), /allocation exhausted/);
     } finally {
       await db.prepare('DELETE FROM api_request_usage WHERE day=?').bind('2099-01-01').run();
+    }
+    // Exercise the real source HTTP budget upsert, including its conflict path.
+    const sourceBefore = await store.one('SELECT last_attempt,next_allowed_at,last_error FROM source_registry WHERE id=?', 'openfootball');
+    let requests = 0;
+    const http = new SourceHttp(quotaStore, {}, { fetcher: async () => { requests++; return new Response('', {status:404}); }, sleep: async () => {} });
+    try {
+      for (let i=0; i<3; i++) await http.request('openfootball','https://api.github.com/mnemba-budget-regression');
+      assert.equal((await quotaStore.one('SELECT used FROM source_request_usage WHERE source_id=? AND day=?','openfootball','2099-01-01')).used,3);
+      await quotaStore.run('UPDATE source_request_usage SET used=250 WHERE source_id=? AND day=?','openfootball','2099-01-01');
+      await assert.rejects(http.request('openfootball','https://api.github.com/mnemba-budget-regression'), /budget exhausted/);
+      assert.equal(requests,3,'Exhausted source budget must prevent a network request');
+    } finally {
+      await quotaStore.run('DELETE FROM source_request_usage WHERE source_id=? AND day=?','openfootball','2099-01-01');
+      await quotaStore.run('UPDATE source_registry SET last_attempt=?,next_allowed_at=?,last_error=? WHERE id=?',sourceBefore.last_attempt,sourceBefore.next_allowed_at,sourceBefore.last_error,'openfootball');
     }
     // Provider calls are stubbed; the real scheduler writes and leases use PostgreSQL.
     for (const cron of Object.keys(CRON_JOBS)) {
