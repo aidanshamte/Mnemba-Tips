@@ -1,6 +1,7 @@
+import {assertLocalOrigin} from './runtime-mode.mjs';
 // One worker process must own the local SQLite files. Prefer the active preview.
 export async function localOrigin(){
- if(process.env.MNEMBA_ORIGIN)return process.env.MNEMBA_ORIGIN;
+ if(process.env.MNEMBA_ORIGIN)return assertLocalOrigin(process.env.MNEMBA_ORIGIN);
  for(const origin of ['http://127.0.0.1:5173','http://localhost:5173','http://127.0.0.1:8787']){
   try{const r=await fetch(origin+'/api/health',{signal:AbortSignal.timeout(10000)});const data=await r.json();if(r.ok&&Array.isArray(data.sports)&&data.sports.includes('soccer'))return origin;}catch{}
  }

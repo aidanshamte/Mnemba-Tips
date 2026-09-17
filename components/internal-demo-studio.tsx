@@ -19,9 +19,9 @@ function ProbabilityBar({ label, value, accent }: { label: string; value: number
   return <div className="probability-row"><div><span>{label}</span><strong>{value}%</strong></div><div className="track"><span className={accent ? "accent" : ""} style={{ width: `${value}%` }} /></div></div>;
 }
 
-export default function Home() {
-  const [sport, setSport] = useState<Sport>("soccer");
-  const [selectedId, setSelectedId] = useState("ars-mci");
+export default function Home({initialSport = "soccer"}: {initialSport?: Sport}) {
+  const [sport, setSport] = useState<Sport>(initialSport);
+  const [selectedId, setSelectedId] = useState(matchups.find((m: any) => m.sport === initialSport)!.id);
   const [query, setQuery] = useState("");
   const filtered = matchups.filter((m: any) => m.sport === sport && `${m.home.name} ${m.away.name}`.toLowerCase().includes(query.toLowerCase()));
   const match: any = matchups.find((m: any) => m.id === selectedId && m.sport === sport) || filtered[0] || matchups.find((m: any) => m.sport === sport);
@@ -82,7 +82,7 @@ export default function Home() {
           <button role="tab" aria-selected={sport === "basketball"} className={sport === "basketball" ? "selected" : ""} onClick={() => changeSport("basketball")}><Circle size={17} /> Basketball</button>
         </div>
 
-        <p role="note" style={{padding:16,background:"#f5be45",color:"#10233d",fontWeight:800}}>Demo Data ? Model scenarios for football and basketball. These are not live fixtures.</p><section className="match-picker">
+        <p role="note" style={{padding:16,background:"#f5be45",color:"#10233d",fontWeight:800}}>Demo data · Model scenarios for football and basketball. These are not live fixtures.</p><section className="match-picker">
           <div className="search"><Search size={17} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search a team" aria-label="Search a team" /></div>
           <div className="match-tabs">
             {filtered.map((item: any) => <button key={item.id} className={item.id === match.id ? "active" : ""} onClick={() => setSelectedId(item.id)}><span>{item.home.short}</span><em>vs</em><span>{item.away.short}</span></button>)}

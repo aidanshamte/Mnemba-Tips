@@ -1,0 +1,52 @@
+import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+const origin = process.argv[2];
+const url = new URL(origin);
+if (!(url.protocol==='https:' && url.hostname.endsWith('.azurecontainerapps.io')) && !['localhost','127.0.0.1'].includes(url.hostname)) throw new Error('Expected Azure-generated URL or loopback');
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
+const browser = await chromium.launch({headless:true,env:process.env});
+const output = process.env.MNEMBA_BROWSER_OUTPUT ?? '.sites-runtime/azure-migration/browser';mkdirSync(output,{recursive:true});
+const errors=[],evidence={origin,checks:[]};
+const overviewResponse=await fetch(origin+'/api/intelligence?view=overview');assert.equal(overviewResponse.status,200);
+const overview=await overviewResponse.json(),fixture=[...(overview.results??[]),...(overview.upcoming??[])][0],article=overview.news?.[0];
+assert.ok(fixture&&article,'Persisted match and news required');
+const {routeToken}=await import('../../lib/football/consumer.mjs');
+try {
+ for(const width of [1440,390]) {
+  const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage();
+  page.on('pageerror',error=>errors.push(error.message));
+  page.on('response',response=>{if(response.url().startsWith(origin+'/api/')&&response.status()>=400)errors.push(response.status()+' '+new URL(response.url()).pathname);});
+  // Exercise persisted data; external media failures must use the existing fallbacks.
+  for(const path of ['/football','/football?tab=Fixtures','/football/search?kind=team&q=Arsenal','/football/search?kind=player&q=Messi','/football/predictions','/football/shortlists','/football/match/'+encodeURIComponent(fixture.id),'/football/news/'+routeToken(article.id)]) {
+   const response=await page.goto(origin+path,{waitUntil:'networkidle',timeout:90000});assert.equal(response.status(),200);
+   await page.locator('h1').first().waitFor();
+   if(path==='/football') { await page.getByRole('status').filter({hasText:'covered matches'}).waitFor({timeout:60000}); await page.locator('.broadcast-action[href*="/match/"]').waitFor({timeout:60000}); }
+   if(path.includes('/news/'))await page.getByRole('heading',{name:'What happened',exact:true}).waitFor();
+   if(path.includes('/match/'))await page.locator('.match-score').waitFor();
+   if(path.includes('search?'))await page.locator('a[role=option]').first().waitFor();
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Overflow '+path);
+   const filename=`${width}-${evidence.checks.length}.png`;await page.screenshot({path:output+'/'+filename,fullPage:false});evidence.checks.push({width,path,screenshot:filename});
+  }
+  await page.goto(origin+'/football/search?kind=team&q=Arsenal',{waitUntil:'networkidle'});
+  await page.locator('a[role=option]').first().click();await page.locator('h1').first().waitFor();assert.match(page.url(),/\/football\/team\//);
+  await page.goto(origin+'/football/search?kind=player&q=Messi',{waitUntil:'networkidle'});
+  await page.locator('a[role=option]').first().click();await page.getByRole('heading',{name:'Club association history'}).waitFor();
+  const portrait = page.locator('.entity-portrait, .player-portrait, .entity-avatar').first();
+  evidence.checks.push({width,path:new URL(page.url()).pathname,playerProfile:true});
+  await page.goto(origin+'/basketball',{waitUntil:'networkidle'});
+  await page.getByRole('tab',{name:'Basketball',exact:true}).waitFor();
+  assert.equal(await page.getByRole('tab',{name:'Basketball',exact:true}).getAttribute('aria-selected'),'true');
+  await page.getByText('Boston Celtics',{exact:true}).first().waitFor();
+  assert.match(await page.getByRole('note').innerText(),/Demo data/);
+  await page.locator('.match-tabs button').filter({hasText:'DEN'}).click();
+  await page.getByText('Denver Nuggets',{exact:true}).first().waitFor();
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Basketball mobile overflow');
+  await page.screenshot({path:output+'/'+width+'-basketball.png'});
+  evidence.checks.push({width,path:'/basketball',demo:true});
+  await page.goto(origin+'/lab',{waitUntil:'networkidle'});assert.ok(page.url().endsWith('/football'));
+  await context.close();
+ }
+ assert.deepEqual(errors,[]);
+ evidence.basketball='Existing model scenarios restored at /basketball; demo label, selection and responsive layout verified. No live basketball feed is claimed.';
+ writeFileSync(output+'/evidence.json',JSON.stringify(evidence,null,2));console.log('PASS desktop/mobile football, fixtures, search, match, history, news, player profiles, basketball scenarios and legacy lab redirect');
+} finally {await browser.close();}

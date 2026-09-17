@@ -1,0 +1,20 @@
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1 MNEMBA_TARGET=azure
+RUN npm run build:azure
+
+FROM node:24-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 MNEMBA_TARGET=azure MNEMBA_SCHEMA_MANAGED=1 MNEMBA_ENABLE_UPDATES=0
+COPY --from=build --chown=node:node /app/.next-azure/standalone ./
+COPY --from=build --chown=node:node /app/.next-azure/static ./.next-azure/static
+COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/lib ./lib
+COPY --from=build --chown=node:node /app/config ./config
+COPY --from=build --chown=node:node /app/scripts/azure ./scripts/azure
+USER node
+EXPOSE 3000
+CMD ["node", "server.js"]

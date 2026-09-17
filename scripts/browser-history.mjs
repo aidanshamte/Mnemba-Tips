@@ -1,9 +1,11 @@
+import {assertLocalOrigin,runtimeMode} from './runtime-mode.mjs';
 import assert from 'node:assert/strict';
 import {mkdirSync,existsSync} from 'node:fs';
 import {resolve,delimiter} from 'node:path';
 import {pathToFileURL} from 'node:url';
 let driver;try{driver=await import('playwright');}catch{const entry=(process.env.PATH??'').split(delimiter).map(p=>resolve(p,'../playwright/index.mjs')).find(existsSync);if(!entry)throw Error('Run with the pinned Playwright package');driver=await import(pathToFileURL(entry).href);}
 const origin=process.env.MNEMBA_ORIGIN??'http://localhost:5173';
+if(runtimeMode()==='local')assertLocalOrigin(origin);
 const libraries=resolve('.sites-runtime/browser-libs/root/usr/lib/x86_64-linux-gnu');
 const browser=await driver.chromium.launch({headless:true,env:{...process.env,LD_LIBRARY_PATH:libraries}});
 mkdirSync('outputs/history',{recursive:true});

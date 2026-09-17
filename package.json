@@ -23,8 +23,13 @@
     "tasks:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-tasks.ps1",
     "schedule": "node scripts/schedule-local.mjs",
     "import:priority": "node scripts/import-priority.mjs",
-    "db:migrate:production": "wrangler d1 migrations apply mnemba-tips-db --remote --config wrangler.jsonc",
-    "deploy:production": "wrangler deploy --config dist/server/wrangler.json"
+    "db:migrate:production": "node scripts/remote-operation.mjs migrate",
+    "deploy:production": "node scripts/remote-operation.mjs deploy",
+    "media:enrich": "node scripts/update-local.mjs media",
+    "build:azure": "MNEMBA_TARGET=azure next build --webpack",
+    "start:azure": "node .next-azure/standalone/server.js",
+    "test:azure": "node --test tests/azure/*.test.mjs",
+    "azure:job": "node scripts/azure/job.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -40,6 +45,7 @@
     "lucide-react": "^1.31.0",
     "next": "16.2.6",
     "next-themes": "^0.4.6",
+    "pg": "^8.16.3",
     "radix-ui": "^1.6.7",
     "react": "19.2.6",
     "react-day-picker": "^10.0.1",

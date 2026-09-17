@@ -1,3 +1,4 @@
+import {runtimeMode} from "./scripts/runtime-mode.mjs";
 import vinext from "vinext";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
@@ -37,6 +38,15 @@ export default defineConfig(async () => {
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         configPath: "./wrangler.jsonc",
+        remoteBindings: false,
+        persistState: {path: ".wrangler/state"},
+        config: config => {
+          if(runtimeMode()==="local") {
+            config.d1_databases=[{binding:"DB",database_name:"site-creator-d1",database_id:"00000000-0000-4000-8000-000000000000",remote:false,migrations_dir:"./drizzle"}];
+            config.vars={...config.vars,MNEMBA_RUNTIME_MODE:"local",MNEMBA_SCHEMA_MANAGED:"0"};
+            config.triggers={crons:[]};
+          }
+        },
       }),
     ],
   };

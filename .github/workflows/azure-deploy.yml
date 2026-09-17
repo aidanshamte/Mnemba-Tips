@@ -1,0 +1,57 @@
+name: Deploy Mnemba Tips to Azure
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**/*.md"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: mnemba-azure-production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AZURE_RESOURCE_GROUP: mnemba-azure
+      AZURE_ACR: mnembab55deec1
+      AZURE_ACR_HOST: mnembab55deec1.azurecr.io
+      AZURE_APP: mnemba-web
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Regression tests and type checks
+        run: |
+          node --test tests/unit/*.test.mjs tests/system/*.test.mjs
+          npx tsc --noEmit -p tsconfig.azure.json
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: 10f69bfd-aa0b-4ea2-b8ed-1bb43d81c7e7
+          tenant-id: 14b1677f-3a8b-4ca5-b3ce-50d76ab2e4b9
+          subscription-id: b55deec1-aecc-443f-8d1c-3401a8a6d190
+      - name: Build and push immutable commit image
+        run: |
+          az acr login --name "$AZURE_ACR"
+          docker build -f Dockerfile.azure -t "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" .
+          docker push "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA"
+      - name: Deploy and verify production reads
+        run: |
+          az containerapp update -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --image "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" --output none
+          for job in mnemba-update-0 mnemba-update-1 mnemba-update-2; do
+            az containerapp job update -g "$AZURE_RESOURCE_GROUP" -n "$job" --image "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" --output none
+          done
+          fqdn=$(az containerapp show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query properties.configuration.ingress.fqdn -o tsv)
+          mkdir -p .sites-runtime/azure-migration
+          node scripts/azure/verify-url.mjs "https://$fqdn" .sites-runtime/azure-migration/ci-verification.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: azure-verification
+          path: .sites-runtime/azure-migration/ci-verification.json
+          if-no-files-found: ignore

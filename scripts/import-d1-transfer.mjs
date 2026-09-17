@@ -1,3 +1,5 @@
+import {assertRemoteAllowed} from './runtime-mode.mjs';
+assertRemoteAllowed();
 import {readFileSync,writeFileSync,existsSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {spawnSync} from 'node:child_process';

@@ -10,7 +10,7 @@ const log=event=>{const line=JSON.stringify({at:new Date().toISOString(),...even
 let owner=false;
 try{writeFileSync(lease,String(process.pid),{flag:'wx'});owner=true;}catch{const pid=Number(readFileSync(lease,'utf8'));try{process.kill(pid,0);throw Error('Scheduler already running');}catch(e){if(e.code!=='ESRCH')throw e;}unlinkSync(lease);writeFileSync(lease,String(process.pid),{flag:'wx'});owner=true;}
 let stopped=false;const stop=()=>{stopped=true;};process.on('SIGINT',stop);process.on('SIGTERM',stop);
-const jobs=['fixtures','results','models','snapshots','news','video-news','retention','search-index'];
+const jobs=['fixtures','results','models','snapshots','news','video-news','media','media-news','retention','search-index'];
 try{do{
  try{
   const state=existsSync(stateFile)?JSON.parse(readFileSync(stateFile,'utf8')):{};

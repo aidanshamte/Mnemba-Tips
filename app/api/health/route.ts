@@ -9,5 +9,5 @@ export async function GET() {
   } catch {
     database = "unavailable";
   }
-  return Response.json({ status: database === "ready" ? "ok" : "degraded", model: "pitchpredict-v3", database, sports: ["soccer", "basketball"] }, { status: database === "ready" ? 200 : 503 });
+  return Response.json({ status: database === "ready" ? "ok" : "degraded", model: "pitchpredict-v3", mode: env.MNEMBA_RUNTIME_MODE === "local" ? "local" : "production", database, sports: ["soccer", "basketball"] }, { status: database === "ready" ? 200 : 503 });
 }

@@ -21,7 +21,7 @@ assert.equal(real.fixture.lifecycle.state,'scheduled');assert.ok(real.analysis.p
 const errors=[];
 try{
  const context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
- await page.goto(origin+'/football/match/'+encodeURIComponent(id));await page.getByRole('heading',{name:/Prediction center/}).waitFor();await page.getByText('Kickoff time to be confirmed.',{exact:false}).first().waitFor();await page.screenshot({path:'outputs/lifecycle/real-liverpool-desktop.png'});
+ await page.goto(origin+'/football/match/'+encodeURIComponent(id));await page.getByRole('heading',{name:/Match prediction/}).waitFor();await page.getByText('Kickoff time to be confirmed.',{exact:false}).first().waitFor();await page.screenshot({path:'outputs/lifecycle/real-liverpool-desktop.png'});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'outputs/lifecycle/real-liverpool-mobile.png',fullPage:true});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  await page.goto(origin+'/football/predictions');await page.getByRole('heading',{name:'Prediction history',exact:true}).first().waitFor();await page.screenshot({path:'outputs/lifecycle/history-mobile.png'});
  const fixture=structuredClone(real);fixture.fixture.home.name='TEST ONLY · Home';fixture.fixture.away.name='TEST ONLY · Away';fixture.fixture.kickoffPrecision='instant';fixture.fixture.startsAt=Date.parse('2026-09-12T18:00:00Z');fixture.analysis.trackingNote='Deterministic browser test only. No database records written.';
@@ -31,7 +31,7 @@ try{
  for(const [status,label] of [['NS','Scheduled'],['1H','In progress'],['FT','Completed']]){
   fixture.fixture.status=status;fixture.fixture.label=label;fixture.fixture.homeScore=status==='NS'?null:2;fixture.fixture.awayScore=status==='NS'?null:1;
   if(status==='FT'){version.gradeState='graded';version.gradeReason='Verified regulation-time result';version.grade={homeScore:2,awayScore:1,resultCorrect:true,exactScoreCorrect:false};}
-  await page.goto(origin+'/football/match/test-only');await page.getByRole('heading',{name:/Prediction center/}).waitFor();await page.getByText('Home 50.0% · Draw 30.0% · Away 20.0%',{exact:true}).waitFor();if(status==='FT')await page.getByText('Exact score: incorrect',{exact:false}).waitFor();await page.screenshot({path:'outputs/lifecycle/test-'+status+'.png',fullPage:true});
+  await page.goto(origin+'/football/match/test-only');await page.getByRole('heading',{name:/Match prediction/}).waitFor();await page.getByText('Saved predictions and results',{exact:true}).click();await page.getByText('Home 50.0% · Draw 30.0% · Away 20.0%',{exact:true}).waitFor();if(status==='FT')await page.getByText('Exact score: incorrect',{exact:false}).waitFor();await page.screenshot({path:'outputs/lifecycle/test-'+status+'.png',fullPage:true});
  }
  assert.deepEqual(errors,[]);console.log(JSON.stringify({realScheduledMatch:id,realProbabilityAvailable:true,simulatedLifecycle:['scheduled','live','completed'],retainedForecast:'test-original',databaseTestWrites:0,pageErrors:errors}));
 }finally{await browser.close();}

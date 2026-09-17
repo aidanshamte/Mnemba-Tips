@@ -1,3 +1,4 @@
+import {announceLocal} from './runtime-mode.mjs';
 import {rejectOtherServer,acquireServerLease} from './local-origin.mjs';
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -6,7 +7,7 @@ import { readExecutionProfile } from "./execution-profile.mjs";
 const [command, ...forwardedArgs] = process.argv.slice(2);
 const args=forwardedArgs.filter(arg=>arg!=='--');
 if (!["dev", "build"].includes(command)) throw new Error("Expected dev or build.");
-if(command==='dev'){await rejectOtherServer(8787);await acquireServerLease('http://localhost:5173');}
+if(command==='dev'){announceLocal();await rejectOtherServer(8787);await acquireServerLease('http://localhost:5173');}
 const managedLinux = readExecutionProfile() === "managed-linux";
 // Vinext follows Next's --hostname spelling; Vite uses --host.
 if (!managedLinux) {

@@ -19,10 +19,10 @@ export async function GET(request: Request) {
   try {
     const params = new URL(request.url).searchParams;
     if (!publicViews.has(params.get('view') ?? 'fixtures') && !internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN)) return Response.json({ error: 'Diagnostics are local-only' }, { status: 403 });
-    return await publicResponse(request, async()=>{const {ready,instance}=service(true);await ready;return instance.read(params);}, process.env.NODE_ENV==='production'&&publicViews.has(params.get('view')??'fixtures')?(caches as unknown as {default:Cache}).default:null);
+    return await publicResponse(request, async()=>{const {ready,instance}=service(true);await ready;return instance.read(params);}, process.env.NODE_ENV==='production'&&publicViews.has(params.get('view')??'fixtures')&&typeof caches!=='undefined'?(caches as unknown as {default:Cache}).default:null);
   } catch { return Response.json({ error: 'Football data is unavailable. Check the local database and diagnostics.' }, { status: 503 }); }
 }
-export async function POST(request: Request) {
+export async function POST(request: Request) {if ((env as unknown as Record<string,unknown>).MNEMBA_RUNTIME_MODE === 'azure' && (env as unknown as Record<string,unknown>).MNEMBA_ENABLE_UPDATES !== '1') return Response.json({error:'Updates are disabled during migration verification'},{status:503});
   if (!internalAccess(request,(env as unknown as Record<string,unknown>).MNEMBA_INTERNAL_TOKEN) || request.headers.get('content-type') !== 'application/json') return Response.json({ error: 'Synchronization requires a same-origin local request' }, { status: 403 });
   try {
     const body = await request.json() as Record<string, unknown>;
