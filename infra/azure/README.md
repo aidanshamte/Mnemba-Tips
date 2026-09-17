@@ -1,6 +1,6 @@
 # Mnemba Tips on Azure
 
-The existing application is deployed to [the Azure-generated HTTPS URL](https://mnemba-web.livelybush-738e4ce5.westus.azurecontainerapps.io). Cloudflare remains deployed. See [the verification report](../../AZURE_MIGRATION_REPORT.md), [baseline record counts](MIGRATION_COUNTS.md), and [exact Namecheap records](DNS_SETTINGS.md). Custom-domain verification is separate from the working generated URL.
+The existing application is deployed to [the Azure-generated HTTPS URL](https://mnemba-web.livelybush-738e4ce5.westus.azurecontainerapps.io). Cloudflare remains deployed. See [the verification report](../../AZURE_MIGRATION_REPORT.md), [baseline record counts](MIGRATION_COUNTS.md), and [exact Namecheap records](DNS_SETTINGS.md). Both `aidanshamte.me` and `www.aidanshamte.me` now have verified Azure-managed HTTPS; www redirects to the apex.
 
 ## Account and infrastructure
 
@@ -22,7 +22,7 @@ Subscription `b55deec1-aecc-443f-8d1c-3401a8a6d190` is Azure for Students, Enabl
 | Logs | `mnemba-logs`, 30-day retention, 0.1 GB daily ingestion cap |
 | Budget | `mnemba-monthly`, USD 10/month; actual 50%/100% and forecast 100% alerts to `aidan.shamte@student.fairfield.edu` |
 
-`main.bicep` defines foundation and runtime. Secrets and instantiated parameters are ignored files under `.sites-runtime/azure-migration/`, never source control. Start a new environment with `deployRuntime=false`; push an image, import and verify the data, then deploy runtime. `enableUpdates=false` is the safe staging default. Do not blindly redeploy defaults over the verified environment or overwrite its secrets/image. The separate import job uses administrator access only for migration; the web and scheduled jobs use the limited runtime role. Immutable history triggers remain enforced.
+`main.bicep` defines foundation and runtime. Secrets and instantiated parameters are ignored files under `.sites-runtime/azure-migration/`, never source control. Start a new environment with `deployRuntime=false`; push an image, import and verify the data, then deploy runtime. `enableUpdates=false` is the safe staging default. Do not blindly redeploy defaults over the verified environment or overwrite its secrets/image. The managed hostname bindings were configured after DNS verification with the commands in DNS_SETTINGS.md; a future foundation/ingress redeployment must preserve or reapply those bindings. Normal GitHub image deployments preserve them. The separate import job uses administrator access only for migration; the web and scheduled jobs use the limited runtime role. Immutable history triggers remain enforced.
 
 ## Runtime and data
 
@@ -64,4 +64,4 @@ The verified USD 100 credit covers the current limited deployment, not an uncond
 
 Official references: [Azure for Students](https://azure.microsoft.com/en-us/free/students/), [Container Apps pricing](https://azure.microsoft.com/en-us/pricing/details/container-apps/), [retail price API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices), [managed custom-domain certificates](https://learn.microsoft.com/en-us/azure/container-apps/custom-domains-managed-certificates).
 
-Namecheap account access is required to enter [these exact records](DNS_SETTINGS.md). Once DNS points to Azure, bind both hostnames and provision managed certificates, then verify HTTPS, redirects, database reads, images and jobs. Keep Cloudflare deployed throughout. A working Azure-generated certificate does not prove custom-domain HTTPS.
+The user entered [these exact Namecheap records](DNS_SETTINGS.md); both Azure-managed certificates, hostname bindings, HTTPS redirects and real-domain browser journeys have now been verified. No Namecheap certificate upload or further DNS action is required. Keep the working Cloudflare deployment as the requested fallback. See the report before any later retirement or D1 delta reconciliation.

@@ -1,6 +1,6 @@
 # Namecheap DNS settings — verified Azure target
 
-Azure HTTPS and desktop/mobile journeys passed before these records were proposed. No DNS changes have been made by this workspace. Current nameservers: `dns1.registrar-servers.com` and `dns2.registrar-servers.com`.
+Azure HTTPS and desktop/mobile journeys passed before these records were proposed. The user has now saved all four records; public DNS was verified on September 17 at approximately 10:42 UTC. Both Azure-managed certificates and bindings succeeded. Strict TLS and redirects were verified at 10:50 UTC, and desktop/mobile journeys passed on the real domain. Current nameservers: `dns1.registrar-servers.com` and `dns2.registrar-servers.com`.
 
 In Namecheap → Domain List → aidanshamte.me → Manage → Advanced DNS:
 
@@ -13,9 +13,9 @@ In Namecheap → Domain List → aidanshamte.me → Manage → Advanced DNS:
 
 Replace the old GitHub Pages A records at @ and any conflicting www record. Preserve MX, SPF, DKIM and other unrelated records. If CAA records exist, verify they permit Azure's managed-certificate issuer before changing them.
 
-After DNS resolves to Azure, bind both hostnames to `mnemba-web` and issue Azure-managed certificates for each. Do not upload the Namecheap certificate unless managed issuance proves unavailable. The Azure-generated certificate does not cover these custom hostnames. Until binding/issuance completes, custom-domain HTTPS is not verified.
+Both hostnames are bound to `mnemba-web` with `SniEnabled`. Apex certificate: `mc-mnemba-env-aidanshamte-me-9187`; www certificate: `mnemba-www-managed`. Both are Azure-managed DigiCert/GeoTrust certificates, currently expiring March 17, 2027. TLS 1.3 and hostname validation passed. The Namecheap certificate was not uploaded.
 
-The app redirects www to `https://aidanshamte.me` with a permanent redirect. Verify both hostnames, HTTP-to-HTTPS, football fixtures/search/matches/history/news/images, basketball scenarios and scheduler results after certificate issuance. Keep the Cloudflare Worker available until these checks pass.
+Verified redirects: HTTP apex/www → the same HTTPS host/path (301); HTTPS www → `https://aidanshamte.me` with the same path/query (308). The real-domain football fixtures/search/matches/history/news/images and basketball browser journeys passed at desktop/mobile widths. Cloudflare remains available as the requested fallback.
 
 Azure-generated URL: https://mnemba-web.livelybush-738e4ce5.westus.azurecontainerapps.io
 
@@ -31,7 +31,7 @@ If Host Records is absent, inspect the **Domain** tab's Nameservers setting and 
 
 ## Azure steps after DNS propagation
 
-These commands are prepared, **not executed**. Both hostnames are currently unbound. After checking public A/CNAME/TXT answers, run:
+Both hostnames and certificates are now bound and verified. These are the reproducible commands for future maintenance; no further execution is needed now:
 
 ```bash
 az containerapp hostname add -g mnemba-azure -n mnemba-web --hostname aidanshamte.me
@@ -42,4 +42,4 @@ az containerapp hostname bind -g mnemba-azure -n mnemba-web --hostname www.aidan
 
 Keep the app available during issuance and verify certificate state plus normal HTTPS requests to both hosts. No CAA records were returned by the September 17 DNS check. If CAA records are added later, Azure's managed certificate requires DigiCert authorization (`0 issue digicert.com`). See [Azure's managed-certificate requirements](https://learn.microsoft.com/en-us/azure/container-apps/custom-domains-managed-certificates).
 
-Then run `node scripts/azure/verify-url.mjs https://aidanshamte.me`, repeat the browser journeys against the canonical domain, and verify `www` redirects to the apex with valid HTTPS on both hops. Preserve Cloudflare and its data pending final delta reconciliation and explicit retirement verification.
+Verification completed with `node scripts/azure/verify-url.mjs https://aidanshamte.me`, the full canonical-domain browser suite, and independent certificate/redirect checks on both hosts. Evidence is in `.sites-runtime/azure-migration/domain-http.json`, `domain-tls.json`, and `browser-domain/evidence.json`. Preserve Cloudflare and its data; any later retirement requires final delta reconciliation and verification.
