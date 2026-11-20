@@ -415,3 +415,24 @@
 .intel .prediction-center ul{margin:var(--mt-space-sm) 0;padding-left:var(--mt-space-xl);font-size:16px;line-height:24px}
 .mt-risk{display:flex;align-items:center;flex-wrap:wrap;gap:var(--mt-space-md);color:var(--mt-color-text-secondary)}
 @media (max-width:767px){.intel .intel-stats strong{font-size:24px;line-height:28px}}
+
+/* ============================== Screens: history, picks, profiles, article ============================== */
+/* History filters use the shared chip treatment (Figma: Filter chip) */
+.intel .history-filters>button{min-height:44px;padding:var(--mt-space-sm) var(--mt-space-lg);border-radius:var(--mt-radius-full);border:var(--mt-border-width-hairline) solid var(--mt-color-border-default);background:var(--mt-color-surface-default);color:var(--mt-color-text-primary);font:500 14px/20px var(--mt-font-ui);cursor:pointer}
+.intel .history-filters>button:hover{border-color:var(--mt-color-border-strong)}
+.intel .history-filters>button[aria-pressed=true]{background:var(--mt-color-action-subtle);border-color:var(--mt-color-action-football);color:var(--mt-color-action-football);font-weight:600}
+.intel .history-filters>button:focus-visible{outline:none;box-shadow:var(--mt-focus-ring)}
+/* Profile hero: portrait caption sits on navy */
+.intel .match-hero .portrait-wrap>small{color:var(--mt-color-text-inverse-secondary)}
+.intel .match-hero>span:first-child{font:600 12px/16px var(--mt-font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--mt-color-text-inverse-secondary)}
+.intel .match-hero h1{color:var(--mt-color-text-inverse);display:flex;align-items:center;flex-wrap:wrap;gap:var(--mt-space-lg);overflow-wrap:anywhere}
+.intel .match-hero a{color:var(--mt-color-text-inverse)}
+/* Article: an unavailable-media frame should not take a full 16:9 hero */
+.intel .article-figure .news-visual:has(.publisher-placeholder){aspect-ratio:auto;height:200px}
+@media (max-width:767px){.intel .article-figure .news-visual:has(.publisher-placeholder){height:160px}}
+/* Profile hero (Figma: Team / Player profile header) — identity image beside the name, never inside the heading */
+.mt-profile-head{display:flex;align-items:center;gap:var(--mt-space-xl);margin:var(--mt-space-lg) 0 var(--mt-space-md);min-width:0}
+.mt-profile-head .portrait-wrap{flex:none}
+.intel .match-hero .mt-profile-head h1{margin:0;font-size:var(--mt-type-display-size,56px);line-height:1.05;min-width:0}
+@media (max-width:767px){.mt-profile-head{gap:var(--mt-space-lg)}.intel .match-hero .mt-profile-head h1{font-size:32px;line-height:36px}}
+.intel .match-center>section>h2{margin:var(--mt-space-2xl) 0 var(--mt-space-md)}
