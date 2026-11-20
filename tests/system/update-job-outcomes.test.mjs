@@ -88,7 +88,7 @@ test('stored status: success sets last_success; empty and degraded runs preserve
   } finally { sqlite.close(); }
 });
 
-test('football-sync lease held: sync defers, scheduler records deferred and stops later jobs', async () => {
+test('football-sync lease held throughout: sync defers, scheduler retries, records deferred and stops later jobs', async () => {
   const {service, store, sqlite, db} = await setup(() => ({events: []}));
   try {
     const holder = await store.lock('football-sync', 600000);
@@ -96,10 +96,27 @@ test('football-sync lease held: sync defers, scheduler records deferred and stop
     const direct = await service.sync('fixtures');
     assert.equal(direct.skipped, 'Another synchronization is running');
     assert.equal(await job(store), null, 'a deferred sync never writes update_jobs');
-    const run = await runScheduled({cron: '0 * * * *', scheduledTime: NOW}, {DB: db}, {now: () => NOW, service});
+    let waits = 0;
+    const run = await runScheduled({cron: '0 * * * *', scheduledTime: NOW}, {DB: db}, {now: () => NOW, service, leaseWait: async () => { waits++; }});
+    assert.equal(waits, 8, 'bounded retries before deferring');
     assert.deepEqual(run.results.map(r => [r.job, r.state]), [['fixtures', 'deferred']]);
     assert.equal(run.state, 'partial');
     assert.equal((await store.one('SELECT state FROM cron_runs WHERE scheduled_at=?', NOW)).state, 'partial');
+  } finally { sqlite.close(); }
+});
+
+test('brief football-sync contention (live worker tick) is waited out and later jobs still run', async () => {
+  const {service, store, sqlite, db} = await setup(() => ({events: []}));
+  try {
+    const holder = await store.lock('football-sync', 600000);
+    let waits = 0;
+    const run = await runScheduled({cron: '0 * * * *', scheduledTime: NOW}, {DB: db}, {now: () => NOW, service,
+      leaseWait: async () => { waits++; if (waits === 1) await store.unlock('football-sync', holder); }});
+    assert.equal(waits, 1);
+    assert.notEqual(run.results[0].state, 'deferred');
+    assert.equal(run.results[0].job, 'fixtures');
+    assert.ok(run.results.length > 1, 'remaining jobs ran after the lease was released');
+    assert.ok(!run.results.some(r => r.state === 'deferred'));
   } finally { sqlite.close(); }
 });
 

@@ -22,10 +22,13 @@ test('push deploys an immutable candidate at 0% traffic and verifies it directly
     assert.ok(!candidate.includes(forbidden), `candidate job must not ${forbidden}`);
 });
 
-test('traffic moves only by explicit stages, jobs move only at 100%, failures roll back', () => {
+test('traffic moves only by explicit atomic cutover, jobs move only at 100%, failures roll back', () => {
   const shift = job('shift-traffic');
   assert.match(shift, /inputs\.action == 'shift-traffic'/);
-  assert.match(shift, /\^\(10\|25\|50\|100\)\$/);
+  // Weighted per-request splits are refused: hashed Next.js chunks exist in only one revision and
+  // Azure offers no sticky sessions in multiple-revision mode.
+  assert.match(shift, /== 100 \]\]/);
+  assert.match(release, /refusing a weighted split/);
   assert.match(shift, /verify-revision\.mjs https:\/\/aidanshamte\.me/);
   assert.match(shift, /if: inputs\.weight == '100'\n\s+run: \|\n[\s\S]*release\.sh jobs/);
   assert.match(shift, /if: failure\(\)[\s\S]*release\.sh rollback/);
