@@ -3,7 +3,11 @@
 #
 #   release.sh prepare                      Multiple-revision mode; pin 100% to the serving revision.
 #   release.sh deploy <image> <suffix>      New revision at 0% traffic, labelled "candidate"; waits until healthy.
-#   release.sh traffic <revision> <weight>  Candidate weight (e.g. 10, 50, 100); the rest stays on the stable revision.
+#   release.sh traffic <revision> 100       Atomic cutover to the verified candidate; the previous revision keeps
+#                                           running at 0% (label "previous") for instant rollback.
+# Weighted splits (e.g. 10/90) are refused: Azure routes each request independently and offers no sticky
+# sessions in multiple-revision mode, so pages from one revision request hashed /_next/static chunks that
+# exist only in that revision (measured 70-95% chunk 404s at a 10% split on 2026-11-20).
 #   release.sh jobs <image>                 Point the existing scheduled jobs at the verified image (no new jobs).
 #   release.sh rollback <revision>          Return 100% of traffic to <revision>.
 #   release.sh status                       Revisions, weights, health and labels.
@@ -50,7 +54,7 @@ case "${1:-}" in
     az containerapp revision label add -g "$RG" -n "$APP" --label candidate --revision "$revision" --yes -o none
     log "candidate $revision at 0% traffic: https://$APP---candidate.$(domain)"; echo "$revision" ;;
   traffic)
-    revision="$2" weight="$3"; stable=$(az containerapp ingress traffic show -g "$RG" -n "$APP" --query "sort_by([?revisionName!=null && revisionName!='$revision' && weight>\`0\`],&weight)[-1].revisionName" -o tsv)
+    revision="$2" weight="$3"; [ "$weight" = 100 ] || [ "${ALLOW_WEIGHTED_SPLIT:-0}" = 1 ] || { log "refusing a weighted split (see header); use 100"; exit 1; }; stable=$(az containerapp ingress traffic show -g "$RG" -n "$APP" --query "sort_by([?revisionName!=null && revisionName!='$revision' && weight>\`0\`],&weight)[-1].revisionName" -o tsv)
     wait_healthy "$revision" || { log "candidate not healthy; traffic unchanged"; exit 1; }
     if [ "$weight" -ge 100 ] || [ -z "$stable" ]; then
       az containerapp ingress traffic set -g "$RG" -n "$APP" --revision-weight "$revision=100" -o none
