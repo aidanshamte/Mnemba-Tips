@@ -299,3 +299,64 @@
   .mt-sheet{width:100vw;height:auto;max-height:90dvh;margin:auto 0 0;border-radius:var(--mt-radius-2xl) var(--mt-radius-2xl) 0 0}
   @keyframes mt-sheet-in{from{transform:translateY(24px);opacity:0}}
 }
+
+/* ============================== Screens: workspace (Home, Fixtures, Leagues, News) ============================== */
+.intel .intel-main{padding:var(--mt-space-xl) var(--mt-layout-margin) var(--mt-space-5xl)}
+@media (min-width:1280px){.intel .intel-main{padding:var(--mt-layout-margin)}}
+.intel .intel-main>*{max-width:var(--mt-layout-content-max);margin-inline:auto}
+@media (min-width:1280px){.intel .intel-main>*{max-width:1080px}}
+
+/* Utility bar (Figma Homepage: search entry + My picks) */
+.mt-utility{display:flex;align-items:center;gap:var(--mt-space-md);margin-bottom:var(--mt-space-xl);flex-wrap:wrap}
+.mt-search-entry{flex:1 1 280px;display:flex;align-items:center;gap:var(--mt-space-md);min-height:48px;padding:var(--mt-space-md) var(--mt-space-lg);border-radius:var(--mt-radius-md);
+  border:var(--mt-border-width-hairline) solid var(--mt-color-border-default);background:var(--mt-color-surface-default);color:var(--mt-color-text-tertiary);text-decoration:none;font:400 16px/24px var(--mt-font-ui);min-width:0}
+.mt-search-entry span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mt-search-entry>svg{color:var(--mt-color-text-secondary);flex:none}
+.mt-search-entry:hover{border-color:var(--mt-color-border-strong)}
+@media (max-width:767px){.mt-utility .mt-btn{flex:1 1 auto}}
+
+/* Matchday panel + range line */
+.matchday-selector{padding:var(--mt-space-xl)}
+.matchday-selector>small{display:block;margin-top:var(--mt-space-sm)}
+.intel-main>p[role=status]{font-size:14px;line-height:20px;color:var(--mt-color-text-secondary);margin:var(--mt-space-md) auto}
+
+/* Fixtures: groups and compact rows (Figma: Compact fixture row) */
+.mt-fixture-groups{display:flex;flex-direction:column;gap:var(--mt-space-xl)}
+.mt-fixture-group{border:var(--mt-border-width-hairline) solid var(--mt-color-border-default);border-radius:var(--mt-radius-lg);background:var(--mt-color-surface-default);box-shadow:var(--mt-shadow-1);overflow:hidden}
+.mt-fixture-group-head{display:flex;align-items:center;justify-content:space-between;gap:var(--mt-space-md);padding:var(--mt-space-md) var(--mt-space-lg);background:var(--mt-color-background-secondary);font:600 18px/24px var(--mt-font-ui)}
+.mt-fixture-group-head small{font-size:12px;font-weight:400;color:var(--mt-color-text-secondary);white-space:nowrap}
+.mt-fixture-row{display:grid;grid-template-columns:150px minmax(0,1fr) 64px minmax(0,1fr) 20px;align-items:center;gap:var(--mt-space-lg);min-height:64px;padding:var(--mt-space-md) var(--mt-space-lg);
+  border-top:var(--mt-border-width-hairline) solid var(--mt-color-border-default);color:var(--mt-color-text-primary);text-decoration:none}
+.mt-fixture-row:hover{background:var(--mt-color-background-primary)}
+.mt-fixture-when{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mt-space-xs);font:600 14px/20px var(--mt-font-ui);font-variant-numeric:tabular-nums}
+.mt-fixture-team{display:flex;align-items:center;gap:var(--mt-space-sm);min-width:0}
+.mt-fixture-home{justify-content:flex-end;text-align:right}
+.mt-fixture-team .mt-team-name{font-size:20px;line-height:24px}
+.mt-fixture-score{text-align:center;font:600 18px/22px var(--mt-font-display);color:var(--mt-color-text-secondary);font-variant-numeric:tabular-nums}
+.mt-fixture-go{color:var(--mt-color-text-tertiary)}
+@media (max-width:767px){
+  .mt-fixture-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"when when" "home score" "away score";row-gap:var(--mt-space-xs)}
+  .mt-fixture-when{grid-area:when;flex-direction:row;align-items:center;flex-wrap:wrap}
+  .mt-fixture-home{grid-area:home;justify-content:flex-end;flex-direction:row-reverse;text-align:left}
+  .mt-fixture-away{grid-area:away}
+  .mt-fixture-score{grid-area:score;grid-row:2 / span 2;align-self:center}
+  .mt-fixture-go{display:none}
+}
+
+/* Home prediction cards: source tag */
+.mt-insight-tag{margin:var(--mt-space-sm) var(--mt-space-xl) var(--mt-space-md)}
+
+/* Leagues: country groups of competition cards (Figma: League card) */
+.mt-league-group{margin-top:var(--mt-space-2xl)}
+.intel .mt-league-group>h2{margin-bottom:var(--mt-space-md);color:var(--mt-color-text-secondary);font:600 12px/16px var(--mt-font-ui);letter-spacing:.06em;text-transform:uppercase}
+.mt-league-group>.intel-matches{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.intel-competition{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mt-space-sm);text-align:left;cursor:pointer;font-family:var(--mt-font-ui)}
+.intel-competition h3{margin:0}
+.mt-card-action{margin-top:var(--mt-space-xs);color:var(--mt-color-action-football)!important;font-weight:600;font-size:15px!important}
+
+/* News: first story featured (Figma: Featured news card) */
+@media (min-width:1024px){
+  .intel .intel-news>.news-card:first-child{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0}
+  .intel .intel-news>.news-card:first-child .news-visual{height:100%;aspect-ratio:auto;min-height:280px;border-radius:0}
+  .intel .intel-news>.news-card:first-child h3{font:600 28px/34px var(--mt-font-display);-webkit-line-clamp:3}
+}
