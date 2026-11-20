@@ -476,3 +476,5 @@
 /* Grid tracks may shrink below table width; wide tables scroll inside .table-scroll (320px overflow fix). */
 .intel .match-columns>*{min-width:0}
 .intel .table-scroll{max-width:100%}
+/* Portrait credit links: 44px hit area without changing the caption layout. */
+.portrait-wrap small a{display:inline-block;padding:14px 6px;margin:-14px -6px;line-height:16px}
