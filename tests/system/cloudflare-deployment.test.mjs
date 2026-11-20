@@ -49,6 +49,17 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
+// The documented D1 export tool (CLOUDFLARE_DEPLOYMENT.md) is Python. Find a real Python 3
+// interpreter by asking it for its version: Linux/macOS ship python3, Windows often only
+// python or the py launcher, and a Windows Store "python3" alias exits non-zero. No match
+// fails the test loudly instead of skipping it.
+function python3(){
+  for(const [command,...prefix] of [['python3'],['python'],['py','-3']]){
+    const probe=spawnSync(command,[...prefix,'--version'],{encoding:'utf8'});
+    if(probe.status===0&&/^Python 3\./.test(`${probe.stdout}${probe.stderr}`.trim()))return {command,prefix};
+  }
+  return null;
+}
 test('transfer retains saved badge metadata while excluding disposable cache rows',()=>{
   const root=mkdtempSync(join(tmpdir(),'mnemba-export-')),path=join(root,'source.sqlite');
   const db=new DatabaseSync(path);
@@ -57,7 +68,9 @@ test('transfer retains saved badge metadata while excluding disposable cache row
     db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('public-badges','{"badges":{"test":{"url":"https://www.thesportsdb.com/images/media/team/badge/test.png"}}}',1,2);
     db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('temporary','{}',1,2);
     db.close();
-    const result=spawnSync('python3',['scripts/prepare-d1-transfer.py',path,join(root,'export')],{encoding:'utf8'});
+    const py=python3();
+    assert.ok(py,'Python 3 is required for scripts/prepare-d1-transfer.py; tried python3, python and py -3');
+    const result=spawnSync(py.command,[...py.prefix,'scripts/prepare-d1-transfer.py',path,join(root,'export')],{encoding:'utf8'});
     assert.equal(result.status,0,result.stderr);
     const manifest=JSON.parse(readFileSync(join(root,'export','manifest.json'),'utf8'));
     assert.equal(manifest.local.football_cache,2);
