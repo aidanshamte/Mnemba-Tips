@@ -2,15 +2,15 @@
 import {TeamIdentity,CompetitionIdentity} from './football-identity';
 import {useEffect,useState} from 'react';
 import NewsCard from './news-card';
+import SiteNav,{TAB_KEY} from './site-nav';
 import CompetitionPicker from './competition-picker';
 import FeaturedMatches from './featured-matches';
 import GlobalSearch from './global-search';
 import LocalTime,{TimePreference,useTimeZone} from './local-time';
 import {useMatchday,MatchdaySelector} from './use-matchday';
 import {routeToken} from '@/lib/football/consumer.mjs';
-import {ArrowUpRight,Activity,Search,Globe2,ChevronRight,Layers3,Newspaper,Trophy,Users} from 'lucide-react';
+import {ArrowUpRight,Search,ChevronRight,Trophy} from 'lucide-react';
 type RecordData=Record<string,any>;
-const tabs=['Predictions','Fixtures','Leagues','Teams & Players','News'];
 function Match({f}:{f:RecordData}){return <a className="intel-match" href={`/football/match/${encodeURIComponent(f.id)}`}><div className="intel-match-meta"><span><CompetitionIdentity id={f.competition.id} name={f.competition.name}/></span><span>{f.label}</span></div><div className="intel-team"><span className="team-name"><TeamIdentity id={f.home.id} name={f.home.name}/></span><b>{f.homeScore??'—'}</b></div><div className="intel-team"><span className="team-name"><TeamIdentity id={f.away.id} name={f.away.name}/></span><b>{f.awayScore??'—'}</b></div><div className="intel-match-foot"><LocalTime fixture={{startsAt:f.startsAt,kickoffPrecision:f.kickoffPrecision}}/><ArrowUpRight size={15}/></div></a>}
 function Insight({f,initial}:{f:RecordData;initial?:RecordData}){const [analysis,setAnalysis]=useState<RecordData|null>(initial??null);useEffect(()=>{if(initial)return;const c=new AbortController();void fetch('/api/intelligence?view=analysis&id='+encodeURIComponent(f.id),{signal:c.signal}).then(r=>r.json() as Promise<RecordData>).then(d=>setAnalysis(d.analysis)).catch(()=>{});return()=>c.abort();},[f.id,initial]);return <article className="intel-panel insight-card"><Match f={f}/>{analysis?.probabilities?<><p className="intel-eyebrow">MATCH RESULT · MODEL ESTIMATE</p><div className="insight-probabilities">{['Home','Draw','Away'].map((label,i)=><div key={label}><span>{label}</span><strong>{(analysis.probabilities[i]*100).toFixed(1)}%</strong></div>)}</div><p>{analysis.explanations?.slice(0,2).join(' ')}</p><small>Regulation time. Estimates carry uncertainty; they are not guarantees.</small></>:<p>{analysis?.reason??'Explore available form, head-to-head history and match details.'}</p>}</article>}
 export default function IntelligenceWorkspace(){
@@ -22,7 +22,7 @@ export default function IntelligenceWorkspace(){
  useEffect(()=>{if(tab!=='News')return;void fetch('/api/intelligence?view=news').then(r=>r.json() as Promise<RecordData>).then(setDetail).catch(()=>setError('News unavailable.'));},[tab]);
  const current=matchday?.query===query?matchday:null,fixtures=current?.fixtures??[],insights=current?.picks??[];
  const featured=current?{today:fixtures,results:fixtures.filter((f:RecordData)=>['FT','FINISHED','1H','2H','HT'].includes(f.status)),upcoming:(insights.length?insights.map((e:RecordData)=>({...e.fixture,recommendation:e.recommendation})):fixtures),note:current.note}:null;
- return <div className="intel"><aside className="intel-sidebar"><a className="intel-brand" href="/football"><span className="intel-symbol">M<span>·</span></span><span>Mnemba Tips<span className="intel-brand-sub">THE GAME, A LITTLE CLEARER</span></span></a><div className="intel-nav-label">EXPLORE FOOTBALL</div><nav aria-label="Main navigation">{tabs.map((t,i)=>{const Icon=[Activity,Layers3,Trophy,Users,Newspaper][i];return <button key={t} className={tab===t?'active':''} onClick={()=>{change({tab:t});}}><Icon size={18}/>{t}</button>})}</nav><div className="intel-sidebar-bottom"><div className="intel-open"><Globe2 size={20}/><strong>The world’s game.<br/>Yours to explore.</strong><p>Matches, meaningful context and stories worth following.</p></div></div></aside>
+ return <div className="intel"><SiteNav active={TAB_KEY[tab]??'home'} onTab={t=>change({tab:t})}/>
  <main className="intel-main"><header className="intel-top"><span><span className="intel-dot"/> MNEMBA TIPS</span><TimePreference/><a href="/football/predictions">Prediction history →</a></header>
  {['Predictions','Fixtures'].includes(tab)&&<><MatchdaySelector filters={filters} change={change}/><p role="status">{current?`${current.range.from} → ${current.range.to} · ${current.count} matches · ${current.eligible??0} qualifying selections`:'Loading selected matchday…'}</p></>}{tab==='Predictions'?<FeaturedMatches data={featured}/>:<section className="intel-heading"><div className="intel-eyebrow">YOUR FOOTBALL DESK</div><h1>{tab==='News'?'The football briefing.':tab==='Leagues'?'Explore the world’s game.':tab==='Teams & Players'?'The people behind the game.':'Every match. More context.'}</h1><p>Follow the teams, the players and the next ninety minutes.</p></section>}
  {error&&<div className="intel-notice" role="status">{error}</div>}
