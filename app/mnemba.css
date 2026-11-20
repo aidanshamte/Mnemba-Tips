@@ -480,3 +480,29 @@
 .portrait-wrap small a{display:inline-block;padding:14px 6px;margin:-14px -6px;line-height:16px}
 /* Article image caption: legacy #657789 measured 4.34:1 on the page background (WCAG AA needs 4.5:1). */
 .intel .article-figure figcaption{color:var(--mt-color-text-secondary)}
+
+/* ---- Leagues directory filters and canonical competition cards (components/leagues-directory.tsx) ---- */
+.mt-league-filters{display:flex;flex-wrap:wrap;gap:var(--mt-space-sm);align-items:flex-end}
+.mt-filter{display:flex;flex-direction:column;gap:var(--mt-space-2xs);font:500 12px/16px var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.intel .mt-filter select,.intel .mt-filter input:not([type=checkbox]){min-height:44px;min-width:0;padding:0 var(--mt-space-md);border-radius:var(--mt-radius-md);border:var(--mt-border-width-hairline) solid var(--mt-color-border-strong);background:var(--mt-color-surface-default);color:var(--mt-color-text-primary);font:400 14px/20px var(--mt-font-ui)}
+.mt-filter-search{flex:1 1 240px;flex-direction:row;align-items:center;gap:var(--mt-space-sm);color:var(--mt-color-text-secondary)}
+.mt-filter-search input{flex:1;width:100%}
+.mt-filter-check{flex-direction:row;align-items:center;min-height:44px;gap:var(--mt-space-sm);font-size:14px;color:var(--mt-color-text-primary)}
+.mt-filter-check input{width:20px;height:20px;accent-color:var(--mt-color-action-football)}
+.intel .mt-card-link{display:inline-flex;align-items:center;min-height:44px;color:inherit;text-decoration:none}
+.intel .mt-card-link:hover{text-decoration:underline}
+.intel .intel-competition .mt-card-action{min-height:44px;padding:0;border:0;background:none;color:var(--mt-color-text-link);font:600 14px/20px var(--mt-font-ui);cursor:pointer}
+.intel .mt-group-label{margin:var(--mt-space-md) 0 var(--mt-space-xs);padding:0 var(--mt-space-md)}
+@media (max-width:767px){.mt-filter{flex:1 1 calc(50% - var(--mt-space-sm))}.mt-filter-search{flex-basis:100%}}
+/* Basketball studio uses the approved logo on its dark sidebar (light plate, artwork unchanged). */
+.mt-studio-brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:44px;text-decoration:none;color:inherit}
+.mt-studio-brand .mt-brand-logo{width:160px}
+.mt-studio-brand small{font-size:12px;opacity:.8}
+/* Chips: season selector (competition page) and toggles (leagues directory). 44px targets. */
+.mt-chip-row{display:flex;flex-wrap:wrap;gap:var(--mt-space-sm);margin:var(--mt-space-md) 0}
+.intel .mt-chip-row>button,.intel .mt-chip{min-height:44px;padding:0 var(--mt-space-lg);border-radius:var(--mt-radius-full);border:var(--mt-border-width-hairline) solid var(--mt-color-border-strong);background:var(--mt-color-surface-default);color:var(--mt-color-text-primary);font:600 14px/20px var(--mt-font-ui);cursor:pointer}
+.intel .mt-chip-row>button[aria-pressed=true],.intel .mt-chip[aria-pressed=true]{background:var(--mt-color-surface-brand);border-color:var(--mt-color-surface-brand);color:var(--mt-color-text-inverse)}
+.mt-chip-row>button:focus-visible,.mt-chip:focus-visible{outline:none;box-shadow:var(--mt-focus-ring)}
+/* Basketball studio muted text: the original #64716c–#71807a greys measured 3.3–4.45:1 on its near-black
+   surfaces (WCAG AA needs 4.5:1). #9aa7a2 measures 6.8–7.7:1. Scoped to the studio shell only. */
+.app-shell :is(.system-card small,.nav-item em,.active>em,button>em,.lineup .lineup-team span,.lineup .player div span,.disclaimer,.h2h-score div span){color:#9aa7a2}

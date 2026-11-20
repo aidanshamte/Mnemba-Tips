@@ -78,6 +78,9 @@ const csp = head.headers.get('content-security-policy') ?? '';
 evidence.headers = {csp: !!csp, objectSrcNone: csp.includes("object-src 'none'"), baseUriSelf: csp.includes("base-uri 'self'"),
   hsts: head.headers.get('strict-transport-security'), nosniff: head.headers.get('x-content-type-options'), referrer: head.headers.get('referrer-policy')};
 if (!evidence.headers.objectSrcNone || !evidence.headers.baseUriSelf) evidence.failures.push('Content-Security-Policy regressed');
+if (!/max-age=\d+/.test(evidence.headers.hsts ?? '')) evidence.failures.push('Strict-Transport-Security missing');
+if (evidence.headers.nosniff !== 'nosniff') evidence.failures.push('X-Content-Type-Options: nosniff missing');
+if (!evidence.headers.referrer) evidence.failures.push('Referrer-Policy missing');
 
 // 6. Administrative and internal endpoints stay protected.
 for (const api of ['intelligence', 'football']) for (const view of ['sources', 'files', 'diagnostics', 'evidence', 'social', 'performance']) await get(`/api/${api}?view=${view}`, {status: 403});

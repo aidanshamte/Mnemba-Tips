@@ -53,7 +53,7 @@ try {
         await page.waitForTimeout(800);
         const m = await page.evaluate(() => ({
           overflow: document.documentElement.scrollWidth > innerWidth + 1,
-          logo: [...document.querySelectorAll('.mt-brand img')].filter(i => i.offsetParent).map(i => ({ok: i.complete && i.naturalWidth > 0, src: i.currentSrc.split('/').pop()})),
+          logo: [...document.querySelectorAll('.mt-brand img, .mt-studio-brand img')].filter(i => i.offsetParent).map(i => ({ok: i.complete && i.naturalWidth > 0, src: i.currentSrc.split('/').pop()})),
           brokenImages: [...document.querySelectorAll('img')].filter(i => i.complete && i.naturalWidth === 0 && i.src && i.offsetParent).map(i => i.src).slice(0, 5),
           // Same rule as the release responsive sweep: a target smaller than 44px in both dimensions.
           small: [...document.querySelectorAll('a,button,input,select,summary,[role=button]')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && getComputedStyle(e).visibility !== 'hidden' && r.height < 44 && r.width < 44; }).map(e => (e.getAttribute('aria-label') || e.textContent || e.tagName).trim().slice(0, 30)),
@@ -63,7 +63,7 @@ try {
         report.pages.push(row);
         if (status !== 200) fail(`${name}@${w}/${theme}: HTTP ${status}`);
         if (m.overflow) fail(`${name}@${w}/${theme}: horizontal overflow`);
-        if (name === 'basketball') { if (w === 1440 && theme === 'light') gap('Basketball keeps its legacy studio shell and brand (unchanged by design)'); } else if (!m.logo.length || m.logo.some(l => !l.ok)) fail(`${name}@${w}/${theme}: approved logo not rendered`);
+        if (!m.logo.length || m.logo.some(l => !l.ok)) fail(`${name}@${w}/${theme}: approved logo not rendered`);
         if (m.brokenImages.length) fail(`${name}@${w}/${theme}: broken images ${m.brokenImages.join(', ')}`);
         if (m.small.length) fail(`${name}@${w}/${theme}: touch targets under 44px: ${m.small.join(' | ')}`);
         if (w === 1440 || w === 375) await page.screenshot({path: `${out}/${name}-${w}-${theme}.png`});
