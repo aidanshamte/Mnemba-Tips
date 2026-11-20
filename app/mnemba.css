@@ -473,3 +473,6 @@
 .mt-unavailable ul{margin:0;padding-left:1.1em;display:grid;gap:var(--mt-space-2xs);font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-secondary)}
 .mt-unavailable li strong{color:var(--mt-color-text-primary);font-weight:600}
 .mt-match-news{margin-top:var(--mt-space-sm)}
+/* Grid tracks may shrink below table width; wide tables scroll inside .table-scroll (320px overflow fix). */
+.intel .match-columns>*{min-width:0}
+.intel .table-scroll{max-width:100%}
