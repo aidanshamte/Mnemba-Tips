@@ -478,3 +478,5 @@
 .intel .table-scroll{max-width:100%}
 /* Portrait credit links: 44px hit area without changing the caption layout. */
 .portrait-wrap small a{display:inline-block;padding:14px 6px;margin:-14px -6px;line-height:16px}
+/* Article image caption: legacy #657789 measured 4.34:1 on the page background (WCAG AA needs 4.5:1). */
+.intel .article-figure figcaption{color:var(--mt-color-text-secondary)}
