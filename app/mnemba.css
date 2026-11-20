@@ -442,3 +442,8 @@
 .intel .search-copy>p{margin:0;font-size:14px;line-height:20px;color:var(--mt-color-text-secondary);text-transform:capitalize}
 .intel .search-copy>small{display:flex;align-items:center;flex-wrap:wrap;gap:var(--mt-space-xs);font-size:13px;line-height:18px;color:var(--mt-color-text-secondary)}
 .intel .search-copy>small:last-child{margin-top:var(--mt-space-xs);color:var(--mt-color-action-football);font-weight:600}
+@media (min-width:768px){.intel .match-hero .match-score{align-items:end}.intel .match-hero .match-score>strong{display:flex;align-items:center;justify-content:center;height:calc(var(--mt-type-page-title-size) * 2.5)}}
+/* Legacy headings used negative tracking; Figma display type uses near-zero tracking */
+.intel h1,.intel .article-header h1,.intel .broadcast-hero h1{letter-spacing:-.005em}
+/* League cards: competition name at card-title size (Figma: League card) */
+.intel .intel-competition h3,.intel .intel-competition .football-identity{font:600 var(--mt-type-card-title-size)/var(--mt-type-card-title-line) var(--mt-font-ui);color:var(--mt-color-text-primary)}
