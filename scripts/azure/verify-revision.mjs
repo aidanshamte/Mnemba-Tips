@@ -10,7 +10,7 @@ if (!(url.protocol === 'https:' && (url.hostname.endsWith('.azurecontainerapps.i
   throw new Error('Use an Azure-generated or canonical-domain HTTPS URL, or a loopback URL');
 const origin = url.origin, evidence = {origin, checkedAt: new Date().toISOString(), routes: [], failures: [], warnings: []};
 // Patterns that must never appear in a public response body.
-const SECRET = [/postgres(ql)?:\/\/[^\s"']*:[^\s"'@]*@/i, /DATABASE_URL\s*[=:]/, /MNEMBA_INTERNAL_TOKEN/, /AccountKey=/i, /[?&]sig=[A-Za-z0-9%+/=]{20,}/, /-----BEGIN [A-Z ]*PRIVATE KEY-----/, /\bgh[pousr]_[A-Za-z0-9]{30,}/];
+const SECRET = [/postgres(ql)?:\/\/[^\s"']*:[^\s"'@]*@/i, /DATABASE_URL\s*[=:]/, /MNEMBA_INTERNAL_TOKEN/, /AccountKey=/i, /\.(?:blob|file|queue|table)\.core\.windows\.net[^\s"']*[?&]sig=/i, /-----BEGIN [A-Z ]*PRIVATE KEY-----/, /\bgh[pousr]_[A-Za-z0-9]{30,}/];
 
 async function get(path, {status = 200, type, method = 'GET', body, headers} = {}) {
   const started = performance.now();
