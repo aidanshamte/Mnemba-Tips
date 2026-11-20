@@ -26,8 +26,8 @@ test('cron duplicate delivery and overlapping invocations do not repeat work',as
     const owner=await store.lock('cloudflare-cron',600000);
     assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,0);
     await store.unlock('cloudflare-cron',owner);
-    assert.equal((await runScheduled(event,{DB:db},{service})).state,'success');assert.equal(calls,4);
-    assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,4);
+    assert.equal((await runScheduled(event,{DB:db},{service})).state,'success');assert.equal(calls,5);
+    assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,5);
   }finally{sqlite.close();}
 });
 test('cron records failures, respects due times and releases its own lease',async()=>{
@@ -35,7 +35,7 @@ test('cron records failures, respects due times and releases its own lease',asyn
   try {
     await store.run("INSERT INTO update_jobs(id,interval_ms,next_run,state,payload) VALUES('fixtures',1,?,'success','{}')",Date.now()+3600000);
     const result=await runScheduled({cron:'0 * * * *',scheduledTime:124},{DB:db},{service:{initialize:async()=>{},sync:async job=>{called.push(job);if(job==='results')throw Error('Provider unavailable');return {outcome:'success'};}}});
-    assert.equal(result.state,'partial');assert.deepEqual(called,['results','models','snapshots']);
+    assert.equal(result.state,'partial');assert.deepEqual(called,['results','models','snapshots','media']);
     assert.equal((await store.one('SELECT state FROM cron_runs')).state,'partial');
     assert.equal(await store.one("SELECT * FROM sync_locks WHERE id='cloudflare-cron'"),null);
   }finally{sqlite.close();}
@@ -99,4 +99,9 @@ test('public cache avoids duplicate reads and never caches authorization-bearing
   await publicResponse(new Request(url,{headers:{'cache-control':'no-cache'}}),load,cache);assert.equal(reads,4);
   await assert.rejects(publicResponse(new Request(url+'&failure=1'),async()=>{throw Error('Quota');},cache),/Quota/);
   assert.equal(entries.size,2);
+});
+
+test('scheduled model work drains bounded pages and records media execution',async()=>{
+ const {store,db,sqlite}=database();await store.init();let pages=0;const called=[];
+ try{const result=await runScheduled({cron:'0 * * * *',scheduledTime:999},{DB:db},{service:{initialize:async()=>{},sync:async job=>{called.push(job);return job==='models'?{complete:++pages===3,processed:10,outcome:'success'}:{outcome:'success'}}}});assert.equal(pages,3);assert.equal(result.results.find(r=>r.job==='models').result.processed,30);assert.ok(called.includes('media'));assert.equal(result.state,'success');}finally{sqlite.close()}
 });

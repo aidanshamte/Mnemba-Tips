@@ -37,3 +37,14 @@ test('only verified canonical aliases inherit media across provider IDs',async()
  const result=await mediaFor(store,['alias:barca','unreviewed:barca','source:bsc']);assert.equal(result['alias:barca'].url,m.url);assert.equal(result['unreviewed:barca'],undefined);assert.equal(result['source:bsc'],undefined);
  }finally{sqlite.close();}
 });
+
+test('badge discovery rotates beyond five leagues and does not expose untested images',async()=>{
+ const {store,sqlite}=database();try{await store.init();const {importBadges,badgeCatalog}=await import('../../lib/football/public-enrichment.mjs');const calls=[];
+ // Catalog rows are provider identities, including leagues outside the previous hard-coded set.
+ const {IntelligenceService}=await import('../../lib/football/intelligence.mjs');const service=new IntelligenceService(store);await service.initialize();
+ for(let i=0;i<7;i++)await service.saveCompetition({id:'thesportsdb:'+i,provider:'thesportsdb',externalId:String(i),name:'League '+i,type:null,seasons:[]});
+ service.sports.teams=async id=>{calls.push(id);return[]};await importBadges(service);await importBadges(service);assert.equal(new Set(calls).size,7);assert.equal(calls.length,10);
+ await store.putCache('public-badges',{badges:{unverified:{url:'https://www.thesportsdb.com/images/media/team/badge/a.png',verifiedAt:store.now()}}},86400000);
+ assert.deepEqual((await badgeCatalog(store)).badges,{});
+ }finally{sqlite.close()}
+});

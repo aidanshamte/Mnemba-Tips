@@ -18,9 +18,9 @@ try {
   page.on('response',response=>{if(response.url().startsWith(origin+'/api/')&&response.status()>=400)errors.push(response.status()+' '+new URL(response.url()).pathname);});
   // Exercise persisted data; external media failures must use the existing fallbacks.
   for(const path of ['/football','/football?tab=Fixtures','/football/search?kind=team&q=Arsenal','/football/search?kind=player&q=Messi','/football/predictions','/football/shortlists','/football/match/'+encodeURIComponent(fixture.id),'/football/news/'+routeToken(article.id)]) {
-   const response=await page.goto(origin+path,{waitUntil:'networkidle',timeout:90000});assert.equal(response.status(),200);
+   const response=await page.goto(origin+path,{waitUntil:path.includes('/match/')?'domcontentloaded':'networkidle',timeout:90000});assert.equal(response.status(),200);
    await page.locator('h1').first().waitFor();
-   if(path==='/football') { await page.getByRole('status').filter({hasText:'covered matches'}).waitFor({timeout:60000}); await page.locator('.broadcast-action[href*="/match/"]').waitFor({timeout:60000}); }
+   if(path==='/football') { await page.getByRole('status').filter({hasText:/\d+ matches/}).waitFor({timeout:60000}); if(process.env.MNEMBA_BROWSER_ALLOW_EMPTY_DAY!=='1'||await page.locator('.broadcast-action[href*="/match/"]').count())await page.locator('.broadcast-action[href*="/match/"]').waitFor({timeout:60000}); }
    if(path.includes('/news/')) {await page.getByRole('heading',{name:'What happened',exact:true}).waitFor();await page.locator('.article-figure').scrollIntoViewIfNeeded();await page.waitForFunction(()=>{const e=document.querySelector('.article-figure .news-visual');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:!!e?.querySelector('.publisher-placeholder');});assert.equal(await page.locator('.article-figure img[src*="football-night"]').count(),0);}
    if(path.includes('/match/'))await page.locator('.match-score').waitFor();
    if(path.includes('search?'))await page.locator('a[role=option]').first().waitFor();
@@ -30,13 +30,13 @@ try {
   await page.goto(origin+'/football/search?kind=team&q=Arsenal',{waitUntil:'networkidle'});
   await page.locator('a[role=option]').first().click();await page.locator('h1').first().waitFor();assert.match(page.url(),/\/football\/team\//);
   await page.locator('.team-badge').first().waitFor();
-  await page.waitForFunction(()=>{const e=document.querySelector('.team-badge');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:e?.classList.contains('monogram-shield');});
-  evidence.checks.push({width,teamVisual:await page.locator('.team-badge img').count()?'loaded badge':'labelled monogram'});
+  await page.waitForFunction(()=>{const e=document.querySelector('.team-badge');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:e?.classList.contains('mnemba-fallback');});
+  evidence.checks.push({width,teamVisual:await page.locator('.team-badge img').count()?'loaded badge':'full-name fallback; no image coverage'});
   await page.goto(origin+'/football/search?kind=player&q=Messi',{waitUntil:'networkidle'});
   await page.locator('a[role=option]').first().click();await page.getByRole('heading',{name:'Club association history'}).waitFor();
   const portrait = page.locator('.media-avatar').first();await portrait.waitFor();await portrait.scrollIntoViewIfNeeded();
-  await page.waitForFunction(()=>{const e=document.querySelector('.media-avatar');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:!!e?.querySelector('.avatar-initials');});
-  evidence.checks.push({width,playerVisual:await portrait.locator('img').count()?'loaded portrait':'labelled fallback'});
+  await page.waitForFunction(()=>{const e=document.querySelector('.media-avatar');const img=e?.querySelector('img');return img?img.complete&&img.naturalWidth>0:!!e?.querySelector('.avatar-name');});
+  evidence.checks.push({width,playerVisual:await portrait.locator('img').count()?'loaded portrait':'full-name fallback; no image coverage'});
   evidence.checks.push({width,path:new URL(page.url()).pathname,playerProfile:true});
   await page.goto(origin+'/basketball',{waitUntil:'networkidle'});
   await page.getByRole('tab',{name:'Basketball',exact:true}).waitFor();
