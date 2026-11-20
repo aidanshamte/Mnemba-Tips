@@ -12,7 +12,7 @@ test('no application query reads every column of the wide evidence tables', () =
   for (const file of files) {
     const source = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
     for (const m of source.matchAll(/SELECT\s+([^'"`]*?)\s+FROM\s+(analysis_forecasts|prematch_snapshots)\b(\s+(?:AS\s+)?(\w+))?/gi)) {
-      const [, columns, table, , alias] = m;
+      const [, columns, , , alias] = m;
       const star = new RegExp(`(^|,)\\s*(\\*|${alias ?? '\\w+'}\\.\\*)\\s*(,|$)`).test(columns);
       if (star || /evidence_ids/.test(columns)) offenders.push(`${file}: ${m[0].slice(0, 90)}`);
     }
