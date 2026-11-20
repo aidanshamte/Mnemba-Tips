@@ -494,3 +494,7 @@
 .intel .intel-competition .mt-card-action{min-height:44px;padding:0;border:0;background:none;color:var(--mt-color-text-link);font:600 14px/20px var(--mt-font-ui);cursor:pointer}
 .intel .mt-group-label{margin:var(--mt-space-md) 0 var(--mt-space-xs);padding:0 var(--mt-space-md)}
 @media (max-width:767px){.mt-filter{flex:1 1 calc(50% - var(--mt-space-sm))}.mt-filter-search{flex-basis:100%}}
+/* Basketball studio uses the approved logo on its dark sidebar (light plate, artwork unchanged). */
+.mt-studio-brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:44px;text-decoration:none;color:inherit}
+.mt-studio-brand .mt-brand-logo{width:160px}
+.mt-studio-brand small{font-size:12px;opacity:.8}

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Activity, BarChart3, BrainCircuit, ChevronDown, Circle, CircleDot, Database, Search, ShieldCheck, Sparkles, Target, Users } from "lucide-react";
+import { Activity, BarChart3, BrainCircuit, ChevronDown, Circle, CircleDot, Database, Search, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { matchups, sources } from "@/lib/demo-data.mjs";
+import BrandLogo from "./brand-logo";
 import { formScore, predictMatch, projectLineup } from "@/lib/prediction-engine.mjs";
 
 type Sport = "soccer" | "basketball";
@@ -59,7 +60,7 @@ export default function Home({initialSport = "soccer"}: {initialSport?: Sport}) 
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><span className="brand-icon"><Target size={21} /></span><div><strong>Mnemba Tips</strong><small>AI Studio</small></div></div>
+        <a className="brand mt-studio-brand" href="/football" aria-label="Mnemba Tips home"><span className="mt-brand-plate"><BrandLogo sizes="160px" priority/></span><small>Basketball</small></a>
         <nav aria-label="Primary navigation">
           <button className="nav-item active"><BrainCircuit size={18} /> Prediction Lab</button>
           <a className="nav-item" href="/football"><Activity size={18} /> Global Football</a>
