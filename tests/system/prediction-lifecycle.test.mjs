@@ -107,6 +107,24 @@ test('market settlement: wins, losses, pushes and voids', () => {
   assert.equal(settleMarket({market: 'result', selection: 'home'}, 1, 0, {period: 'extra-time'}), 'pending');
 });
 
+test('the models stage stops before the scheduler deadline, keeps its cursor, still grades, then resumes', async () => {
+  const w = await world();
+  try {
+    const upcoming = [0, 1, 2].map(i => normalizeFixture('api-football', apiFixture(750 + i, 'NS', `2026-09-1${1 + i}T12:00:00Z`)));
+    await w.service.saveFixtures(upcoming);
+    const stopped = await w.lab.update({stopAt: w.now()});
+    assert.equal(stopped.stoppedEarly, true);
+    assert.equal(stopped.complete, false, 'batch stays resumable');
+    assert.equal(stopped.processed, 0);
+    assert.equal(typeof stopped.graded, 'number', 'grading still runs after an early stop');
+    const resumed = await w.lab.update({stopAt: w.now() + 3600_000});
+    assert.equal(resumed.stoppedEarly, false);
+    assert.equal(resumed.complete, true);
+    assert.ok(resumed.processed >= upcoming.length);
+    for (const f of upcoming) assert.ok((await forecasts(w.store, f.id)).length > 0, `forecast stored for ${f.id}`);
+  } finally { w.sqlite.close(); }
+});
+
 test('a model candidate is never promoted from one match or a training fit', async () => {
   const w = await world();
   try {
