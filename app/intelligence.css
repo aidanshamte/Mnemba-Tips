@@ -57,3 +57,34 @@
  .match-hero button{padding:10px 14px;font-size:13px}
  .match-nav{gap:12px;padding:14px;line-height:1.4}
 }
+
+.team-badge.team-name-fallback,.match-score .team-badge.team-name-fallback,.visual-search .team-badge.team-name-fallback{width:auto;height:auto;min-width:0;max-width:100%;clip-path:none;background:transparent;border:0;border-radius:0;font-size:12px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;flex-shrink:1;padding:4px}
+.media-avatar:has(.avatar-name){width:auto;min-height:72px;height:auto;padding:8px;background:#edf2f5}.avatar-name{font-size:12px;line-height:1.4;overflow-wrap:anywhere;text-align:center}
+.prediction-center .prediction-pick{font-size:20px;font-weight:700}.prediction-center .intel-stats{margin-bottom:14px}
+
+.match-score .team-badge.team-name-fallback{display:none}.match-center .match-time-settings{padding:6px 12px;margin:0 0 12px;background:transparent;border:0}.match-time-settings summary{font-size:12px;color:#526576}.match-hero .team-name-fallback{color:inherit}
+@media(max-width:680px){.match-nav.compact-nav{flex-wrap:nowrap;justify-content:flex-start;gap:18px;padding:14px;margin-bottom:8px;overflow-x:auto;white-space:nowrap;max-width:100%}.compact-nav a{flex:none;font-size:12px}.match-hero{padding:20px}.match-score{margin:16px 0;gap:12px}.prediction-center{padding:18px}}
+
+/* Shared neutral identities: no resemblance to official crests. */
+.football-identity{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;max-width:100%;min-width:0}.football-identity>span:last-child{min-width:0;overflow-wrap:anywhere}.identity-badge.team-badge,.match-score .identity-badge.team-badge,.visual-search .identity-badge.team-badge{display:inline-grid;place-items:center;flex-shrink:0;border-radius:50%;clip-path:none;padding:0;margin:0;background:transparent;color:#24705d;overflow:hidden;vertical-align:middle;line-height:1}.identity-badge.competition-visual{color:#3b6287}.identity-badge>svg{display:block;max-width:100%;max-height:100%}.identity-badge.team-badge img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border-radius:0;background:transparent}.identity-badge.team-badge:has(img)>svg{visibility:visible}.match-score>a>.identity-badge{margin-bottom:10px}.broadcast-copy .identity-badge{color:#b4e5d3}.broadcast-ticker .football-identity{white-space:nowrap}.football-identity small{font-size:.75em}.visual-credits article{padding:16px;border-bottom:1px solid #dce5eb;overflow-wrap:anywhere}
+.visual-search .identity-badge.team-badge img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.match-hero .identity-badge{color:#b4e5d3}.match-hero .competition-visual{color:#c4d9fa}.match-score .football-identity{display:flex;flex-direction:column;justify-content:center;gap:8px}.match-score .football-identity>span:last-child{overflow-wrap:normal;word-break:normal}
+.intel .match-hero .identity-badge.team-badge{color:#b4e5d3}.intel .match-hero .identity-badge.competition-visual{color:#c4d9fa}
+
+/* Shared badge sizes keep list icons compact and primary identities prominent. */
+.badge-tiny{--badge-size:22px}.badge-small{--badge-size:32px}.badge-medium{--badge-size:48px}.badge-large{--badge-size:72px}.badge-hero{--badge-size:112px}
+.identity-badge.team-badge,.match-score .identity-badge.team-badge,.visual-search .identity-badge.team-badge{width:var(--badge-size);height:var(--badge-size);min-width:var(--badge-size);border-radius:0}
+.identity-badge.team-badge>svg{width:100%;height:100%}
+.identity-badge.team-badge img{transform:scale(var(--badge-artwork-scale,1));transform-origin:center;object-fit:contain}
+.match-score{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;column-gap:24px}
+.match-score>a,.match-score>a:last-child{text-align:center;min-width:0}
+.match-score .football-identity{width:100%;gap:18px}
+.match-score .football-identity>span:last-child{overflow-wrap:anywhere;line-height:1.25;min-height:2.5em;display:flex;align-items:center;justify-content:center}
+.match-score>strong{align-self:end;line-height:1.25;min-height:1.75em;display:flex;align-items:center;white-space:nowrap}
+@media(min-width:681px) and (max-width:1024px){.badge-hero{--badge-size:96px}}
+@media(max-width:680px){.badge-hero{--badge-size:76px}.match-hero .badge-medium{--badge-size:44px}.match-score{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);column-gap:8px;font-size:clamp(16px,4.6vw,23px)}.match-score .football-identity{gap:12px}.match-score>strong{font-size:26px;min-height:1.92em}}
+/* Override the legacy away-team margin as well as the general badge reset. */
+.match-score>a .identity-badge.team-badge{margin:0}
+.match-score>a{font-size:inherit}
+.intel .match-hero .match-score{font-size:28px;letter-spacing:normal}
+@media(max-width:680px){.intel .match-hero .match-score{font-size:clamp(16px,4.6vw,23px)}}

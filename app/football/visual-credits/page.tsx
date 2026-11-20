@@ -1,0 +1,5 @@
+'use client';
+import {useEffect,useState} from 'react';
+import PublicNav from '@/components/public-nav';
+type Credit={logoUrl:string;sourceUrl:string;licenseUrl:string;licenseOrPermission:string;attribution:string};
+export default function VisualCredits(){const [items,setItems]=useState<Credit[]>([]);useEffect(()=>{void fetch('/api/intelligence?view=visuals').then(r=>r.json() as Promise<{team?:Record<string,Credit>;competition?:Record<string,Credit>}>).then(data=>{const all=[...Object.values(data.team??{}),...Object.values(data.competition??{})] as Credit[];setItems([...new Map(all.map(m=>[m.logoUrl,m])).values()]);}).catch(()=>{});},[]);return <div className="intel"><main className="match-center visual-credits"><PublicNav/><h1>Football visual credits</h1><p>Official crests are shown only with recorded image permission and a verified identity. Mnemba initials badges are neutral fallbacks, not official club or competition logos.</p>{items.map(m=><article key={m.logoUrl}><p>{m.attribution}</p><a href={m.sourceUrl}>Original image and creator</a> · <a href={m.licenseUrl}>{m.licenseOrPermission}</a></article>)}</main></div>;}

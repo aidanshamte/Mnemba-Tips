@@ -1,0 +1,18 @@
+{
+  "livescore": {
+    "automationAllowed": true,
+    "storageAllowed": true,
+    "publicDisplayAllowed": true,
+    "permissionEvidence": "Project owner authorization in final production handoff, reconfirmed integration request 2026-09-24; scoreboard/incidents/lineups only; no Perform/Opta.",
+    "contractVerified": true,
+    "discoveryUrl": "https://prod-cdn-mev-api.lsmedia1.com/api/v2/live/soccer/1",
+    "compactTimestampTimezone": "UTC",
+    "dailyLimit": 1500,
+    "pollSeconds": 60
+  },
+  "perform": {
+    "enabled": false,
+    "permissionEvidence": null,
+    "reason": "No third-party Opta/Perform authorization or sanitized response contract supplied. No requests, outlet tokens, cookies or browser sessions are used."
+  }
+}
