@@ -498,3 +498,11 @@
 .mt-studio-brand{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:44px;text-decoration:none;color:inherit}
 .mt-studio-brand .mt-brand-logo{width:160px}
 .mt-studio-brand small{font-size:12px;opacity:.8}
+/* Chips: season selector (competition page) and toggles (leagues directory). 44px targets. */
+.mt-chip-row{display:flex;flex-wrap:wrap;gap:var(--mt-space-sm);margin:var(--mt-space-md) 0}
+.intel .mt-chip-row>button,.intel .mt-chip{min-height:44px;padding:0 var(--mt-space-lg);border-radius:var(--mt-radius-full);border:var(--mt-border-width-hairline) solid var(--mt-color-border-strong);background:var(--mt-color-surface-default);color:var(--mt-color-text-primary);font:600 14px/20px var(--mt-font-ui);cursor:pointer}
+.intel .mt-chip-row>button[aria-pressed=true],.intel .mt-chip[aria-pressed=true]{background:var(--mt-color-surface-brand);border-color:var(--mt-color-surface-brand);color:var(--mt-color-text-inverse)}
+.mt-chip-row>button:focus-visible,.mt-chip:focus-visible{outline:none;box-shadow:var(--mt-focus-ring)}
+/* Basketball studio muted text: the original #64716c–#71807a greys measured 3.3–4.45:1 on its near-black
+   surfaces (WCAG AA needs 4.5:1). #9aa7a2 measures 6.8–7.7:1. Scoped to the studio shell only. */
+.app-shell :is(.system-card small,.nav-item em,.active>em,button>em,.lineup .lineup-team span,.lineup .player div span,.disclaimer,.h2h-score div span){color:#9aa7a2}

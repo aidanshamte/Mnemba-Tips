@@ -169,7 +169,7 @@
 }
 
 /* Brand (navy) surfaces stay dark in both themes, so content on them keeps the light-theme inverse values. */
-[data-theme="dark"] :is(.mt-rail,.mt-topbar,.match-hero,.intel-footer,.broadcast-hero,.matchday-presets button[aria-pressed=true],.search-categories>button[aria-pressed=true]){
+[data-theme="dark"] :is(.mt-rail,.mt-topbar,.match-hero,.intel-footer,.broadcast-hero,.matchday-presets button[aria-pressed=true],.search-categories>button[aria-pressed=true],.mt-chip[aria-pressed=true],.mt-chip-row>button[aria-pressed=true]){
   --mt-color-text-inverse:var(--mt-primitive-warm-50);
   --mt-color-text-inverse-secondary:var(--mt-primitive-navy-300);
   --mt-color-border-inverse:var(--mt-primitive-navy-700);

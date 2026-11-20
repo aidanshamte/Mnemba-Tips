@@ -39,7 +39,7 @@ export default function LeaguesDirectory({competitions, onFixtures}: {competitio
       {select('Category', who, setWho, [['men', 'Men'], ['women', 'Women'], ['youth', 'Youth']])}
       {select('Tier', tier, setTier, [['1', 'Top tier'], ['2', 'Second tier'], ['3', 'Third tier']])}
       {select('Coverage', coverage, setCoverage, [['extensive', 'Extensive'], ['partial', 'Partial'], ['limited', 'Limited']])}
-      <label className="mt-filter mt-filter-check"><input type="checkbox" checked={activeOnly} onChange={e => setActiveOnly(e.target.checked)}/><span>Active season only</span></label>
+      <button type="button" className="mt-chip" aria-pressed={activeOnly} onClick={() => setActiveOnly(v => !v)}>Active season only</button>
     </div>
     <p role="status" className="mt-supporting">{shown.length.toLocaleString()} {shown.length === 1 ? 'competition' : 'competitions'}</p>
     {!shown.length && <StatePanel kind="empty" title="No competitions match these filters">Clear a filter or search for another competition.</StatePanel>}
