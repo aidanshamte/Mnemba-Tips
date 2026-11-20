@@ -436,3 +436,9 @@
 .intel .match-hero .mt-profile-head h1{margin:0;font-size:var(--mt-type-display-size,56px);line-height:1.05;min-width:0}
 @media (max-width:767px){.mt-profile-head{gap:var(--mt-space-lg)}.intel .match-hero .mt-profile-head h1{font-size:32px;line-height:36px}}
 .intel .match-center>section>h2{margin:var(--mt-space-2xl) 0 var(--mt-space-md)}
+/* Search results (Figma: Search result row) */
+.intel .search-copy{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mt-space-2xs);min-width:0}
+.intel .search-copy>strong{font:600 18px/24px var(--mt-font-ui);overflow-wrap:anywhere}
+.intel .search-copy>p{margin:0;font-size:14px;line-height:20px;color:var(--mt-color-text-secondary);text-transform:capitalize}
+.intel .search-copy>small{display:flex;align-items:center;flex-wrap:wrap;gap:var(--mt-space-xs);font-size:13px;line-height:18px;color:var(--mt-color-text-secondary)}
+.intel .search-copy>small:last-child{margin-top:var(--mt-space-xs);color:var(--mt-color-action-football);font-weight:600}
