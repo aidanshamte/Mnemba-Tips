@@ -1,0 +1,23 @@
+// Bounded, resumable background discovery. A page title alone never supplies
+// the missing country/team-type evidence needed to assign an image.
+import {readFileSync,writeFileSync,existsSync,mkdirSync} from 'node:fs';import {createHash} from 'node:crypto';
+import {logoName} from '../lib/football/logo-discovery.mjs';import {downloadLogo} from '../lib/football/image-validation.mjs';import {ownerLogoPermission} from '../lib/football/logo-permission.mjs';
+const [input,output]=process.argv.slice(2);if(!input||!output)throw Error('Targets and output paths required');
+const targets=JSON.parse(readFileSync(input)),report=existsSync(output)?JSON.parse(readFileSync(output)):{entries:[],attempts:[]},seen=new Set(report.attempts.map(t=>t.id)),cache='.sites-runtime/logo-completion/wiki-cache';mkdirSync(cache,{recursive:true});
+let stopped=false,cursor=0;const demonyms={England:'English',Scotland:'Scottish',Wales:'Welsh',Turkey:'Turkish',Netherlands:'Dutch',Germany:'German',France:'French',Spain:'Spanish',Italy:'Italian',Portugal:'Portuguese',Greece:'Greek',Sweden:'Swedish',Denmark:'Danish',Finland:'Finnish',Norway:'Norwegian',Poland:'Polish',Czechia:'Czech','United States':'American',China:'Chinese',Japan:'Japanese',Brazil:'Brazilian',Argentina:'Argentine'};
+async function worker(){while(!stopped){const target=targets[cursor++];if(!target)return;if(seen.has(target.id))continue;if(process.argv.includes('--cached-only')&&!existsSync(cache+'/'+createHash('sha256').update('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(target.name)).digest('hex')+'.json'))continue;seen.add(target.id);const attempt={id:target.id,name:target.name,at:Date.now(),sourceUrl:'https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(target.name)};
+ try{
+  if(/^(?:3rd Group|Runner-up Group|Winner Group|Winner Match)|\[abandoned|^in \d|^--:--/.test(target.name))throw Error('Unresolved participant slot or malformed identity');
+  const file=cache+'/'+createHash('sha256').update(attempt.sourceUrl).digest('hex')+'.json';let article;
+  if(existsSync(file))article=JSON.parse(readFileSync(file));else{const response=await fetch(attempt.sourceUrl,{signal:AbortSignal.timeout(15000)});if([403,429,503].includes(response.status))stopped=true;if(!response.ok)throw Error('Wikipedia HTTP '+response.status);article=await response.json();writeFileSync(file,JSON.stringify(article));}
+  if(article.sourceRequest)attempt.sourceUrl=article.sourceRequest;const text=article.extract??'';if(article.type==='disambiguation'||!/(?:football|soccer) (?:club|team)/i.test(text))throw Error('Article does not uniquely identify a football club/team');
+  if(logoName(article.title)!==logoName(target.name)&&!logoName(text).includes(logoName(target.name)))throw Error('Article does not establish exact requested name');
+  const country=(target.countries??[]).find(c=>c.length>3&&[c,demonyms[c]].filter(Boolean).some(n=>text.slice(0,500).toLowerCase().includes(n.toLowerCase())));if(!country)throw Error('No corroborating stored country in article introduction');
+  const u=new URL(article.originalimage?.source??'');for(const key of [...u.searchParams.keys()])if(key.startsWith('utm_'))u.searchParams.delete(key);
+  if(!/logo|crest|badge/i.test(decodeURIComponent(u.pathname)))throw Error('Primary image is not explicitly identified as a crest/logo');
+  const {metadata}=await downloadLogo(u.href),sourceUrl=article.content_urls?.desktop?.page;if(!sourceUrl?.startsWith('https://en.wikipedia.org/wiki/'))throw Error('Original article reference missing');
+  report.entries.push({entity:{id:target.id,name:target.name,type:'team'},basis:'Exact article name and football club/team description; stored country '+country+' corroborated in introduction; explicit logo filename',media:{url:u.href,sourceUrl,sourceEntityId:article.wikibase_item,...metadata,...ownerLogoPermission(),attribution:'Team mark referenced by Wikipedia; mark belongs to its owner',lastSuccess:Date.now()}});attempt.state='valid';
+ }catch(error){attempt.state='unresolved';attempt.error=error.message;if(/HTTP (?:429|503)|host backoff/i.test(error.message))stopped=true;}
+ report.attempts.push(attempt);writeFileSync(output,JSON.stringify(report,null,2));if(report.attempts.length%50===0)console.log(JSON.stringify({attempted:report.attempts.length,resolved:report.entries.length,stopped}));await new Promise(r=>setTimeout(r,Number(process.env.LOGO_DISCOVERY_DELAY_MS)||800));
+}}
+await Promise.all(Array.from({length:Math.max(1,Math.min(2,Number(process.env.LOGO_DISCOVERY_CONCURRENCY)||2))},()=>worker()));console.log(JSON.stringify({attempted:report.attempts.length,resolved:report.entries.length,stopped,remaining:targets.filter(t=>!seen.has(t.id)).length}));

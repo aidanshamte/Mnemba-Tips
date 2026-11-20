@@ -1,0 +1,179 @@
+{
+ "master": "brand/mnemba-tips-logo-master.png",
+ "masterSha256": "050067ce3a6731404fa195ede6886b32c5d774d7e71a6cc1dd7cb55ff3eb360b",
+ "masterSize": [
+  2172,
+  724
+ ],
+ "wordmarkCrop": {
+  "left": 54,
+  "top": 65,
+  "width": 2085,
+  "height": 583
+ },
+ "emblemBox": {
+  "x0": 60,
+  "y0": 71,
+  "x1": 627,
+  "y1": 641
+ },
+ "letterStart": 644,
+ "files": [
+  {
+   "name": "mnemba-tips-wordmark-240.png",
+   "width": 240,
+   "height": 67,
+   "bytes": 23038
+  },
+  {
+   "name": "mnemba-tips-wordmark-240.avif",
+   "width": 240,
+   "height": 67,
+   "bytes": 6860
+  },
+  {
+   "name": "mnemba-tips-wordmark-240.webp",
+   "width": 240,
+   "height": 67,
+   "bytes": 9882
+  },
+  {
+   "name": "mnemba-tips-wordmark-480.png",
+   "width": 480,
+   "height": 134,
+   "bytes": 72294
+  },
+  {
+   "name": "mnemba-tips-wordmark-480.avif",
+   "width": 480,
+   "height": 134,
+   "bytes": 15029
+  },
+  {
+   "name": "mnemba-tips-wordmark-480.webp",
+   "width": 480,
+   "height": 134,
+   "bytes": 24660
+  },
+  {
+   "name": "mnemba-tips-wordmark-960.png",
+   "width": 960,
+   "height": 268,
+   "bytes": 244879
+  },
+  {
+   "name": "mnemba-tips-wordmark-960.avif",
+   "width": 960,
+   "height": 268,
+   "bytes": 30959
+  },
+  {
+   "name": "mnemba-tips-wordmark-960.webp",
+   "width": 960,
+   "height": 268,
+   "bytes": 59878
+  },
+  {
+   "name": "mnemba-tips-wordmark-on-dark-960.png",
+   "width": 960,
+   "height": 306,
+   "bytes": 200156
+  },
+  {
+   "name": "mnemba-tips-emblem-64.png",
+   "width": 64,
+   "height": 64,
+   "bytes": 10316
+  },
+  {
+   "name": "mnemba-tips-emblem-64.avif",
+   "width": 64,
+   "height": 64,
+   "bytes": 3430
+  },
+  {
+   "name": "mnemba-tips-emblem-64.webp",
+   "width": 64,
+   "height": 64,
+   "bytes": 3758
+  },
+  {
+   "name": "mnemba-tips-emblem-128.png",
+   "width": 128,
+   "height": 128,
+   "bytes": 34311
+  },
+  {
+   "name": "mnemba-tips-emblem-128.avif",
+   "width": 128,
+   "height": 128,
+   "bytes": 7672
+  },
+  {
+   "name": "mnemba-tips-emblem-128.webp",
+   "width": 128,
+   "height": 128,
+   "bytes": 9572
+  },
+  {
+   "name": "mnemba-tips-emblem-256.png",
+   "width": 256,
+   "height": 256,
+   "bytes": 119531
+  },
+  {
+   "name": "mnemba-tips-emblem-256.avif",
+   "width": 256,
+   "height": 256,
+   "bytes": 17073
+  },
+  {
+   "name": "mnemba-tips-emblem-256.webp",
+   "width": 256,
+   "height": 256,
+   "bytes": 24978
+  },
+  {
+   "name": "../favicon.ico",
+   "width": 48,
+   "height": 48,
+   "bytes": 10418
+  },
+  {
+   "name": "favicon-32.png",
+   "width": 32,
+   "height": 32,
+   "bytes": 3100
+  },
+  {
+   "name": "icon-192.png",
+   "width": 192,
+   "height": 192,
+   "bytes": 71749
+  },
+  {
+   "name": "icon-512.png",
+   "width": 512,
+   "height": 512,
+   "bytes": 463451
+  },
+  {
+   "name": "icon-maskable-512.png",
+   "width": 512,
+   "height": 512,
+   "bytes": 243406
+  },
+  {
+   "name": "apple-touch-icon.png",
+   "width": 180,
+   "height": 180,
+   "bytes": 46383
+  },
+  {
+   "name": "mnemba-tips-social-1200x630.png",
+   "width": 1200,
+   "height": 630,
+   "bytes": 239186
+  }
+ ]
+}

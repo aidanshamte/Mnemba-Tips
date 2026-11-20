@@ -1,0 +1,1069 @@
+[
+  {
+    "entityId": "openfootball:Simba%20SC",
+    "kind": "team",
+    "name": "Simba SC",
+    "url": "https://upload.wikimedia.org/wikipedia/en/b/bf/Simba_Sports_Club.png",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Simba_S.C.",
+    "identityEvidence": "Article describes Simba Sports Club in Kariakoo, Dar es Salaam, Tanzania; image visually inspected and reads Simba Sports Club 1936."
+  },
+  {
+    "entityId": "openfootball:Mtibwa%20Sugar%20FC",
+    "kind": "team",
+    "name": "Mtibwa Sugar FC",
+    "url": "https://upload.wikimedia.org/wikipedia/en/a/a7/Mtibwa_Sugar_FC.jpg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Mtibwa_Sugar_F.C.",
+    "identityEvidence": "Article identifies Mtibwa Sugar Football Club in Turiani, Tanzania; image visually inspected and reads Mtibwa Sugar FC."
+  },
+  {
+    "entityId": "openfootball:Young%20Africans%20SC",
+    "kind": "team",
+    "name": "Young Africans SC",
+    "url": "https://upload.wikimedia.org/wikipedia/en/d/d1/Young_Africans_SC_%28logo%29.png",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Young_Africans_S.C.",
+    "identityEvidence": "Structured article Q1630751 names Young Africans Sports Club in Jangwani, Dar es Salaam, Tanzania and explicitly links this logo."
+  },
+  {
+    "entityId": "openfootball:28b685d9a71b6e6253974b04aa1bb71aa3d0bde4e815c197fa8bff7f11f546b6",
+    "kind": "competition",
+    "name": "Tanzania NBC Premier League",
+    "url": "https://upload.wikimedia.org/wikipedia/en/5/54/TFF_Ligi_Kuu_Premier_League_Tanzania_Logo.jpg",
+    "sourceUrl": "https://en.wikipedia.org/wiki/Tanzanian_Premier_League",
+    "identityEvidence": "League article identifies the Tanzania Mainland top division, NBC sponsorship and this exact file; visually inspected image reads Tanzania Premier League Ligi Kuu. This is the league mark, not an assertion of a current sponsor lockup."
+  },
+  {
+    "entityId": "openfootball:JKT%20Tanzania%20FC",
+    "kind": "team",
+    "name": "JKT Tanzania FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/jkt-tanzania.webp",
+    "sourceUrl": "https://www.apwin.com/team/jkt-tanzania/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:Mashujaa%20FC",
+    "kind": "team",
+    "name": "Mashujaa FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/mashujaa-fc.webp",
+    "sourceUrl": "https://www.apwin.com/team/jkt-tanzania/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:Mbeya%20City%20FC",
+    "kind": "team",
+    "name": "Mbeya City FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/mbeya-city-fc.webp",
+    "sourceUrl": "https://www.apwin.com/team/jkt-tanzania/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:Pamba%20Jiji%20FC",
+    "kind": "team",
+    "name": "Pamba Jiji FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/pamba-jiji-fc.webp",
+    "sourceUrl": "https://www.apwin.com/team/jkt-tanzania/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:KMC%20FC",
+    "kind": "team",
+    "name": "KMC FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/kinondoni-municipal-council-football-club.webp",
+    "sourceUrl": "https://www.apwin.com/es/equipo/kinondoni-municipal-council-fc/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:Tanzania%20Prisons%20FC",
+    "kind": "team",
+    "name": "Tanzania Prisons FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/tanzania-prisons.webp",
+    "sourceUrl": "https://www.apwin.com/team/tanzania-prisons/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:Singida%20Fountain%20Gate%20FC",
+    "kind": "team",
+    "name": "Singida Fountain Gate FC",
+    "url": "https://cdnbfc.com/dq4uxsxpv/v1770109958/fountain-gate-fc.webp",
+    "sourceUrl": "https://www.apwin.com/team/jkt-tanzania/",
+    "identityEvidence": "Explicit club logo element in the Tanzania Ligi kuu Bara club page/league table; club name, Tanzania and competition agree with stored fixtures. Alias corroborated by https://en.wikipedia.org/wiki/Fountain_Gate_F.C : Singida Fountain Gate renamed Fountain Gate in 2024; distinct from Singida Black Stars.",
+    "attribution": "APWin image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:TRA%20United%20SC",
+    "kind": "team",
+    "name": "TRA United SC",
+    "url": "https://dsg-images.com/clubs/200x200/62676.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/team/tra-united-sc/62676/",
+    "identityEvidence": "Exact TRA United SC profile 62676 in Tanzania, explicit current logo element, distinct old-logo element not used.",
+    "attribution": "Global Sports Archive image reference; club mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:17e149575303129ba408251a99e02799ed116b29a469a6e76ef64aecccebed1f",
+    "kind": "competition",
+    "name": "World Cup 2026",
+    "url": "https://www.dsg-images.com/comps/50x50/18_22.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/fifa-world-cup-2026-canada-mexico-usa/74534",
+    "identityEvidence": "Reviewed competition identity: World Cup 2026 corresponds to FIFA World Cup in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:1924ab65b67fe283a7eba5ac63ea8dd9d4ffb2d81eb2884f7712e1ecb9a2714b",
+    "kind": "competition",
+    "name": "Copa Sudamericana 2025",
+    "url": "https://www.dsg-images.com/comps/50x50/428_1.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-sudamericana-2026/78024",
+    "identityEvidence": "Reviewed competition identity: Copa Sudamericana 2025 corresponds to Copa Sudamericana in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:25af08dfb851b61fe3095707dae0f49da86b293b2ca544c911438b58ee40704e",
+    "kind": "competition",
+    "name": "Major League Soccer",
+    "url": "https://www.dsg-images.com/comps/50x50/47_1.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Reviewed competition identity: Major League Soccer corresponds to MLS in United States source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:26f7a1f8ae750929ceeb3bffbb86ccf238c6317511989618774dfa8e9b7c26f9",
+    "kind": "competition",
+    "name": "Rwanda Premier League",
+    "url": "https://www.dsg-images.com/comps/50x50/87_5.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/bk-pro-league-2026-2027/81414",
+    "identityEvidence": "Reviewed competition identity: Rwanda Premier League corresponds to Premier League in Rwanda source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:69ec78b7c4496c8cfbb8283a0dd95fba09ef8ddd4e59ae663b3050810df0e2fd",
+    "kind": "competition",
+    "name": "2. Fußball-Bundesliga",
+    "url": "https://www.dsg-images.com/comps/50x50/327_1.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/2-bundesliga-2026-2027/80245",
+    "identityEvidence": "Reviewed competition identity: 2. Fußball-Bundesliga corresponds to 2. Bundesliga in Germany source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:720d2e8c5bcd277a359d7e74d74f30b2ce74f8fe7e14e0ae40e0010d85e9de1f",
+    "kind": "competition",
+    "name": "Nigeria Premier League",
+    "url": "https://www.dsg-images.com/comps/50x50/61_2.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/nigeria-premier-football-league-2026-2027/81511",
+    "identityEvidence": "Reviewed competition identity: Nigeria Premier League corresponds to Nigeria Premier League in Nigeria source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:7242a3dec974008b255cce8d9f70f2e3b77f4d955d65b67873fd6bbada53671b",
+    "kind": "competition",
+    "name": "Jupiler Pro League 2026/27 (Belgium First Division A)",
+    "url": "https://www.dsg-images.com/comps/50x50/65_3.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/jupiler-pro-league-2026-2027/81255",
+    "identityEvidence": "Reviewed competition identity: Jupiler Pro League 2026/27 (Belgium First Division A) corresponds to Jupiler Pro League in Belgium source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:72bf212c2209fb4b5b2818da133f21797f29d56257eb431a285ee8ac3bc426ba",
+    "kind": "competition",
+    "name": "Brasileiro Série A 2026",
+    "url": "https://www.dsg-images.com/comps/50x50/14_5.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Reviewed competition identity: Brasileiro Série A 2026 corresponds to Série A in Brazil source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:a7472c830905ccfcea469fb568d9bfe9b3db70c76e407fa77f492ed1f457b2da",
+    "kind": "competition",
+    "name": "Segunda División",
+    "url": "https://www.dsg-images.com/comps/50x50/343_4.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Reviewed competition identity: Segunda División corresponds to La Liga 2 in Spain source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:a76781e4a47a941cfaede722d26a6d521113c1b43bdb83199953342c1ea6720c",
+    "kind": "competition",
+    "name": "Copa Libertadores 2026",
+    "url": "https://www.dsg-images.com/comps/50x50/161_2.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Reviewed competition identity: Copa Libertadores 2026 corresponds to Copa Libertadores in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:b839eb27ce717160b425b8b82c4a0790e76b383d1378179f03a0385f5f9c9b74",
+    "kind": "competition",
+    "name": "UEFA Conference League - Quali",
+    "url": "https://www.dsg-images.com/comps/50x50/2465_1.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/uefa-conference-league-2026-2027/80326",
+    "identityEvidence": "Reviewed competition identity: UEFA Conference League - Quali corresponds to UEFA Conference League in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:d7474b1e762c0492aad8e6f2d2ee4f52eb7376c7f3ff2dbe1bc4e2bab932f3ac",
+    "kind": "competition",
+    "name": "Ghana Premier League",
+    "url": "https://www.dsg-images.com/comps/50x50/289_4.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ghana-premier-league-2026-2027/81049",
+    "identityEvidence": "Reviewed competition identity: Ghana Premier League corresponds to Ghana Premier League in Ghana source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:ee0d1abb291c0d12dc86047a2f4e2d6f06256f4fc2e2599ff608c9d1a062f8ae",
+    "kind": "competition",
+    "name": "Euro 2028",
+    "url": "https://www.dsg-images.com/comps/50x50/11_8.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/uefa-european-championship-2028-uk-ireland/78659",
+    "identityEvidence": "Reviewed competition identity: Euro 2028 corresponds to European Championship in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:eeb5095c753c4eb27978bb336a852c533ce583b643f1ac3cf6887639c08676e8",
+    "kind": "competition",
+    "name": "Zambia Super League",
+    "url": "https://www.dsg-images.com/comps/50x50/245_1.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mtn-super-league-2026/81229",
+    "identityEvidence": "Reviewed competition identity: Zambia Super League corresponds to Super Division in Zambia source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:f8fe956fa38e1591a41cfdf2205e50bfaf6eb6b3f0ecd6f36d0a4687c79ba766",
+    "kind": "competition",
+    "name": "Uganda Premier League",
+    "url": "https://www.dsg-images.com/comps/50x50/251_2.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Reviewed competition identity: Uganda Premier League corresponds to FUFA Super League in Uganda source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:ffa49c28e182b20757f6c32454ab6b4274c85fbda63290cb1e2c883ab1659bd0",
+    "kind": "competition",
+    "name": "Turkish Süper Lig",
+    "url": "https://www.dsg-images.com/comps/50x50/23_5.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/trendyol-super-lig-2026-2027/80283",
+    "identityEvidence": "Reviewed competition identity: Turkish Süper Lig corresponds to Süper Lig in Türkiye source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "statsbomb:53",
+    "kind": "competition",
+    "name": "UEFA Women's Euro",
+    "url": "https://www.dsg-images.com/comps/50x50/999_6.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/uefa-womens-euro-2025-switzerland/74562",
+    "identityEvidence": "Reviewed competition identity: UEFA Women's Euro corresponds to UEFA Women's EURO in international confederation source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:71b15028be3ba3e459791d4db3c3d4a40b8b6d004e23c5b8a276af326c3003ff",
+    "kind": "competition",
+    "name": "Japan | J1 League 2025",
+    "url": "https://www.dsg-images.com/comps/50x50/15_2.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/meiji-yasuda-j1-league-2026-2027/78660",
+    "identityEvidence": "Reviewed competition identity: Japan | J1 League 2025 corresponds to J. League in Japan source directory. Exact league/organizer and gender; qualifiers use parent competition mark. Year-specific source identity retained in source URL.",
+    "attribution": "Global Sports Archive logo reference; competition mark belongs to its owner"
+  },
+  {
+    "entityId": "openfootball:3b09b5da2864532bf58c0b99df2533fa83ecb9c2fb664e02677bb20955d13ffb",
+    "kind": "competition",
+    "name": "China | Super League 2025",
+    "url": "https://cdnbfc.com/dq4uxsxpv/chinese-super-league.webp",
+    "sourceUrl": "https://www.apwin.com/league/china/chinese-super-league/",
+    "identityEvidence": "Source search ID 23 explicitly identifies China Chinese Super League. Stored competition originated in OpenFootball cn.1.json, China first division; sponsor-neutral competition identity.",
+    "attribution": "APWin logo reference; competition mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Al-Hilal%20(Omdurman)",
+    "name": "Al-Hilal (Omdurman)",
+    "url": "https://dsg-images.com/clubs/50x50/16674.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/bk-pro-league-2026-2027/81414",
+    "identityEvidence": "Exact normalized club name in reviewed Rwanda domestic competition standings; GSA club ID 16674. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Rangers%20International%20FC",
+    "name": "Rangers International FC",
+    "url": "https://dsg-images.com/clubs/50x50/2240.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/nigeria-premier-football-league-2026-2027/81511",
+    "identityEvidence": "Exact normalized club name in reviewed Nigeria domestic competition standings; GSA club ID 2240. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Shooting%20Stars%20SC",
+    "name": "Shooting Stars SC",
+    "url": "https://dsg-images.com/clubs/50x50/2244.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/nigeria-premier-football-league-2026-2027/81511",
+    "identityEvidence": "Exact normalized club name in reviewed Nigeria domestic competition standings; GSA club ID 2244. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Accra%20Hearts%20of%20Oak%20SC",
+    "name": "Accra Hearts of Oak SC",
+    "url": "https://dsg-images.com/clubs/50x50/1069.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ghana-premier-league-2026-2027/81049",
+    "identityEvidence": "Exact normalized club name in reviewed Ghana domestic competition standings; GSA club ID 1069. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Aduana%20FC",
+    "name": "Aduana FC",
+    "url": "https://dsg-images.com/clubs/50x50/17155.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ghana-premier-league-2026-2027/81049",
+    "identityEvidence": "Exact normalized club name in reviewed Ghana domestic competition standings; GSA club ID 17155. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Karela%20United%20FC",
+    "name": "Karela United FC",
+    "url": "https://dsg-images.com/clubs/50x50/34626.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ghana-premier-league-2026-2027/81049",
+    "identityEvidence": "Exact normalized club name in reviewed Ghana domestic competition standings; GSA club ID 34626. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Vision%20FC",
+    "name": "Vision FC",
+    "url": "https://dsg-images.com/clubs/50x50/36404.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ghana-premier-league-2026-2027/81049",
+    "identityEvidence": "Exact normalized club name in reviewed Ghana domestic competition standings; GSA club ID 36404. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:FC%20MUZA",
+    "name": "FC MUZA",
+    "url": "https://dsg-images.com/clubs/50x50/39378.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mtn-super-league-2026/81229",
+    "identityEvidence": "Exact normalized club name in reviewed Zambia domestic competition standings; GSA club ID 39378. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:BUL%20FC",
+    "name": "BUL FC",
+    "url": "https://dsg-images.com/clubs/50x50/11504.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 11504. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Entebbe%20UPPC%20FC",
+    "name": "Entebbe UPPC FC",
+    "url": "https://dsg-images.com/clubs/50x50/52010.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 52010. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Express%20FC",
+    "name": "Express FC",
+    "url": "https://dsg-images.com/clubs/50x50/16911.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16911. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:KCCA%20FC",
+    "name": "KCCA FC",
+    "url": "https://dsg-images.com/clubs/50x50/16666.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16666. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Kitara%20FC",
+    "name": "Kitara FC",
+    "url": "https://dsg-images.com/clubs/50x50/22313.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 22313. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Lugazi%20FC",
+    "name": "Lugazi FC",
+    "url": "https://dsg-images.com/clubs/50x50/67183.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 67183. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Maroons%20FC",
+    "name": "Maroons FC",
+    "url": "https://dsg-images.com/clubs/50x50/16930.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16930. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Mbarara%20City%20FC",
+    "name": "Mbarara City FC",
+    "url": "https://dsg-images.com/clubs/50x50/33684.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 33684. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:NEC%20FC",
+    "name": "NEC FC",
+    "url": "https://dsg-images.com/clubs/50x50/62748.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 62748. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:SC%20Villa",
+    "name": "SC Villa",
+    "url": "https://dsg-images.com/clubs/50x50/16914.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16914. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:UPDF%20FC",
+    "name": "UPDF FC",
+    "url": "https://dsg-images.com/clubs/50x50/16916.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16916. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Vipers%20SC",
+    "name": "Vipers SC",
+    "url": "https://dsg-images.com/clubs/50x50/16922.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/startimes-uganda-premier-league-2026-2027/81415",
+    "identityEvidence": "Exact normalized club name in reviewed Uganda domestic competition standings; GSA club ID 16922. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CF%20Montr%C3%A9al",
+    "name": "CF Montréal",
+    "url": "https://dsg-images.com/clubs/50x50/2101.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2101. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:FC%20Cincinnati",
+    "name": "FC Cincinnati",
+    "url": "https://dsg-images.com/clubs/50x50/39765.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 39765. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:FC%20Dallas",
+    "name": "FC Dallas",
+    "url": "https://dsg-images.com/clubs/50x50/2088.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2088. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Inter%20Miami%20CF",
+    "name": "Inter Miami CF",
+    "url": "https://dsg-images.com/clubs/50x50/37824.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 37824. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Los%20Angeles%20FC",
+    "name": "Los Angeles FC",
+    "url": "https://dsg-images.com/clubs/50x50/25244.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 25244. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Nashville%20SC",
+    "name": "Nashville SC",
+    "url": "https://dsg-images.com/clubs/50x50/42856.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 42856. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Orlando%20City",
+    "name": "Orlando City",
+    "url": "https://dsg-images.com/clubs/50x50/15797.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 15797. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Philadelphia%20Union",
+    "name": "Philadelphia Union",
+    "url": "https://dsg-images.com/clubs/50x50/2098.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2098. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Portland%20Timbers",
+    "name": "Portland Timbers",
+    "url": "https://dsg-images.com/clubs/50x50/2100.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2100. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Real%20Salt%20Lake",
+    "name": "Real Salt Lake",
+    "url": "https://dsg-images.com/clubs/50x50/2090.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2090. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:San%20Diego%20FC",
+    "name": "San Diego FC",
+    "url": "https://dsg-images.com/clubs/50x50/68632.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 68632. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:St.%20Louis%20City%20SC",
+    "name": "St. Louis City SC",
+    "url": "https://dsg-images.com/clubs/50x50/47865.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 47865. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Vancouver%20Whitecaps",
+    "name": "Vancouver Whitecaps",
+    "url": "https://dsg-images.com/clubs/50x50/2099.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/mls-2026/77976",
+    "identityEvidence": "Exact normalized club name in reviewed United States domestic competition standings; GSA club ID 2099. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:SV%20Zulte%20Waregem",
+    "name": "SV Zulte Waregem",
+    "url": "https://dsg-images.com/clubs/50x50/3082.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/jupiler-pro-league-2026-2027/81255",
+    "identityEvidence": "Exact normalized club name in reviewed Belgium domestic competition standings; GSA club ID 3082. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Fluminense%20FC",
+    "name": "Fluminense FC",
+    "url": "https://dsg-images.com/clubs/50x50/1376.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1376. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Gr%C3%AAmio%20FBPA",
+    "name": "Grêmio FBPA",
+    "url": "https://dsg-images.com/clubs/50x50/1047.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1047. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Mirassol%20FC",
+    "name": "Mirassol FC",
+    "url": "https://dsg-images.com/clubs/50x50/23095.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 23095. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:S%C3%A3o%20Paulo%20FC",
+    "name": "São Paulo FC",
+    "url": "https://dsg-images.com/clubs/50x50/1044.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1044. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:SC%20Internacional",
+    "name": "SC Internacional",
+    "url": "https://dsg-images.com/clubs/50x50/1045.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1045. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:SE%20Palmeiras",
+    "name": "SE Palmeiras",
+    "url": "https://dsg-images.com/clubs/50x50/1380.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1380. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Santos%20FC",
+    "name": "Santos FC",
+    "url": "https://dsg-images.com/clubs/50x50/1048.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/brasileirao-betano-serie-a-2026/77982",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1048. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:AD%20Ceuta%20FC",
+    "name": "AD Ceuta FC",
+    "url": "https://dsg-images.com/clubs/50x50/29673.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 29673. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Granada%20CF",
+    "name": "Granada CF",
+    "url": "https://dsg-images.com/clubs/50x50/739.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 739. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:RCD%20Mallorca",
+    "name": "RCD Mallorca",
+    "url": "https://dsg-images.com/clubs/50x50/730.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 730. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Real%20Oviedo",
+    "name": "Real Oviedo",
+    "url": "https://dsg-images.com/clubs/50x50/725.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 725. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Real%20Valladolid",
+    "name": "Real Valladolid",
+    "url": "https://dsg-images.com/clubs/50x50/742.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 742. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:UD%20Almer%C3%ADa",
+    "name": "UD Almería",
+    "url": "https://dsg-images.com/clubs/50x50/745.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 745. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:UD%20Las%20Palmas",
+    "name": "UD Las Palmas",
+    "url": "https://dsg-images.com/clubs/50x50/749.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-hypermotion-2026-2027/80601",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 749. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Samsunspor",
+    "name": "Samsunspor",
+    "url": "https://dsg-images.com/clubs/50x50/1083.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/trendyol-super-lig-2026-2027/80283",
+    "identityEvidence": "Exact normalized club name in reviewed Turkey domestic competition standings; GSA club ID 1083. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Trabzonspor",
+    "name": "Trabzonspor",
+    "url": "https://dsg-images.com/clubs/50x50/1081.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/trendyol-super-lig-2026-2027/80283",
+    "identityEvidence": "Exact normalized club name in reviewed Turkey domestic competition standings; GSA club ID 1081. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CR%20B%C3%A9louizdad",
+    "name": "CR Bélouizdad",
+    "url": "https://dsg-images.com/clubs/50x50/17210.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ligue-1-mobilis-2026-2027/81231",
+    "identityEvidence": "Exact normalized club name in reviewed Algeria domestic competition standings; GSA club ID 17210. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Olympique%20Akbou",
+    "name": "Olympique Akbou",
+    "url": "https://dsg-images.com/clubs/50x50/11833.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ligue-1-mobilis-2026-2027/81231",
+    "identityEvidence": "Exact normalized club name in reviewed Algeria domestic competition standings; GSA club ID 11833. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:EC%20Juventude",
+    "name": "EC Juventude",
+    "url": "https://dsg-images.com/clubs/50x50/1391.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-b-2026/77983",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1391. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:SC%20Recife",
+    "name": "SC Recife",
+    "url": "https://dsg-images.com/clubs/50x50/1379.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-b-2026/77983",
+    "identityEvidence": "Exact normalized club name in reviewed Brazil domestic competition standings; GSA club ID 1379. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:ES%20Troyes%20AC",
+    "name": "ES Troyes AC",
+    "url": "https://dsg-images.com/clubs/50x50/592.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ligue-1-mcdonalds-2026-2027/80398",
+    "identityEvidence": "Exact normalized club name in reviewed France domestic competition standings; GSA club ID 592. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Racing%20Club%20de%20Lens",
+    "name": "Racing Club de Lens",
+    "url": "https://dsg-images.com/clubs/50x50/600.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ligue-1-mcdonalds-2026-2027/80398",
+    "identityEvidence": "Exact normalized club name in reviewed France domestic competition standings; GSA club ID 600. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Stade%20Rennais%20FC%201901",
+    "name": "Stade Rennais FC 1901",
+    "url": "https://dsg-images.com/clubs/50x50/578.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/ligue-1-mcdonalds-2026-2027/80398",
+    "identityEvidence": "Exact normalized club name in reviewed France domestic competition standings; GSA club ID 578. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:AE%20Kifisias",
+    "name": "AE Kifisias",
+    "url": "https://dsg-images.com/clubs/50x50/37514.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/stoiximan-super-league-2026-2027/80318",
+    "identityEvidence": "Exact normalized club name in reviewed Greece domestic competition standings; GSA club ID 37514. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:FC%20Internazionale%20Milano",
+    "name": "FC Internazionale Milano",
+    "url": "https://dsg-images.com/clubs/50x50/788.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-a-enilive-2026-2027/80361",
+    "identityEvidence": "Exact normalized club name in reviewed Italy domestic competition standings; GSA club ID 788. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:US%20Sassuolo%20Calcio",
+    "name": "US Sassuolo Calcio",
+    "url": "https://dsg-images.com/clubs/50x50/826.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-a-enilive-2026-2027/80361",
+    "identityEvidence": "Exact normalized club name in reviewed Italy domestic competition standings; GSA club ID 826. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Hellas%20Verona%20FC",
+    "name": "Hellas Verona FC",
+    "url": "https://dsg-images.com/clubs/50x50/817.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-b-bkt-2026-2027/80416",
+    "identityEvidence": "Exact normalized club name in reviewed Italy domestic competition standings; GSA club ID 817. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:US%20Cremonese",
+    "name": "US Cremonese",
+    "url": "https://dsg-images.com/clubs/50x50/840.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/serie-b-bkt-2026-2027/80416",
+    "identityEvidence": "Exact normalized club name in reviewed Italy domestic competition standings; GSA club ID 840. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Mara%20Sugar%20FC",
+    "name": "Mara Sugar FC",
+    "url": "https://dsg-images.com/clubs/50x50/57135.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/sportpesa-league-2026-2027/81586",
+    "identityEvidence": "Exact normalized club name in reviewed Kenya domestic competition standings; GSA club ID 57135. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Murang'a%20Seal%20FC",
+    "name": "Murang'a Seal FC",
+    "url": "https://dsg-images.com/clubs/50x50/42065.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/sportpesa-league-2026-2027/81586",
+    "identityEvidence": "Exact normalized club name in reviewed Kenya domestic competition standings; GSA club ID 42065. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Club%20Tijuana",
+    "name": "Club Tijuana",
+    "url": "https://dsg-images.com/clubs/50x50/2077.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/liga-bbva-mx-2026-2027/80373",
+    "identityEvidence": "Exact normalized club name in reviewed Mexico domestic competition standings; GSA club ID 2077. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Deportivo%20Toluca",
+    "name": "Deportivo Toluca",
+    "url": "https://dsg-images.com/clubs/50x50/2060.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/liga-bbva-mx-2026-2027/80373",
+    "identityEvidence": "Exact normalized club name in reviewed Mexico domestic competition standings; GSA club ID 2060. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:COD%20Mekn%C3%A9s",
+    "name": "COD Meknés",
+    "url": "https://dsg-images.com/clubs/50x50/16629.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/botola-pro-inwi-1-2026-2027/81599",
+    "identityEvidence": "Exact normalized club name in reviewed Morocco domestic competition standings; GSA club ID 16629. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:RS%20Berkane",
+    "name": "RS Berkane",
+    "url": "https://dsg-images.com/clubs/50x50/12932.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/botola-pro-inwi-1-2026-2027/81599",
+    "identityEvidence": "Exact normalized club name in reviewed Morocco domestic competition standings; GSA club ID 12932. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:JS%20Soualem",
+    "name": "JS Soualem",
+    "url": "https://dsg-images.com/clubs/50x50/44762.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/botola-pro-inwi-2-2025-2026/77465",
+    "identityEvidence": "Exact normalized club name in reviewed Morocco domestic competition standings; GSA club ID 44762. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:RC%20Celta%20de%20Vigo",
+    "name": "RC Celta de Vigo",
+    "url": "https://dsg-images.com/clubs/50x50/741.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-ea-sports-2026-2027/80342",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 741. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Rayo%20Vallecano%20de%20Madrid",
+    "name": "Rayo Vallecano de Madrid",
+    "url": "https://dsg-images.com/clubs/50x50/737.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/la-liga-ea-sports-2026-2027/80342",
+    "identityEvidence": "Exact normalized club name in reviewed Spain domestic competition standings; GSA club ID 737. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Academia%20Puerto%20Cabello",
+    "name": "Academia Puerto Cabello",
+    "url": "https://dsg-images.com/clubs/50x50/27255.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-sudamericana-2026/78024",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 27255. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Barcelona%20SC",
+    "name": "Barcelona SC",
+    "url": "https://dsg-images.com/clubs/50x50/2104.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 2104. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CA%20Platense",
+    "name": "CA Platense",
+    "url": "https://dsg-images.com/clubs/50x50/17445.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17445. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CD%20Coquimbo%20Unido",
+    "name": "CD Coquimbo Unido",
+    "url": "https://dsg-images.com/clubs/50x50/1897.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 1897. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CD%20Tolima",
+    "name": "CD Tolima",
+    "url": "https://dsg-images.com/clubs/50x50/1991.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 1991. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CS%20Cristal",
+    "name": "CS Cristal",
+    "url": "https://dsg-images.com/clubs/50x50/17763.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17763. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:CS%20Independiente%20Rivadavia",
+    "name": "CS Independiente Rivadavia",
+    "url": "https://dsg-images.com/clubs/50x50/17447.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17447. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Club%20Always%20Ready",
+    "name": "Club Always Ready",
+    "url": "https://dsg-images.com/clubs/50x50/35540.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 35540. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Club%20Bol%C3%ADvar",
+    "name": "Club Bolívar",
+    "url": "https://dsg-images.com/clubs/50x50/18042.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 18042. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Club%20Cerro%20Porte%C3%B1o",
+    "name": "Club Cerro Porteño",
+    "url": "https://dsg-images.com/clubs/50x50/17818.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17818. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Cusco%20FC",
+    "name": "Cusco FC",
+    "url": "https://dsg-images.com/clubs/50x50/17816.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17816. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Deportivo%20La%20Guaira%20FC",
+    "name": "Deportivo La Guaira FC",
+    "url": "https://dsg-images.com/clubs/50x50/17300.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17300. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Estudiantes%20de%20La%20Plata",
+    "name": "Estudiantes de La Plata",
+    "url": "https://dsg-images.com/clubs/50x50/1043.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 1043. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Independiente%20Santa%20Fe",
+    "name": "Independiente Santa Fe",
+    "url": "https://dsg-images.com/clubs/50x50/1994.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 1994. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:LDU%20de%20Quito",
+    "name": "LDU de Quito",
+    "url": "https://dsg-images.com/clubs/50x50/1051.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 1051. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Universidad%20Central%20de%20Venezuela%20FC",
+    "name": "Universidad Central de Venezuela FC",
+    "url": "https://dsg-images.com/clubs/50x50/17319.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/copa-conmebol-libertadores-2026/78025",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 17319. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  },
+  {
+    "kind": "team",
+    "entityId": "openfootball:Riga%20FC",
+    "name": "Riga FC",
+    "url": "https://dsg-images.com/clubs/50x50/10100.png",
+    "sourceUrl": "https://globalsportsarchive.com/en/soccer/competition/uefa-conference-league-2026-2027/80326",
+    "identityEvidence": "Exact normalized club name in reviewed International competition standings; existing fixture competition membership checked for continental teams; GSA club ID 10100. Image URL observed on the same page.",
+    "attribution": "Global Sports Archive logo reference; mark belongs to its owner"
+  }
+]

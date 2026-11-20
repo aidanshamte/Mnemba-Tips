@@ -1,24 +1,41 @@
 name: Deploy Mnemba Tips to Azure
+# Canary release. A push to main builds an immutable commit image and creates a NEW revision at
+# 0% public traffic, labelled "candidate", then verifies it directly. Public traffic, scheduled
+# jobs and rollback are explicit manual steps (workflow_dispatch) — see scripts/azure/release.sh.
 on:
   push:
     branches: [main]
     paths-ignore: ["**/*.md"]
   workflow_dispatch:
+    inputs:
+      action:
+        description: "deploy-candidate | shift-traffic | rollback"
+        type: choice
+        options: [deploy-candidate, shift-traffic, rollback]
+        default: deploy-candidate
+      revision:
+        description: "Revision name (shift-traffic: the candidate; rollback: the revision to restore)"
+        required: false
+      weight:
+        description: "shift-traffic: candidate percentage (10, 50 or 100; 100 also moves the scheduled jobs)"
+        required: false
+        default: "10"
 permissions:
   contents: read
   id-token: write
 concurrency:
   group: mnemba-azure-production
   cancel-in-progress: false
+env:
+  AZURE_RESOURCE_GROUP: mnemba-azure
+  AZURE_ACR: mnembab55deec1
+  AZURE_ACR_HOST: mnembab55deec1.azurecr.io
+  AZURE_APP: mnemba-web
 jobs:
-  deploy:
+  candidate:
+    if: github.event_name == 'push' || inputs.action == 'deploy-candidate'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    env:
-      AZURE_RESOURCE_GROUP: mnemba-azure
-      AZURE_ACR: mnembab55deec1
-      AZURE_ACR_HOST: mnembab55deec1.azurecr.io
-      AZURE_APP: mnemba-web
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -29,6 +46,7 @@ jobs:
       - name: Regression tests and type checks
         run: |
           node --test tests/unit/*.test.mjs tests/system/*.test.mjs
+          npx tsc --noEmit
           npx tsc --noEmit -p tsconfig.azure.json
       - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
         with:
@@ -36,22 +54,85 @@ jobs:
           tenant-id: 14b1677f-3a8b-4ca5-b3ce-50d76ab2e4b9
           subscription-id: b55deec1-aecc-443f-8d1c-3401a8a6d190
       - name: Build and push immutable commit image
+        id: image
         run: |
           az acr login --name "$AZURE_ACR"
           docker build -f Dockerfile.azure -t "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" .
           docker push "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA"
-      - name: Deploy and verify production reads
+          digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA")
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Image: \`$AZURE_ACR_HOST/mnemba:$GITHUB_SHA\` → \`$digest\`" >> "$GITHUB_STEP_SUMMARY"
+      - name: Create candidate revision at 0% traffic
+        id: deploy
         run: |
-          az containerapp update -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --image "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" --output none
-          for job in mnemba-update-0 mnemba-update-1 mnemba-update-2; do
-            az containerapp job update -g "$AZURE_RESOURCE_GROUP" -n "$job" --image "$AZURE_ACR_HOST/mnemba:$GITHUB_SHA" --output none
-          done
-          fqdn=$(az containerapp show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query properties.configuration.ingress.fqdn -o tsv)
-          mkdir -p .sites-runtime/azure-migration
-          node scripts/azure/verify-url.mjs "https://$fqdn" .sites-runtime/azure-migration/ci-verification.json
+          stable=$(bash scripts/azure/release.sh prepare)
+          revision=$(bash scripts/azure/release.sh deploy "${{ steps.image.outputs.digest }}" "r-${GITHUB_SHA::12}")
+          domain=$(az containerapp show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query properties.configuration.ingress.fqdn -o tsv | cut -d. -f2-)
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"; echo "stable=$stable" >> "$GITHUB_OUTPUT"
+          echo "url=https://$AZURE_APP---candidate.$domain" >> "$GITHUB_OUTPUT"
+      - name: Verify candidate directly (no public traffic)
+        run: |
+          mkdir -p .sites-runtime/azure-release
+          node scripts/azure/verify-revision.mjs "${{ steps.deploy.outputs.url }}" .sites-runtime/azure-release/candidate.json
+          node scripts/azure/verify-url.mjs "${{ steps.deploy.outputs.url }}" .sites-runtime/azure-release/candidate-reads.json
+          {
+            echo "Candidate \`${{ steps.deploy.outputs.revision }}\` verified at 0% traffic; \`${{ steps.deploy.outputs.stable }}\` still serves 100%."
+            echo "Next: run this workflow with action=shift-traffic, revision=${{ steps.deploy.outputs.revision }}, weight=10 → 50 → 100."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Deactivate a candidate that failed verification
+        if: failure() && steps.deploy.outputs.revision != ''
+        run: az containerapp revision deactivate -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --revision "${{ steps.deploy.outputs.revision }}"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: azure-verification
-          path: .sites-runtime/azure-migration/ci-verification.json
+          name: azure-candidate-verification
+          path: .sites-runtime/azure-release/
           if-no-files-found: ignore
+
+  shift-traffic:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'shift-traffic'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: 10f69bfd-aa0b-4ea2-b8ed-1bb43d81c7e7
+          tenant-id: 14b1677f-3a8b-4ca5-b3ce-50d76ab2e4b9
+          subscription-id: b55deec1-aecc-443f-8d1c-3401a8a6d190
+      - name: Shift traffic and verify the public site
+        id: shift
+        run: |
+          [[ "${{ inputs.weight }}" =~ ^(10|25|50|100)$ ]] || { echo 'weight must be 10, 25, 50 or 100'; exit 1; }
+          stable=$(az containerapp ingress traffic show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query "sort_by([?revisionName!='${{ inputs.revision }}' && weight>\`0\`],&weight)[-1].revisionName" -o tsv)
+          echo "stable=$stable" >> "$GITHUB_OUTPUT"
+          bash scripts/azure/release.sh traffic "${{ inputs.revision }}" "${{ inputs.weight }}"
+          mkdir -p .sites-runtime/azure-release
+          for i in 1 2 3; do node scripts/azure/verify-revision.mjs https://aidanshamte.me ".sites-runtime/azure-release/public-${{ inputs.weight }}-$i.json"; sleep 20; done
+      - name: Move the existing scheduled jobs to the verified image (100% only)
+        if: inputs.weight == '100'
+        run: |
+          image=$(az containerapp revision show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --revision "${{ inputs.revision }}" --query "properties.template.containers[0].image" -o tsv)
+          bash scripts/azure/release.sh jobs "$image"
+      - name: Automatic rollback on a failed stage
+        if: failure() && steps.shift.outputs.stable != ''
+        run: bash scripts/azure/release.sh rollback "${{ steps.shift.outputs.stable }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: azure-traffic-${{ inputs.weight }}
+          path: .sites-runtime/azure-release/
+          if-no-files-found: ignore
+
+  rollback:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'rollback'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: azure/login@8216e11d8cd9b42fe925c852af8e76311ff067ac # v2
+        with:
+          client-id: 10f69bfd-aa0b-4ea2-b8ed-1bb43d81c7e7
+          tenant-id: 14b1677f-3a8b-4ca5-b3ce-50d76ab2e4b9
+          subscription-id: b55deec1-aecc-443f-8d1c-3401a8a6d190
+      - run: bash scripts/azure/release.sh rollback "${{ inputs.revision }}"

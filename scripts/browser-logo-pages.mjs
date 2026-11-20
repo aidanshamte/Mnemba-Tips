@@ -1,0 +1,11 @@
+import{readFileSync,writeFileSync}from'node:fs';
+import assert from'node:assert/strict';
+import{routeToken}from'../lib/football/consumer.mjs';
+const origin=process.argv[2]??'http://localhost:5184';if(!['localhost','127.0.0.1'].includes(new URL(origin).hostname))throw Error('Local preview required');
+const{chromium}=await import(process.env.PLAYWRIGHT_MODULE??'playwright'),browser=await chromium.launch({headless:true,env:process.env}),report=[];
+try{const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',e=>errors.push(e.message));const fixture=JSON.parse(readFileSync('.sites-runtime/real-logos/browser/evidence.json')).find(r=>r.label==='Tanzania').fixture;
+await page.goto(origin+'/football/match/'+routeToken(fixture));await page.locator('.match-score').waitFor({timeout:60000});
+const competition=JSON.parse(readFileSync('.sites-runtime/real-logos/coverage.json')).competitions.find(c=>c.countries.includes('Tanzania'));
+const links=await page.locator('a[href^="/football/team/"],a[href^="/football/competition/"]').evaluateAll(es=>[...new Set(es.map(e=>e.getAttribute('href')))]);
+for(const path of [...links.filter(x=>x.startsWith('/football/team/')).slice(0,1),'/football/competition/'+routeToken(competition.providerIds[0]),'/football/search?q=Simba&kind=team']){console.log('VISIT',path);const response=await page.goto(origin+path,{waitUntil:'domcontentloaded'});assert.ok(response.ok(),path);await page.locator('h1').first().waitFor({timeout:60000});await page.locator('.has-real-badge img').first().waitFor({timeout:30000});await page.waitForTimeout(1000);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+path);const count=await page.locator('.has-real-badge img').count();const failed=await page.locator('.has-real-badge img').evaluateAll(es=>es.filter(i=>i.complete&&!i.naturalWidth).map(i=>i.src));assert.deepEqual(failed,[]);assert.deepEqual(errors,[]);report.push({path,status:response.status(),realImages:count,errors:[...errors],overflow:false});writeFileSync('.sites-runtime/real-logos/browser/additional-pages.json',JSON.stringify(report,null,2));console.log('PASS',path,count);}
+}finally{await browser.close();}

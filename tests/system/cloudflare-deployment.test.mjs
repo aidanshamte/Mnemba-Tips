@@ -26,8 +26,8 @@ test('cron duplicate delivery and overlapping invocations do not repeat work',as
     const owner=await store.lock('cloudflare-cron',600000);
     assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,0);
     await store.unlock('cloudflare-cron',owner);
-    assert.equal((await runScheduled(event,{DB:db},{service})).state,'success');assert.equal(calls,4);
-    assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,4);
+    assert.equal((await runScheduled(event,{DB:db},{service})).state,'success');assert.equal(calls,5);
+    assert.equal((await runScheduled(event,{DB:db},{service})).state,'skipped');assert.equal(calls,5);
   }finally{sqlite.close();}
 });
 test('cron records failures, respects due times and releases its own lease',async()=>{
@@ -35,7 +35,7 @@ test('cron records failures, respects due times and releases its own lease',asyn
   try {
     await store.run("INSERT INTO update_jobs(id,interval_ms,next_run,state,payload) VALUES('fixtures',1,?,'success','{}')",Date.now()+3600000);
     const result=await runScheduled({cron:'0 * * * *',scheduledTime:124},{DB:db},{service:{initialize:async()=>{},sync:async job=>{called.push(job);if(job==='results')throw Error('Provider unavailable');return {outcome:'success'};}}});
-    assert.equal(result.state,'partial');assert.deepEqual(called,['results','models','snapshots']);
+    assert.equal(result.state,'partial');assert.deepEqual(called,['results','models','snapshots','media']);
     assert.equal((await store.one('SELECT state FROM cron_runs')).state,'partial');
     assert.equal(await store.one("SELECT * FROM sync_locks WHERE id='cloudflare-cron'"),null);
   }finally{sqlite.close();}
@@ -49,6 +49,17 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {spawnSync} from 'node:child_process';
+// The documented D1 export tool (CLOUDFLARE_DEPLOYMENT.md) is Python. Find a real Python 3
+// interpreter by asking it for its version: Linux/macOS ship python3, Windows often only
+// python or the py launcher, and a Windows Store "python3" alias exits non-zero. No match
+// fails the test loudly instead of skipping it.
+function python3(){
+  for(const [command,...prefix] of [['python3'],['python'],['py','-3']]){
+    const probe=spawnSync(command,[...prefix,'--version'],{encoding:'utf8'});
+    if(probe.status===0&&/^Python 3\./.test(`${probe.stdout}${probe.stderr}`.trim()))return {command,prefix};
+  }
+  return null;
+}
 test('transfer retains saved badge metadata while excluding disposable cache rows',()=>{
   const root=mkdtempSync(join(tmpdir(),'mnemba-export-')),path=join(root,'source.sqlite');
   const db=new DatabaseSync(path);
@@ -57,7 +68,9 @@ test('transfer retains saved badge metadata while excluding disposable cache row
     db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('public-badges','{"badges":{"test":{"url":"https://www.thesportsdb.com/images/media/team/badge/test.png"}}}',1,2);
     db.prepare('INSERT INTO football_cache VALUES(?,?,?,?)').run('temporary','{}',1,2);
     db.close();
-    const result=spawnSync('python3',['scripts/prepare-d1-transfer.py',path,join(root,'export')],{encoding:'utf8'});
+    const py=python3();
+    assert.ok(py,'Python 3 is required for scripts/prepare-d1-transfer.py; tried python3, python and py -3');
+    const result=spawnSync(py.command,[...py.prefix,'scripts/prepare-d1-transfer.py',path,join(root,'export')],{encoding:'utf8'});
     assert.equal(result.status,0,result.stderr);
     const manifest=JSON.parse(readFileSync(join(root,'export','manifest.json'),'utf8'));
     assert.equal(manifest.local.football_cache,2);
@@ -99,4 +112,9 @@ test('public cache avoids duplicate reads and never caches authorization-bearing
   await publicResponse(new Request(url,{headers:{'cache-control':'no-cache'}}),load,cache);assert.equal(reads,4);
   await assert.rejects(publicResponse(new Request(url+'&failure=1'),async()=>{throw Error('Quota');},cache),/Quota/);
   assert.equal(entries.size,2);
+});
+
+test('scheduled model work drains bounded pages and records media execution',async()=>{
+ const {store,db,sqlite}=database();await store.init();let pages=0;const called=[];
+ try{const result=await runScheduled({cron:'0 * * * *',scheduledTime:999},{DB:db},{service:{initialize:async()=>{},sync:async job=>{called.push(job);return job==='models'?{complete:++pages===3,processed:10,outcome:'success'}:{outcome:'success'}}}});assert.equal(pages,3);assert.equal(result.results.find(r=>r.job==='models').result.processed,30);assert.ok(called.includes('media'));assert.equal(result.state,'success');}finally{sqlite.close()}
 });

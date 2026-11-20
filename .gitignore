@@ -62,3 +62,7 @@ credentials.json
 
 # Azure build output
 /.next-azure/
+# Also ignore .next-azure when it is a file or symlink (a Codespaces export once committed it as a symlink to /tmp)
+/.next-azure
+# Production-recovery evidence lives outside the repository; never commit image layers or unpacked filesystems
+/mnemba-production-recovery-*/

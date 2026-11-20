@@ -1,0 +1,9 @@
+import{readFileSync,writeFileSync}from'node:fs';
+import{database}from'../tests/football-db.mjs';
+import{populatedLocalDatabase}from'./local-database.mjs';
+import{downloadLogo}from'../lib/football/image-validation.mjs';
+import{saveMedia}from'../lib/football/media-registry.mjs';
+const root='.sites-runtime/real-logos',audit=JSON.parse(readFileSync(root+'/coverage.json')),permission=JSON.parse(readFileSync('config/logo-permission.json')),{store,sqlite}=database(populatedLocalDatabase());let owner;const report=[];
+try{owner=await store.lock('football-sync',600000);if(!owner)throw Error('Another update is running');
+for(const t of audit.teams.filter(t=>t.state==='missing'))for(const id of t.providerIds){const r=await store.one('SELECT payload FROM football_teams WHERE id=?',id),p=JSON.parse(r.payload);if(p.provider!=='thesportsdb'||!p.logo||p.sourceUrl!=='https://www.thesportsdb.com/team/'+p.externalId)continue;const entry={id,name:p.name,sourceUrl:p.sourceUrl};try{const{metadata}=await downloadLogo(p.logo);await saveMedia(store,{id,type:'team'},'badge',{url:p.logo,originalUrl:p.logo,sourceUrl:p.sourceUrl,sourceEntityId:p.externalId,...metadata,publicDisplayAllowed:true,permissionEvidence:permission.reference,usageBasis:'Project-owner permission: '+permission.reference,attribution:'TheSportsDB team record; mark belongs to its owner',lastSuccess:store.now()},'Existing structured provider team ID '+p.externalId+' and logo from the same persisted record; no cross-name assignment');Object.assign(entry,{state:'valid',...metadata});}catch(e){Object.assign(entry,{state:'unresolved',error:e.message});}report.push(entry);writeFileSync(root+'/stored-provider-import.json',JSON.stringify(report,null,2));console.log(p.name,entry.state,entry.error??'');}
+}finally{if(owner)await store.unlock('football-sync',owner);sqlite.close();}
