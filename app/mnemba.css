@@ -447,3 +447,6 @@
 .intel h1,.intel .article-header h1,.intel .broadcast-hero h1{letter-spacing:-.005em}
 /* League cards: competition name at card-title size (Figma: League card) */
 .intel .intel-competition h3,.intel .intel-competition .football-identity{font:600 var(--mt-type-card-title-size)/var(--mt-type-card-title-line) var(--mt-font-ui);color:var(--mt-color-text-primary)}
+/* Contrast (axe): legacy hard-coded colours replaced with theme tokens */
+.intel .broadcast-ticker>strong{color:var(--mt-color-text-link)}
+.intel .article-header h1{color:var(--mt-color-text-primary)}
