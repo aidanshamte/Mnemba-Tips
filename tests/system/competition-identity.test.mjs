@@ -190,3 +190,41 @@ test('planning is deterministic and applying it twice changes nothing (re-import
     assert.equal((await store.one('SELECT COUNT(*) n FROM competitions')).n, rows.length, 'provider records are never deleted');
   } finally { sqlite.close(); }
 });
+
+test('catalog, competition page and daily task use the evidence-checked identity', async () => {
+  const {IntelligenceService} = await import('../../lib/football/intelligence.mjs');
+  const {normalizeFixture} = await import('../../lib/football/providers.mjs');
+  const {apiFixture} = await import('../football-db.mjs');
+  const {store, sqlite} = database();
+  try {
+    await store.init(); const now = Date.parse('2026-11-21T00:00:00Z'); store.now = () => now;
+    const service = new IntelligenceService(store); await service.initialize();
+    // Two providers, one competition (same teams), saved through the real import path.
+    const raw = (id, comp, home, away, day) => { const f = normalizeFixture('api-football', apiFixture(id, 'FT', `2026-10-${String(day).padStart(2, '0')}T10:00:00Z`, home, away)); return {...f, competition: {...comp, seasons: [{id: `${comp.id}:2026`, competitionId: comp.id, year: 2026, current: true, coverage: {}}]}, seasonId: `${comp.id}:2026`}; };
+    const aus = {name: 'Australia', id: 'x:au', provider: 'x', externalId: 'au', code: null, continent: 'Oceania'};
+    const a = {id: 'openfootball:aleague', provider: 'openfootball', externalId: 'aleague', name: 'A-League Men', type: 'league', country: aus};
+    const b = {id: 'livescore:25896', provider: 'livescore', externalId: '25896', name: 'A-League', type: 'league', country: aus};
+    const teamsA = [[11, 'Sydney FC'], [12, 'Melbourne Victory'], [13, 'Adelaide United'], [14, 'Perth Glory']];
+    let n = 5000, day = 1;
+    const fx = [];
+    for (const comp of [a, b]) for (const [hi, hn] of teamsA) for (const [ai, an] of teamsA) if (hi !== ai) { const f = raw(n++, comp, hi + (comp === b ? 100 : 0), ai + (comp === b ? 100 : 0), day++ % 28 + 1); fx.push({...f, home: {...f.home, name: hn}, away: {...f.away, name: an}}); }
+    await service.saveFixtures(fx);
+    const before = (await service.read(new URLSearchParams({view: 'catalog'}))).competitions.filter(c => /A-League/.test(c.name));
+    assert.equal(before.length, 2, 'without the identity run, providers are not merged by name');
+    const run = await service.sync('competition-identities');
+    assert.ok(run.changes.aliases >= 2);
+    const after = (await service.read(new URLSearchParams({view: 'catalog'}))).competitions.filter(c => /A-League/.test(c.name));
+    assert.equal(after.length, 1);
+    assert.equal(after[0].name, 'A-League Men');
+    assert.deepEqual(after[0].providerIds.sort(), ['livescore:25896', 'openfootball:aleague']);
+    const page = await service.read(new URLSearchParams({view: 'competition', id: 'livescore:25896'}));
+    assert.equal(page.canonicalId, after[0].id);
+    assert.equal(page.legacyId, 'livescore:25896');
+    assert.equal(page.competition.name, 'A-League Men');
+    assert.equal((await service.sync('competition-identities')).changes.aliases, 0, 'daily task is idempotent');
+    // A newly imported provider copy is not merged across providers until the next evidence-checked run.
+    const c = {id: 'thesportsdb:4356', provider: 'thesportsdb', externalId: '4356', name: 'A-League Men', type: 'league', country: aus};
+    await service.saveFixtures([raw(n++, c, 211, 212, 3)]);
+    assert.equal((await service.read(new URLSearchParams({view: 'catalog'}))).competitions.filter(x => /A-League/.test(x.name)).length, 2);
+  } finally { sqlite.close(); }
+});
