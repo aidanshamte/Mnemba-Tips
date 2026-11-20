@@ -7,6 +7,7 @@ import {FixtureGroups} from './fixture-row';
 import {Skeleton,SourceTag,StatePanel} from './mt-ui';
 import CompetitionPicker from './competition-picker';
 import FeaturedMatches from './featured-matches';
+import {featuredPool} from '@/lib/football/featured.mjs';
 import GlobalSearch from './global-search';
 import LocalTime,{useTimeZone} from './local-time';
 import {useMatchday,MatchdaySelector} from './use-matchday';
@@ -25,7 +26,7 @@ export default function IntelligenceWorkspace(){
  useEffect(()=>{let active=true;const controller=new AbortController();async function load(){try{const [o,c]=await Promise.all(['overview','catalog'].map(async view=>{const r=await fetch('/api/intelligence?view='+view+'&timezone='+encodeURIComponent(zone??'UTC'),{signal:controller.signal});if(!r.ok)throw Error('Football data is temporarily unavailable. Please retry shortly.');return r.json() as Promise<RecordData>;}));if(active){setData(o);setCatalog(c);setError('');}}catch(e){if(active)setError(String(e));}}void load();const timer=setInterval(()=>{if(!document.hidden)void load();},60000);return()=>{active=false;controller.abort();clearInterval(timer);};},[zone]);
  useEffect(()=>{if(tab!=='News')return;void fetch('/api/intelligence?view=news').then(r=>{if(!r.ok)throw Error('News unavailable.');return r.json() as Promise<RecordData>;}).then(setDetail).catch(()=>setError('News unavailable.'));},[tab]);
  const current=matchday?.query===query?matchday:null,fixtures=current?.fixtures??[],insights=current?.picks??[];
- const featured=current?{today:fixtures,results:fixtures.filter((f:RecordData)=>['FT','FINISHED','1H','2H','HT'].includes(f.status)),upcoming:(insights.length?insights.map((e:RecordData)=>({...e.fixture,recommendation:e.recommendation})):fixtures),note:current.note}:null;
+ const featured=current?{today:fixtures,results:fixtures.filter((f:RecordData)=>['FT','FINISHED','1H','2H','HT'].includes(f.status)),upcoming:featuredPool(current),note:current.note}:null;
  return <div className="intel"><SiteNav active={TAB_KEY[tab]??'home'} onTab={t=>change({tab:t})}/>
  <main className="intel-main"><div className="mt-utility"><a className="mt-search-entry" href="/football/search"><Search aria-hidden="true" size={20}/><span>Search teams, players, competitions, fixtures and news</span></a><a className="mt-btn" href="/football/shortlists">Saved picks</a><a className="mt-btn mt-btn-quiet" href="/football/predictions">Prediction history</a></div>
  {tab!=='Predictions'&&<section className="intel-heading"><div className="intel-eyebrow">FOOTBALL</div><h1>{PAGE[tab]?.[0]??'Football'}</h1><p>{PAGE[tab]?.[1]}</p></section>}{['Predictions','Fixtures'].includes(tab)&&<><MatchdaySelector filters={filters} change={change}/><p role="status">{current?`${current.range.from} → ${current.range.to} · ${current.count} matches · ${current.eligible??0} qualifying selections`:'Loading selected matchday…'}</p></>}{tab==='Predictions'&&<FeaturedMatches data={featured}/>}
