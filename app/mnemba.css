@@ -467,3 +467,9 @@
 .intel .mt-status-actions>*{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--mt-space-lg);border-radius:var(--mt-radius-md);border:1px solid #9aa9b8;background:transparent;color:#0c203a;font:600 15px/20px var(--mt-font-ui);text-decoration:none;cursor:pointer}
 .intel .mt-status-actions>.mt-status-primary{background:#0c203a;border-color:#0c203a;color:#fff}
 .mt-status-actions>*:focus-visible{outline:none;box-shadow:var(--mt-focus-ring)}
+
+/* ---- Match centre: one concise unavailable state; related reporting (components/match-center.tsx) ---- */
+.mt-unavailable h2{margin:0 0 var(--mt-space-sm)}
+.mt-unavailable ul{margin:0;padding-left:1.1em;display:grid;gap:var(--mt-space-2xs);font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.mt-unavailable li strong{color:var(--mt-color-text-primary);font-weight:600}
+.mt-match-news{margin-top:var(--mt-space-sm)}
