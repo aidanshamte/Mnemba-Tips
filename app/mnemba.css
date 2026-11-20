@@ -1,0 +1,37 @@
+/* Mnemba Tips design layer (approved Figma system). Loaded after intelligence.css.
+   Scoped to the public football surface (.intel) and the shared site navigation (.mt-*),
+   so the basketball studio and its legacy theme are unaffected. */
+
+/* ============================== Foundations ============================== */
+.intel{
+  --ink:var(--mt-color-text-primary);--muted:var(--mt-color-text-secondary);--line:var(--mt-color-border-default);
+  font-family:var(--mt-font-ui);font-size:var(--mt-type-body-size);line-height:var(--mt-type-body-line);
+  background:var(--mt-color-background-primary);color:var(--mt-color-text-primary);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+.intel :where(h1,h2,h3){font-family:var(--mt-font-display);letter-spacing:0}
+.intel :where(h1){font-weight:700;font-size:var(--mt-type-page-title-size);line-height:var(--mt-type-page-title-line);letter-spacing:-.005em;margin:0}
+.intel :where(h2){font-weight:600;font-size:var(--mt-type-section-title-size);line-height:var(--mt-type-section-title-line);margin:0}
+.intel :where(h3){font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-card-title-size);line-height:var(--mt-type-card-title-line);letter-spacing:-.005em;margin:0}
+.intel :where(p){color:inherit}
+.intel :where(small,.intel-small){font-size:var(--mt-type-caption-size);line-height:var(--mt-type-caption-line);color:var(--mt-color-text-secondary)}
+.intel :where(a){color:inherit}
+.intel :where(p,li,small) a:not([class]){color:var(--mt-color-text-link);text-decoration:underline;text-underline-offset:2px}
+.intel :focus-visible{outline:none;box-shadow:var(--mt-focus-ring);border-radius:var(--mt-radius-sm)}
+.intel ::selection{background:var(--mt-color-action-subtle)}
+
+/* Typographic roles (Figma text styles) for new markup */
+.mt-display{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-display-size);line-height:var(--mt-type-display-line);letter-spacing:-.005em}
+.mt-page-title{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-page-title-size);line-height:var(--mt-type-page-title-line)}
+.mt-section-title{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-section-title-size);line-height:var(--mt-type-section-title-line)}
+.mt-card-title{font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-card-title-size);line-height:var(--mt-type-card-title-line);letter-spacing:-.005em}
+.mt-team-name{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-team-size);line-height:var(--mt-type-team-line)}
+.mt-prediction{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-prediction-size);line-height:var(--mt-type-prediction-line)}
+.mt-body{font-size:var(--mt-type-body-size);line-height:var(--mt-type-body-line)}
+.mt-supporting{font-size:var(--mt-type-supporting-size);line-height:var(--mt-type-supporting-line);color:var(--mt-color-text-secondary)}
+.mt-label{font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-label-size);line-height:var(--mt-type-label-line);letter-spacing:.06em;text-transform:uppercase}
+.mt-caption{font-size:var(--mt-type-caption-size);line-height:var(--mt-type-caption-line);color:var(--mt-color-text-secondary)}
+.mt-stat{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-stat-size);line-height:var(--mt-type-stat-line);font-variant-numeric:tabular-nums}
+.mt-stat-small{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-stat-small-size);line-height:var(--mt-type-stat-small-line);font-variant-numeric:tabular-nums}
+.mt-clamp-2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.mt-visually-hidden{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

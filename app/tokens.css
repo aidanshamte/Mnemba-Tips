@@ -1,0 +1,169 @@
+/* Mnemba Tips design foundations — generated from the approved Figma variables
+   (file LiJeBBMcrA9KR75fgffW4L, collections Primitives, Color, Spacing, Radius,
+   Border, Elevation, Layout). Every name matches the Figma WEB code syntax var(--mt-…). */
+
+/* ---------- Fonts: self-hosted OFL WOFF2 (public/fonts), swap + metric-matched fallbacks ---------- */
+@font-face{font-family:"Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url("/fonts/inter-latin-wght-normal.woff2") format("woff2-variations");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url("/fonts/inter-latin-ext-wght-normal.woff2") format("woff2-variations");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-display:swap;font-weight:600;src:url("/fonts/barlow-condensed-latin-600-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-display:swap;font-weight:600;src:url("/fonts/barlow-condensed-latin-ext-600-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-display:swap;font-weight:700;src:url("/fonts/barlow-condensed-latin-700-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Barlow Condensed";font-style:normal;font-display:swap;font-weight:700;src:url("/fonts/barlow-condensed-latin-ext-700-normal.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+/* Fallbacks tuned to the real fonts' metrics so the swap does not shift layout. */
+@font-face{font-family:"Inter Fallback";src:local("Arial");size-adjust:107.12%;ascent-override:90.44%;descent-override:22.52%;line-gap-override:0%}
+@font-face{font-family:"Barlow Condensed Fallback";src:local("Arial Narrow"),local("ArialNarrow"),local("Arial");size-adjust:88%;ascent-override:113%;descent-override:28%;line-gap-override:0%}
+
+:root{
+  /* Typefaces (Figma: Inter UI/body, Barlow Condensed display/names/numbers) */
+  --mt-font-ui:"Inter","Inter Fallback",Arial,Helvetica,sans-serif;
+  --mt-font-display:"Barlow Condensed","Barlow Condensed Fallback","Arial Narrow",Arial,sans-serif;
+
+  /* ---------- Primitives (hidden in Figma; referenced only by semantic tokens) ---------- */
+  --mt-primitive-navy-950:#06101c;--mt-primitive-navy-900:#0b1b2e;--mt-primitive-navy-800:#12263d;--mt-primitive-navy-700:#1c3552;--mt-primitive-navy-600:#2a4a6e;--mt-primitive-navy-300:#a3b4c8;
+  --mt-primitive-pitch-900:#064a27;--mt-primitive-pitch-800:#085f32;--mt-primitive-pitch-700:#0a7a41;--mt-primitive-pitch-600:#0e8f4d;--mt-primitive-pitch-500:#17a95d;--mt-primitive-pitch-400:#3ccb7e;--mt-primitive-pitch-100:#dcf4e6;
+  --mt-primitive-warm-0:#ffffff;--mt-primitive-warm-50:#faf8f3;--mt-primitive-warm-100:#f3f0e7;--mt-primitive-warm-200:#e5e0d3;--mt-primitive-warm-400:#b8b1a0;
+  --mt-primitive-slate-900:#0e1a28;--mt-primitive-slate-700:#3a4b5e;--mt-primitive-slate-500:#5e6d7d;--mt-primitive-slate-300:#a8b4c1;
+  --mt-primitive-gold-700:#7d6210;--mt-primitive-gold-500:#c9a227;--mt-primitive-gold-400:#ddb94b;--mt-primitive-gold-100:#f6eed3;
+  --mt-primitive-blue-600:#1f63d6;--mt-primitive-blue-400:#6aa8ff;--mt-primitive-blue-100:#e4eeff;
+  --mt-primitive-red-600:#b33434;--mt-primitive-red-400:#f27c7c;--mt-primitive-red-100:#fbe6e6;
+  --mt-primitive-amber-600:#a15c00;--mt-primitive-amber-400:#f0b445;--mt-primitive-amber-100:#fcf0d8;
+
+  /* ---------- Color · Light (default) ---------- */
+  --mt-color-background-primary:var(--mt-primitive-warm-50);
+  --mt-color-background-secondary:var(--mt-primitive-warm-100);
+  --mt-color-background-inverse:var(--mt-primitive-navy-900);
+  --mt-color-surface-default:var(--mt-primitive-warm-0);
+  --mt-color-surface-elevated:var(--mt-primitive-warm-0);
+  --mt-color-surface-sunken:var(--mt-primitive-warm-100);
+  --mt-color-surface-brand:var(--mt-primitive-navy-900);
+  --mt-color-surface-brand-raised:var(--mt-primitive-navy-800);
+  --mt-color-text-primary:var(--mt-primitive-slate-900);
+  --mt-color-text-secondary:var(--mt-primitive-slate-700);
+  --mt-color-text-tertiary:var(--mt-primitive-slate-500);
+  --mt-color-text-inverse:var(--mt-primitive-warm-50);
+  --mt-color-text-inverse-secondary:var(--mt-primitive-navy-300);
+  --mt-color-text-on-action:var(--mt-primitive-warm-0);
+  --mt-color-text-link:var(--mt-primitive-blue-600);
+  --mt-color-action-football:var(--mt-primitive-pitch-700);
+  --mt-color-action-hover:var(--mt-primitive-pitch-800);
+  --mt-color-action-pressed:var(--mt-primitive-pitch-900);
+  --mt-color-action-subtle:var(--mt-primitive-pitch-100);
+  --mt-color-action-disabled:var(--mt-primitive-warm-200);
+  --mt-color-accent-gold:var(--mt-primitive-gold-500);
+  --mt-color-accent-gold-text:var(--mt-primitive-gold-700);
+  --mt-color-accent-gold-subtle:var(--mt-primitive-gold-100);
+  --mt-color-state-live:var(--mt-primitive-pitch-700);
+  --mt-color-state-live-subtle:var(--mt-primitive-pitch-100);
+  --mt-color-state-success:var(--mt-primitive-pitch-700);
+  --mt-color-state-success-subtle:var(--mt-primitive-pitch-100);
+  --mt-color-state-warning:var(--mt-primitive-amber-600);
+  --mt-color-state-warning-subtle:var(--mt-primitive-amber-100);
+  --mt-color-state-error:var(--mt-primitive-red-600);
+  --mt-color-state-error-subtle:var(--mt-primitive-red-100);
+  --mt-color-state-info:var(--mt-primitive-blue-600);
+  --mt-color-state-info-subtle:var(--mt-primitive-blue-100);
+  --mt-color-state-unavailable:var(--mt-primitive-slate-500);
+  --mt-color-state-unavailable-subtle:var(--mt-primitive-warm-100);
+  --mt-color-prediction-correct:var(--mt-primitive-pitch-700);
+  --mt-color-prediction-incorrect:var(--mt-primitive-red-600);
+  --mt-color-prediction-pending:var(--mt-primitive-amber-600);
+  --mt-color-prediction-void:var(--mt-primitive-slate-500);
+  --mt-color-prediction-exploratory:var(--mt-primitive-blue-600);
+  --mt-color-border-default:var(--mt-primitive-warm-200);
+  --mt-color-border-strong:var(--mt-primitive-warm-400);
+  --mt-color-border-inverse:var(--mt-primitive-navy-700);
+  --mt-color-border-focus:var(--mt-primitive-blue-600);
+  --mt-color-overlay-scrim:var(--mt-primitive-navy-950);
+
+  /* ---------- Spacing (4px base) ---------- */
+  --mt-space-0:0px;--mt-space-2xs:2px;--mt-space-xs:4px;--mt-space-sm:8px;--mt-space-md:12px;--mt-space-lg:16px;--mt-space-xl:24px;--mt-space-2xl:32px;--mt-space-3xl:40px;--mt-space-4xl:48px;--mt-space-5xl:64px;--mt-space-6xl:80px;--mt-space-7xl:96px;
+
+  /* ---------- Radius ---------- */
+  --mt-radius-none:0px;--mt-radius-xs:4px;--mt-radius-sm:6px;--mt-radius-md:10px;--mt-radius-lg:14px;--mt-radius-xl:20px;--mt-radius-2xl:28px;--mt-radius-full:999px;
+
+  /* ---------- Border ---------- */
+  --mt-border-width-hairline:1px;--mt-border-width-strong:2px;--mt-border-width-focus:3px;
+
+  /* ---------- Elevation (Figma effect styles Elevation/1–3, Focus/Ring) ---------- */
+  --mt-elevation-1-offset-y:1px;--mt-elevation-1-blur:3px;--mt-elevation-2-offset-y:6px;--mt-elevation-2-blur:18px;--mt-elevation-3-offset-y:16px;--mt-elevation-3-blur:40px;--mt-elevation-focus-spread:3px;
+  --mt-shadow-1:0 var(--mt-elevation-1-offset-y) var(--mt-elevation-1-blur) rgb(6 16 28 / .10);
+  --mt-shadow-2:0 var(--mt-elevation-2-offset-y) var(--mt-elevation-2-blur) rgb(6 16 28 / .12);
+  --mt-shadow-3:0 var(--mt-elevation-3-offset-y) var(--mt-elevation-3-blur) rgb(6 16 28 / .18);
+  --mt-focus-ring:0 0 0 var(--mt-elevation-focus-spread) var(--mt-color-border-focus);
+
+  /* ---------- Layout (Figma "Layout" collection; desktop values) ---------- */
+  --mt-layout-viewport-width:1440px;--mt-layout-columns:12;--mt-layout-margin:48px;--mt-layout-gutter:24px;--mt-layout-content-max:1080px;
+  --mt-rail-width:264px;--mt-topbar-height:64px;--mt-bottom-nav-height:64px;
+  /* Breakpoints (reference values; CSS media queries cannot read custom properties) */
+  --mt-breakpoint-desktop:1440px;--mt-breakpoint-laptop:1024px;--mt-breakpoint-tablet:768px;--mt-breakpoint-mobile:375px;--mt-breakpoint-compact:320px;
+
+  /* ---------- Safe areas ---------- */
+  --mt-safe-top:env(safe-area-inset-top,0px);--mt-safe-bottom:env(safe-area-inset-bottom,0px);--mt-safe-left:env(safe-area-inset-left,0px);--mt-safe-right:env(safe-area-inset-right,0px);
+
+  /* ---------- Motion ---------- */
+  --mt-motion-duration-fast:120ms;--mt-motion-duration-base:200ms;--mt-motion-duration-slow:320ms;--mt-motion-ease:cubic-bezier(.2,.7,.2,1);
+
+  /* ---------- Typography scale (Figma text styles) ---------- */
+  --mt-type-display-size:72px;--mt-type-display-line:72px;
+  --mt-type-page-title-size:44px;--mt-type-page-title-line:48px;
+  --mt-type-section-title-size:28px;--mt-type-section-title-line:34px;
+  --mt-type-card-title-size:18px;--mt-type-card-title-line:24px;
+  --mt-type-team-size:22px;--mt-type-team-line:26px;
+  --mt-type-prediction-size:26px;--mt-type-prediction-line:30px;
+  --mt-type-body-size:16px;--mt-type-body-line:24px;
+  --mt-type-supporting-size:14px;--mt-type-supporting-line:20px;
+  --mt-type-label-size:12px;--mt-type-label-line:16px;
+  --mt-type-caption-size:12px;--mt-type-caption-line:16px;
+  --mt-type-stat-size:32px;--mt-type-stat-line:36px;
+  --mt-type-stat-small-size:18px;--mt-type-stat-small-line:22px;
+  color-scheme:light;
+}
+
+/* Layout values per breakpoint (Figma Layout modes) */
+@media (max-width:1279px){:root{--mt-layout-viewport-width:1024px;--mt-layout-margin:40px;--mt-layout-gutter:20px;--mt-layout-content-max:944px}}
+@media (max-width:1023px){:root{--mt-layout-viewport-width:768px;--mt-layout-columns:8;--mt-layout-margin:32px;--mt-layout-gutter:16px;--mt-layout-content-max:704px}}
+@media (max-width:767px){:root{--mt-layout-viewport-width:375px;--mt-layout-columns:4;--mt-layout-margin:16px;--mt-layout-gutter:12px;--mt-layout-content-max:343px;--mt-type-display-size:44px;--mt-type-display-line:46px;--mt-type-page-title-size:32px;--mt-type-page-title-line:36px}}
+@media (max-width:359px){:root{--mt-layout-viewport-width:320px;--mt-layout-margin:12px;--mt-layout-gutter:8px;--mt-layout-content-max:296px}}
+
+/* ---------- Color · Dark (opt-in via data-theme="dark"; light remains the default) ---------- */
+[data-theme="dark"]{
+  color-scheme:dark;
+  --mt-color-background-primary:var(--mt-primitive-navy-950);
+  --mt-color-background-secondary:var(--mt-primitive-navy-900);
+  --mt-color-background-inverse:var(--mt-primitive-warm-50);
+  --mt-color-surface-default:var(--mt-primitive-navy-900);
+  --mt-color-surface-elevated:var(--mt-primitive-navy-800);
+  --mt-color-surface-sunken:var(--mt-primitive-navy-950);
+  --mt-color-surface-brand:var(--mt-primitive-navy-800);
+  --mt-color-surface-brand-raised:var(--mt-primitive-navy-700);
+  --mt-color-text-primary:var(--mt-primitive-warm-50);
+  --mt-color-text-secondary:var(--mt-primitive-navy-300);
+  --mt-color-text-tertiary:var(--mt-primitive-slate-300);
+  --mt-color-text-inverse:var(--mt-primitive-slate-900);
+  --mt-color-text-inverse-secondary:var(--mt-primitive-slate-700);
+  --mt-color-text-on-action:var(--mt-primitive-navy-950);
+  --mt-color-text-link:var(--mt-primitive-blue-400);
+  --mt-color-action-football:var(--mt-primitive-pitch-400);
+  --mt-color-action-hover:var(--mt-primitive-pitch-500);
+  --mt-color-action-pressed:var(--mt-primitive-pitch-600);
+  --mt-color-action-subtle:var(--mt-primitive-navy-700);
+  --mt-color-action-disabled:var(--mt-primitive-navy-700);
+  --mt-color-accent-gold:var(--mt-primitive-gold-400);
+  --mt-color-accent-gold-text:var(--mt-primitive-gold-400);
+  --mt-color-accent-gold-subtle:var(--mt-primitive-navy-800);
+  --mt-color-state-live:var(--mt-primitive-pitch-400);--mt-color-state-live-subtle:var(--mt-primitive-navy-700);
+  --mt-color-state-success:var(--mt-primitive-pitch-400);--mt-color-state-success-subtle:var(--mt-primitive-navy-700);
+  --mt-color-state-warning:var(--mt-primitive-amber-400);--mt-color-state-warning-subtle:var(--mt-primitive-navy-700);
+  --mt-color-state-error:var(--mt-primitive-red-400);--mt-color-state-error-subtle:var(--mt-primitive-navy-700);
+  --mt-color-state-info:var(--mt-primitive-blue-400);--mt-color-state-info-subtle:var(--mt-primitive-navy-700);
+  --mt-color-state-unavailable:var(--mt-primitive-slate-300);--mt-color-state-unavailable-subtle:var(--mt-primitive-navy-800);
+  --mt-color-prediction-correct:var(--mt-primitive-pitch-400);--mt-color-prediction-incorrect:var(--mt-primitive-red-400);--mt-color-prediction-pending:var(--mt-primitive-amber-400);--mt-color-prediction-void:var(--mt-primitive-slate-300);--mt-color-prediction-exploratory:var(--mt-primitive-blue-400);
+  --mt-color-border-default:var(--mt-primitive-navy-700);--mt-color-border-strong:var(--mt-primitive-navy-600);--mt-color-border-inverse:var(--mt-primitive-warm-200);--mt-color-border-focus:var(--mt-primitive-blue-400);
+  --mt-shadow-1:0 1px 3px rgb(0 0 0 / .4);--mt-shadow-2:0 6px 18px rgb(0 0 0 / .45);--mt-shadow-3:0 16px 40px rgb(0 0 0 / .55);
+}
+
+/* ---------- Reduced motion: no animation, no smooth scroll ---------- */
+@media (prefers-reduced-motion:reduce){
+  :root{--mt-motion-duration-fast:0ms;--mt-motion-duration-base:0ms;--mt-motion-duration-slow:0ms}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
