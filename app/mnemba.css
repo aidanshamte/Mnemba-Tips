@@ -157,7 +157,7 @@
 .mt-source-estimate,.mt-source-exploratory{background:var(--mt-color-state-info-subtle);color:var(--mt-color-state-info)}
 .mt-source-unavailable{background:var(--mt-color-state-unavailable-subtle);color:var(--mt-color-state-unavailable)}
 .mt-status-live,.mt-status-halftime{background:var(--mt-color-state-live-subtle);color:var(--mt-color-state-live)}
-.mt-status-unconfirmed,.mt-status-postponed{background:var(--mt-color-state-warning-subtle);color:var(--mt-color-state-warning)}
+.mt-status-unconfirmed,.mt-status-postponed,.mt-status-overdue{background:var(--mt-color-state-warning-subtle);color:var(--mt-color-state-warning)}
 .mt-status-abandoned{background:var(--mt-color-state-error-subtle);color:var(--mt-color-state-error)}
 .mt-live-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:mt-pulse 1.6s var(--mt-motion-ease) infinite}
 @keyframes mt-pulse{50%{opacity:.35}}

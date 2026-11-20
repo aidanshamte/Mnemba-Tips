@@ -2,6 +2,7 @@
 // Prediction grade, State panel, Inline banner, Loading skeleton, Uncertainty indicator).
 // Server-safe: no hooks. Status is always icon + word, never colour alone.
 import type {ReactNode} from 'react';
+import {LIVE_STALE_MS} from '@/lib/football/match-state.mjs';
 import {ShieldCheck,Sparkles,ChartColumn,Info,Clock,TriangleAlert,Pause,Check,X,Calendar,WifiOff,History,CircleCheck,CircleX} from 'lucide-react';
 
 export type SourceKind='confirmed'|'estimate'|'exploratory'|'unavailable';
@@ -13,14 +14,17 @@ const SOURCE:Record<SourceKind,{label:string;Icon:typeof Info}>={
 };
 export function SourceTag({kind,label}:{kind:SourceKind;label?:string}){const {Icon,label:fallback}=SOURCE[kind];return <span className={`mt-tag mt-source-${kind}`}><Icon aria-hidden="true" size={14}/>{label??fallback}</span>;}
 
-export type MatchStatusKind='scheduled'|'unconfirmed'|'live'|'halftime'|'finished'|'postponed'|'abandoned';
+export type MatchStatusKind='scheduled'|'unconfirmed'|'live'|'halftime'|'overdue'|'finished'|'postponed'|'abandoned';
 const STATUS:Record<MatchStatusKind,{label:string;Icon:typeof Info|null}>={
  scheduled:{label:'Scheduled',Icon:Clock},unconfirmed:{label:'Time not confirmed',Icon:TriangleAlert},live:{label:'Live',Icon:null},
- halftime:{label:'Half-time',Icon:Pause},finished:{label:'Full time',Icon:Check},postponed:{label:'Postponed',Icon:Calendar},abandoned:{label:'Abandoned',Icon:X},
+ halftime:{label:'Half-time',Icon:Pause},overdue:{label:'Result not confirmed',Icon:TriangleAlert},finished:{label:'Full time',Icon:Check},postponed:{label:'Postponed',Icon:Calendar},abandoned:{label:'Abandoned',Icon:X},
 };
 /** Map provider status codes onto the design vocabulary. Unknown codes stay scheduled. */
-export function matchStatusKind(status?:string,kickoffPrecision?:string):MatchStatusKind{
+export function matchStatusKind(status?:string,kickoffPrecision?:string,startsAt?:number,now:number=Date.now()):MatchStatusKind{
  const s=(status??'').toUpperCase();
+ const inPlay=['1H','2H','ET','P','LIVE','IN_PLAY','BT','HT','PAUSED'].includes(s);
+ // Stale live statuses are never presented as live (same threshold as lib/football/match-state.mjs).
+ if(inPlay&&Number.isFinite(startsAt)&&now-(startsAt as number)>LIVE_STALE_MS)return 'overdue';
  if(['1H','2H','ET','P','LIVE','IN_PLAY','BT'].includes(s))return 'live';
  if(s==='HT'||s==='PAUSED')return 'halftime';
  if(['FT','AET','PEN','FINISHED','AWARDED'].includes(s))return 'finished';

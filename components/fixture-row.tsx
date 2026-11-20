@@ -8,7 +8,7 @@ type Side={id?:string;name?:string};
 type Fixture={id:string;status?:string;kickoffPrecision?:string;startsAt:number;homeScore?:number|null;awayScore?:number|null;home?:Side;away?:Side;competition?:{id?:string;name:string}};
 
 export function FixtureRow({f}:{f:Fixture}){
- const kind=matchStatusKind(f.status,f.kickoffPrecision),scored=f.homeScore!=null&&f.awayScore!=null;
+ const kind=matchStatusKind(f.status,f.kickoffPrecision,f.startsAt),scored=f.homeScore!=null&&f.awayScore!=null;
  return <a className="mt-fixture-row" href={`/football/match/${encodeURIComponent(f.id)}`}>
   <span className="mt-fixture-when"><LocalTime fixture={{startsAt:f.startsAt,kickoffPrecision:f.kickoffPrecision}}/>{kind!=='scheduled'&&<StatusTag kind={kind}/>}</span>
   <span className="mt-fixture-team mt-fixture-home"><span className="mt-team-name mt-clamp-2">{f.home?.name}</span><IdentityBadge id={f.home?.id} name={f.home?.name??'Home team'} variant="small" decorative/></span>
