@@ -93,7 +93,7 @@
 
   /* ---------- Layout (Figma "Layout" collection; desktop values) ---------- */
   --mt-layout-viewport-width:1440px;--mt-layout-columns:12;--mt-layout-margin:48px;--mt-layout-gutter:24px;--mt-layout-content-max:1080px;
-  --mt-rail-width:264px;--mt-topbar-height:64px;--mt-bottom-nav-height:64px;
+  --mt-color-logo-plate:#f4f7f8;--mt-rail-width:264px;--mt-topbar-height:64px;--mt-bottom-nav-height:64px;
   /* Breakpoints (reference values; CSS media queries cannot read custom properties) */
   --mt-breakpoint-desktop:1440px;--mt-breakpoint-laptop:1024px;--mt-breakpoint-tablet:768px;--mt-breakpoint-mobile:375px;--mt-breakpoint-compact:320px;
 

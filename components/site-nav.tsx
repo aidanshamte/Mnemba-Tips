@@ -5,6 +5,7 @@
 import {useEffect,useRef,useState,type MouseEvent} from 'react';
 import {Home,CalendarDays,Trophy,Users,Newspaper,History,Bookmark,Search,Menu,X,Globe,ChartColumn,Layers3,Image as ImageIcon,Volleyball} from 'lucide-react';
 import {TimePreference} from './local-time';
+import BrandLogo from './brand-logo';
 
 type Item={key:string;label:string;href:string;tab?:string;Icon:typeof Home};
 // Workspace tabs keep their existing ?tab= deep links.
@@ -39,7 +40,7 @@ function activeFromLocation():string{
  return [...SECONDARY].find(i=>pathname.startsWith(i.href))?.key??'';
 }
 
-function Brand(){return <a className="mt-brand" href="/football" aria-label="Mnemba Tips home"><span className="mt-brand-mark" aria-hidden="true">M<i/></span><span className="mt-brand-words"><strong>Mnemba Tips</strong><small>The game, a little clearer</small></span></a>;}
+function Brand({tagline}:{tagline?:boolean}){return <a className="mt-brand" href="/football" aria-label="Mnemba Tips home"><span className="mt-brand-plate"><BrandLogo sizes="(min-width: 1280px) 192px, (min-width: 768px) 136px, 120px" priority/></span>{tagline&&<small className="mt-brand-tagline">The game, a little clearer</small>}</a>;}
 
 export default function SiteNav({active,onTab}:{active?:string;onTab?:(tab:string)=>void}){
  // `active` (from the workspace) wins; other pages read the URL after mount.
@@ -56,7 +57,7 @@ export default function SiteNav({active,onTab}:{active?:string;onTab?:(tab:strin
  return <>
   <a className="mt-skip" href="#mt-main">Skip to main content</a>
   <nav className="mt-rail" aria-label="Main navigation">
-   <Brand/>
+   <Brand tagline/>
    <div className="mt-rail-links">{PRIMARY.map(i=>link(i,'mt-nav-item'))}</div>
    <div className="mt-rail-secondary" aria-label="More">{SECONDARY.map(i=>link(i,'mt-nav-item mt-nav-item-small'))}</div>
    <div className="mt-rail-zone"><span className="mt-rail-zone-label"><Globe aria-hidden="true" size={16}/>Times in your timezone</span><TimePreference/></div>

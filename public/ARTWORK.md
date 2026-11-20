@@ -17,4 +17,15 @@ no logos, no specific real club, no real stadium, no watermark.
 
 Team badges, when supplied, remain provider-hosted. Missing or failed badges
 show neutral initials, not invented club crests. Source links are retained on
-match pages. The favicon is original project-native SVG artwork.
+match pages.
+
+## Mnemba Tips logo
+
+`brand/mnemba-tips-logo-master.png` (repository root, not served) is the approved
+Mnemba Tips logo master, 2172×724 RGBA, SHA-256
+`050067ce3a6731404fa195ede6886b32c5d774d7e71a6cc1dd7cb55ff3eb360b`.
+Every file in `public/brand/` and `public/favicon.ico` is generated from it by
+`scripts/brand/build-logo-assets.mjs`. Derivatives are trimmed, isolated, padded and
+resized only; the artwork is never redrawn or recoloured. The compact emblem is the
+ball, "M", ribbons, arrow and target with the underline swoosh and wordmark masked out.
+On navy or dark surfaces the logo sits on a light plate (`--mt-color-logo-plate`).
