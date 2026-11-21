@@ -100,3 +100,18 @@ test('a past kickoff still marked not-started is not counted as awaiting analysi
     assert.equal(view.analysis.pending, 0, 'no unclearable analysis backlog');
   } finally { w.sqlite.close(); }
 });
+
+test('full analyses get an immutable tracked forecast without waiting for the daily batch; repeated runs add none', async () => {
+  const w = await world();
+  try {
+    const before = Number((await w.store.one('SELECT COUNT(*) n FROM analysis_forecasts WHERE fixture_id=?', w.full.id)).n);
+    const r = await computeAnalysisStates(w.service, {});
+    const rows = await w.store.all('SELECT id,as_of,kickoff_at,model_version,payload FROM analysis_forecasts WHERE fixture_id=?', w.full.id);
+    assert.ok(rows.length > before, `captured: ${JSON.stringify(r)}`);
+    for (const f of rows) { assert.ok(Number(f.as_of) < Number(f.kickoff_at), 'saved before kickoff'); assert.ok(f.model_version); }
+    assert.equal(Number((await w.store.one('SELECT COUNT(*) n FROM analysis_forecasts WHERE fixture_id IN (?,?)', w.early.id, w.waiting.id)).n), 0, 'no tracked forecast without full evidence');
+    const again = await computeAnalysisStates(w.service, {});
+    assert.equal(again.captured, 0, 'idempotent');
+    assert.deepEqual(await w.store.all('SELECT id,as_of,kickoff_at,model_version,payload FROM analysis_forecasts WHERE fixture_id=?', w.full.id), rows, 'forecasts never rewritten');
+  } finally { w.sqlite.close(); }
+});
