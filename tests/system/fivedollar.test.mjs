@@ -464,8 +464,8 @@ test('live tick makes no request when disabled, and a linked page reads the fres
     await w.service.saveFixtures([theirs, ours], {liveOnly: true});
     const c = (await w.store.one("SELECT canonical_id FROM fixture_identities WHERE fixture_id='livescore:9'")).canonical_id;
     await w.store.run("UPDATE fixture_identities SET canonical_id=?,verification='provider-match' WHERE fixture_id='fivedollar:9'", c);
-    await w.store.putCache('live:state:livescore:9', {fixture: {homeScore: 0}, updatedAt: 1000, revision: 'old'}, 86400000);
-    await w.store.putCache('live:state:fivedollar:9', {fixture: {homeScore: 1}, updatedAt: 2000, revision: 'new'}, 86400000);
+    await w.store.putCache('live:state:livescore:9', {fixture: {homeScore: 0}, updatedAt: w.store.now() + 1000, revision: 'old'}, 86400000);
+    await w.store.putCache('live:state:fivedollar:9', {fixture: {homeScore: 1}, updatedAt: w.store.now() + 2000, revision: 'new'}, 86400000);
     const s = await liveSnapshot(w.store, 'livescore:9');
     assert.equal(s.fixture.homeScore, 1, 'freshest linked state'); assert.equal(s.resolvedFor, 'livescore:9');
   } finally { w.sqlite.close(); }
@@ -484,5 +484,28 @@ test('a backfill client fills at most its share of the shared minute window, lea
     const m = minute(), used = (await w.store.one("SELECT used FROM source_request_usage WHERE source_id='fivedollar' AND day=?", `m:${String(m).padStart(10, '0')}`))?.used ?? 0;
     assert.ok(Number(used) <= 5);
     assert.ok(9 - Number(used) >= 4, 'at least 4 of the 9 slots remain for live updates, jobs and grading');
+  } finally { w.sqlite.close(); }
+});
+
+test('a frozen provider never hides a linked final: list representative and live read both prefer it', async () => {
+  const {liveSnapshot, publishLive} = await import('../../lib/football/live.mjs');
+  const w = await world();
+  try {
+    const catalog = new Map(LEAGUES.map(l => [l.id, l]));
+    const ours = normalizeFdfaFixture(raw(77, 'finished', {goals: {home: 2, away: 1, half_home: 1, half_away: 0}}), catalog);
+    const frozen = {...ours, id: 'livescore:77', provider: 'livescore', externalId: '77', status: '2H', elapsed: 90, homeScore: 1, awayScore: 0, label: 'Live', regulationScore: undefined,
+      home: {...ours.home, id: 'livescore:t10', provider: 'livescore'}, away: {...ours.away, id: 'livescore:t20', provider: 'livescore'},
+      competition: {...ours.competition, id: 'livescore:100', provider: 'livescore', seasons: [{...ours.competition.seasons[0], id: 'livescore:100:2026', competitionId: 'livescore:100'}]}, seasonId: 'livescore:100:2026'};
+    await w.service.saveFixtures([frozen], {liveOnly: true});
+    await publishLive(w.service, 'livescore:77');                       // LiveScore's last state before its backoff
+    w.advance(3600000);
+    await w.service.saveFixtures([ours], {liveOnly: true});           // the provider's final, never published live
+    const c = (await w.store.one("SELECT canonical_id FROM fixture_identities WHERE fixture_id='livescore:77'")).canonical_id;
+    await w.store.run("UPDATE fixture_identities SET canonical_id=?,verification='provider-match' WHERE fixture_id='fivedollar:77'", c);
+    const state = await liveSnapshot(w.store, 'livescore:77');
+    assert.equal(state.fixture.status, 'FT'); assert.equal(state.fixture.homeScore, 2); assert.equal(state.derived, 'stored-observation');
+    const rows = (await w.store.all("SELECT payload FROM fixtures WHERE id IN ('livescore:77','fivedollar:77')")).map(r => JSON.parse(r.payload));
+    const [shown] = await w.service.deduplicateFixtures(rows);
+    assert.equal(shown.status, 'FT', 'the final represents the match'); assert.equal(shown.sourceClaims.length, 2, 'both claims kept');
   } finally { w.sqlite.close(); }
 });
