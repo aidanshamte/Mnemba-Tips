@@ -284,5 +284,12 @@ test('a possible-duplicate review hides a licensed-provider newcomer but never a
     const ids = (await catalogCompetitions(store)).flatMap(c => c.providerIds);
     assert.ok(ids.includes(established.competition.id), 'established competition stays visible');
     assert.ok(!ids.includes('fivedollar:l9'), 'licensed-provider newcomer is hidden until reviewed');
+    // Review filed against the established record, naming the newcomer's canonical competition as the comparison.
+    await store.run("DELETE FROM verification_queue WHERE kind='competition-possible-duplicate'");
+    const newcomerCanonical = (await store.one("SELECT canonical_id FROM entity_aliases WHERE provider_id='fivedollar:l9'")).canonical_id;
+    await store.run("INSERT INTO verification_queue(id,kind,entity_id,source_url,payload,status,created_at) VALUES(?,?,?,?,?,?,?)", `identity:competition-possible-duplicate:${established.competition.id}`, 'competition-possible-duplicate', established.competition.id, 'https://example.invalid', JSON.stringify({canonicalId: newcomerCanonical}), 'pending', 0);
+    const again = (await catalogCompetitions(store)).flatMap(c => c.providerIds);
+    assert.ok(again.includes(established.competition.id), 'established competition still visible');
+    assert.ok(!again.includes('fivedollar:l9'), 'newcomer hidden when it is the compared side');
   } finally { sqlite.close(); }
 });
