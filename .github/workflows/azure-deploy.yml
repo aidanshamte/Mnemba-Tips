@@ -124,6 +124,14 @@ jobs:
         run: |
           image=$(az containerapp revision show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --revision "${{ inputs.revision }}" --query "properties.template.containers[0].image" -o tsv)
           bash scripts/azure/release.sh jobs "$image"
+      - name: Deactivate superseded revisions (keep serving + one rollback)
+        if: inputs.weight == '100'
+        # A cleanup problem is reported but never reverses a verified release.
+        continue-on-error: true
+        run: |
+          # Every active revision keeps a replica with its own database pool; 12 active revisions exhausted the
+          # 50-connection PostgreSQL limit on 2026-11-21. Deactivation only; nothing is deleted.
+          node scripts/azure/cleanup-revisions.mjs --serving "${{ inputs.revision }}" --rollback "${{ steps.shift.outputs.stable }}" --health https://aidanshamte.me/api/health
       - name: Automatic rollback on a failed stage
         if: failure() && steps.shift.outputs.stable != ''
         run: bash scripts/azure/release.sh rollback "${{ steps.shift.outputs.stable }}"
@@ -133,6 +141,9 @@ jobs:
           name: azure-traffic-${{ inputs.weight }}
           path: .sites-runtime/azure-release/
           if-no-files-found: ignore
+      - name: Deactivate the abandoned candidate after a failed cutover (evidence uploaded above)
+        if: failure() && steps.shift.outputs.stable != ''
+        run: node scripts/azure/cleanup-revisions.mjs --abandoned "${{ inputs.revision }}"
 
   rollback:
     if: github.event_name == 'workflow_dispatch' && inputs.action == 'rollback'
