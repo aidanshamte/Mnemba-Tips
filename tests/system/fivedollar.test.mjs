@@ -103,7 +103,7 @@ test('emergency switch and a missing key make no requests and fail safely', asyn
     const w = await world({env});
     try {
       const result = await w.service.sync('fivedollar');
-      assert.equal(result.state, 'disabled'); assert.equal(result.outcome, 'success');
+      assert.equal(result.state, 'disabled'); assert.equal(result.outcome, 'disabled', 'a disabled provider is never recorded as a success');
       assert.equal(w.calls.length, 0);
       const source = await w.store.one("SELECT enabled,disabled_reason FROM source_registry WHERE id='fivedollar'");
       assert.equal(source.enabled, 0);
@@ -371,5 +371,42 @@ test('a provider stage that reaches its time limit is recorded as incomplete, ne
     const r = await runScheduled({cron: '0 * * * *', scheduledTime: 7}, {DB: w.db}, {service: {initialize: async () => {}, sync: async job => { ran.push(job); return {outcome: job === 'fivedollar' ? 'incomplete' : 'success'}; }}});
     assert.equal(r.state, 'success', 'an incomplete provider stage does not fail the run');
     assert.equal(r.results.find(x => x.job === 'fivedollar').state, 'incomplete', 'but cron_runs records it accurately');
+  } finally { w.sqlite.close(); }
+});
+
+test('history backfill checkpoints per page, resumes after a stop, and continues when the page cap grows', async () => {
+  const {backfillHistory, FiveDollarClient, FdfaStop} = await import('../../lib/football/fivedollar.mjs');
+  const pagesSeen = [];
+  const w = await world({respond: u => {
+    const m = u.pathname.match(/^\/v1\/leagues\/(\d+)\/fixtures$/); if (!m || m[1] !== '100') return null;
+    const page = Number(u.searchParams.get('page') ?? 1); pagesSeen.push(page);
+    const rows = [raw(5000 + page, 'finished', {kickoff_ts: Date.parse(`2026-10-0${page}T15:00:00Z`) / 1000})];
+    return new Response(JSON.stringify({success: 1, data: rows, pagination: {page, per_page: 100, count: 1, has_more: page < 3}}), {headers: {'content-type': 'application/json'}});
+  }});
+  try {
+    w.setFixtures([raw(5100, 'scheduled', {kickoff_ts: Date.parse('2026-11-22T15:00:00Z') / 1000})]);
+    await syncFiveDollar(w.service, {mode: 'core', budget: 0}).catch(() => {});
+    const catalog = new Map(LEAGUES.map(l => [l.id, l]));
+    const save = (f) => w.service.saveFixtures([f], {liveOnly: true});
+    await save(normalizeFdfaFixture(raw(5100, 'scheduled', {kickoff_ts: Date.parse('2026-11-22T15:00:00Z') / 1000}), catalog));
+    const summary = () => ({history: {leagues: 0, pages: 0, fixtures: 0, inserted: 0, rejected: 0}});
+    // First run: the time box stops it after one page.
+    const c1 = new FiveDollarClient(w.service, {budget: Infinity, stopAt: Infinity}); c1.checkTime = function () { if (this.requests >= 1) throw new FdfaStop('Stage time limit reached'); };
+    await assert.rejects(backfillHistory(w.service, c1, catalog, summary(), {maxPages: 2, upcomingOnly: false}), /time limit/);
+    assert.deepEqual(pagesSeen, [1]);
+    assert.equal((await w.store.cache('fdfa:history:100')).data.page, 2, 'checkpoint saved');
+    // Second run resumes at page 2 and finishes at the cap of 2 pages.
+    w.advance(60000);
+    await backfillHistory(w.service, new FiveDollarClient(w.service, {budget: Infinity}), catalog, summary(), {maxPages: 2, upcomingOnly: false});
+    assert.deepEqual(pagesSeen, [1, 2], 'resumed, not restarted');
+    // A later run with a larger cap continues from page 3 instead of repeating pages 1-2.
+    w.advance(60000);
+    const s3 = summary();
+    await backfillHistory(w.service, new FiveDollarClient(w.service, {budget: Infinity}), catalog, s3, {maxPages: 12, upcomingOnly: false});
+    assert.deepEqual(pagesSeen, [1, 2, 3]);
+    assert.equal((await w.store.cache('fdfa:history:100')).data.done, true);
+    const rows = await w.store.one("SELECT COUNT(*) n FROM fixtures WHERE id IN ('fivedollar:5001','fivedollar:5002','fivedollar:5003')");
+    assert.equal(rows.n, 3, 'each page stored exactly once');
+    assert.equal((await w.store.one("SELECT COUNT(*) n FROM analysis_forecasts WHERE fixture_id IN ('fivedollar:5001','fivedollar:5002','fivedollar:5003')")).n, 0, 'no forecast for a finished historical match');
   } finally { w.sqlite.close(); }
 });
