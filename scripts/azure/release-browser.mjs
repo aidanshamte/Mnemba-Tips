@@ -47,7 +47,8 @@ try {
       if (theme === 'dark' && !['home', 'match', 'team', 'article'].includes(name)) continue;
       const started = Date.now(); let status = 0;
       try {
-        const resp = await page.goto(origin + path, {waitUntil: 'networkidle', timeout: 90000}); status = resp?.status() ?? 0;
+        // Readiness is the load event plus visible content: live pages keep background polling, so the network never idles.
+        const resp = await page.goto(origin + path, {waitUntil: 'load', timeout: 90000}); status = resp?.status() ?? 0;
         await page.locator('h1').first().waitFor({timeout: 30000});
         if (theme === 'dark') { await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark')); await page.waitForTimeout(300); }
         await page.waitForTimeout(800);
@@ -79,7 +80,7 @@ try {
     // Mobile navigation sheet.
     if (w === 375 && theme === 'light') {
       try {
-        await page.goto(origin + '/football', {waitUntil: 'networkidle'}); await page.locator('.mt-bottom-nav button').click();
+        await page.goto(origin + '/football', {waitUntil: 'load'}); const menu = page.locator('.mt-bottom-nav button'); await menu.waitFor({state: 'visible', timeout: 30000}); await menu.click();
         const d = page.locator('dialog[aria-label=Menu]'); assert.equal(await d.evaluate(e => e.open), true);
         await page.keyboard.press('Escape'); assert.equal(await d.evaluate(e => e.open), false); report.mobileMenu = 'pass';
       } catch (e) { fail('mobile menu: ' + e.message.split('\n')[0]); }
@@ -91,7 +92,7 @@ try {
     const texts = {};
     for (const tz of ['America/New_York', 'Asia/Tokyo']) {
       const ctx = await browser.newContext({timezoneId: tz}); const p = await ctx.newPage();
-      await p.goto(origin + routes.match, {waitUntil: 'networkidle', timeout: 90000}); await p.locator('.match-hero').waitFor();
+      await p.goto(origin + routes.match, {waitUntil: 'load', timeout: 90000}); await p.locator('.match-hero').waitFor({state: 'visible', timeout: 30000});
       texts[tz] = (await p.locator('.match-hero').innerText()).match(/\d{1,2}:\d{2}[^\n·]*/)?.[0] ?? null; await ctx.close();
     }
     report.timezone = texts; if (!texts['America/New_York'] || texts['America/New_York'] === texts['Asia/Tokyo']) fail('kickoff did not follow the visitor timezone: ' + JSON.stringify(texts));
