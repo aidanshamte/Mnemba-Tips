@@ -509,3 +509,23 @@ test('a frozen provider never hides a linked final: list representative and live
     assert.equal(shown.status, 'FT', 'the final represents the match'); assert.equal(shown.sourceClaims.length, 2, 'both claims kept');
   } finally { w.sqlite.close(); }
 });
+
+test('a linked final stored before a frozen live state was published still wins', async () => {
+  const {liveSnapshot, publishLive} = await import('../../lib/football/live.mjs');
+  const w = await world();
+  try {
+    const catalog = new Map(LEAGUES.map(l => [l.id, l]));
+    const ours = normalizeFdfaFixture(raw(78, 'finished', {goals: {home: 3, away: 1, half_home: 1, half_away: 0}}), catalog);
+    await w.service.saveFixtures([ours], {liveOnly: true});           // final stored first
+    w.advance(180000);
+    const frozen = {...ours, id: 'livescore:78', provider: 'livescore', externalId: '78', status: '2H', elapsed: 90, homeScore: 3, awayScore: 0, label: 'Live', regulationScore: undefined,
+      home: {...ours.home, id: 'livescore:t10', provider: 'livescore'}, away: {...ours.away, id: 'livescore:t20', provider: 'livescore'},
+      competition: {...ours.competition, id: 'livescore:100', provider: 'livescore', seasons: [{...ours.competition.seasons[0], id: 'livescore:100:2026', competitionId: 'livescore:100'}]}, seasonId: 'livescore:100:2026'};
+    await w.service.saveFixtures([frozen], {liveOnly: true});
+    await publishLive(w.service, 'livescore:78');                     // frozen live state published later
+    const c = (await w.store.one("SELECT canonical_id FROM fixture_identities WHERE fixture_id='livescore:78'")).canonical_id;
+    await w.store.run("UPDATE fixture_identities SET canonical_id=?,verification='provider-match' WHERE fixture_id='fivedollar:78'", c);
+    const state = await liveSnapshot(w.store, 'livescore:78');
+    assert.equal(state.fixture.status, 'FT'); assert.equal(state.fixture.awayScore, 1);
+  } finally { w.sqlite.close(); }
+});
