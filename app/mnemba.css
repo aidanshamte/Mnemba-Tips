@@ -336,7 +336,7 @@
 .mt-fixture-when{display:flex;flex-direction:column;align-items:flex-start;gap:var(--mt-space-xs);font:600 14px/20px var(--mt-font-ui);font-variant-numeric:tabular-nums}
 .mt-fixture-team{display:flex;align-items:center;gap:var(--mt-space-sm);min-width:0}
 .mt-fixture-home{justify-content:flex-end;text-align:right}
-.mt-fixture-team .mt-team-name{font-size:20px;line-height:24px}
+.mt-fixture-team .mt-team-name{font-size:var(--mt-type-team-size);line-height:var(--mt-type-team-line)}
 .mt-fixture-score{text-align:center;font:650 1rem/1.375rem var(--mt-font-ui);color:var(--mt-color-text-secondary);font-variant-numeric:tabular-nums}
 .mt-fixture-go{color:var(--mt-color-text-tertiary)}
 @media (max-width:767px){
@@ -543,3 +543,4 @@
 @media (min-width:1024px){.intel .intel-news>.news-card:first-child h3{font:650 1.25rem/1.3 var(--mt-font-ui)}}
 .mt-team-name,.intel-team .team-name,.mt-fixture-group-head{overflow-wrap:anywhere}
 @media (max-width:767px){.intel-matches,.mt-fixture-groups,.intel-news{gap:var(--mt-space-sm)}.intel .intel-main{padding-top:var(--mt-space-md)}}
+.intel details,.intel details>div,.intel .market-explorer{min-width:0;max-width:100%}.intel .table-scroll{overflow-x:auto;contain:inline-size}

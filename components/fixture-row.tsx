@@ -31,6 +31,9 @@ export function FixtureGroups({fixtures}:{fixtures:Fixture[]}){
  if(!groups.has(key))groups.set(key,{key,canonical:f.competitionCanonical,competition:f.competitionName&&f.competition?{...f.competition,name:f.competitionName}:f.competition,items:[]});
  const g=groups.get(key)!;if(!g.items.some(x=>x.id===f.id))g.items.push(f);}
  type Group={key:string;canonical?:string;competition:Fixture['competition'];items:Fixture[]};
+ // Different leagues can share a display name (Serbia's and Slovakia's "Super Liga"); add the country so headers stay distinct.
+ const named=new Map<string,number>();for(const g of groups.values()){const n=g.competition?.name??'';named.set(n,(named.get(n)??0)+1);}
+ for(const g of groups.values())if(g.competition&&g.canonical&&(named.get(g.competition.name)??0)>1){const c=g.canonical.split(':')[1]??'';g.competition={...g.competition,name:`${g.competition.name} · ${c.split('-').map(w=>w[0]?.toUpperCase()+w.slice(1)).join(' ')}`};}
  const ordered:Group[]=orderByCompetition([...groups.values()],(g:Group)=>g.canonical??'',favourites);
  return <div className="mt-fixture-groups">{ordered.map(g=>{const name=g.competition?.name??'Other fixtures',fav=!!g.canonical&&isFavourite(g.canonical);
   return <section key={g.key} className="mt-fixture-group" aria-label={name}>
