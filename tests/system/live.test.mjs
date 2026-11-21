@@ -39,19 +39,19 @@ test('central discovery persists canonical claims, diffs unchanged state and nev
   const f=normalizeFixture('api-football',raw);await x.service.saveFixtures([f]);
   await x.store.upsert('model_predictions',{id:'saved',fixture_id:f.id,model_version:'test',created_at:f.startsAt-1000,kickoff_at:f.startsAt,label:'Pre-match',payload:'{"immutable":true}'});
   const before=await x.store.one('SELECT * FROM model_predictions WHERE id=?','saved');
-  assert.equal((await liveTick(x.service)).state,'success');assert.equal(calls,1);
+  assert.equal((await liveTick(x.service,{cadenceMs:0})).state,'success');assert.equal(calls,1);
   const state=await liveSnapshot(x.store,f.id);assert.equal(state.fixture.homeScore,2);assert.ok(state.revision);
   assert.ok(await x.store.one('SELECT canonical_id FROM fixture_identities WHERE fixture_id=?',f.id));
   assert.equal(await publishLive(x.service,f.id),false);
   assert.deepEqual(await x.store.one('SELECT * FROM model_predictions WHERE id=?','saved'),before);
-  const owner=await x.store.lock('football-sync');assert.equal((await liveTick(x.service)).state,'busy');assert.equal(calls,1);await x.store.unlock('football-sync',owner);
-  x.advance(31*60000);raw.goals.home=3;assert.equal((await liveTick(x.service)).state,'success');const next=await liveSnapshot(x.store,f.id);assert.equal(next.fixture.homeScore,3);assert.notEqual(next.revision,state.revision);
+  const owner=await x.store.lock('football-sync');assert.equal((await liveTick(x.service,{cadenceMs:0})).state,'busy');assert.equal(calls,1);await x.store.unlock('football-sync',owner);
+  x.advance(31*60000);raw.goals.home=3;assert.equal((await liveTick(x.service,{cadenceMs:0})).state,'success');const next=await liveSnapshot(x.store,f.id);assert.equal(next.fixture.homeScore,3);assert.notEqual(next.revision,state.revision);
  }finally{x.sqlite.close();}
 });
 test('unconfigured worker is idle and failures preserve last published state',async()=>{
- const x=await setup();try{assert.equal((await liveTick(x.service)).state,'not-configured');assert.equal((await liveSnapshot(x.store,'missing')).unavailable,true);}finally{x.sqlite.close();}
+ const x=await setup();try{assert.equal((await liveTick(x.service,{cadenceMs:0})).state,'not-configured');assert.equal((await liveSnapshot(x.store,'missing')).unavailable,true);}finally{x.sqlite.close();}
  const y=await setup({env:{API_FOOTBALL_KEY:'synthetic-test-key'},fetcher:async()=>{throw Error('network');},sleep:async()=>{}});
- try{await y.store.putCache('live:state:api-football:1',{revision:'old',fixture:{homeScore:1}},86400000);assert.equal((await liveTick(y.service)).state,'unavailable');assert.equal((await liveTick(y.service)).state,'backoff');assert.equal((await liveSnapshot(y.store,'api-football:1')).revision,'old');}finally{y.sqlite.close();}
+ try{await y.store.putCache('live:state:api-football:1',{revision:'old',fixture:{homeScore:1}},86400000);assert.equal((await liveTick(y.service,{cadenceMs:0})).state,'unavailable');assert.equal((await liveTick(y.service,{cadenceMs:0})).state,'backoff');assert.equal((await liveSnapshot(y.store,'api-football:1')).revision,'old');}finally{y.sqlite.close();}
 });
 test('SSE sends snapshot and changed revision, reconnect replays latest, abort releases stream',async()=>{
  let state={revision:'one',fixture:{homeScore:0}};const abort=new AbortController();
@@ -60,4 +60,21 @@ test('SSE sends snapshot and changed revision, reconnect replays latest, abort r
  assert.match(decode((await reader.read()).value),/retry/);assert.match(decode((await reader.read()).value),/id: one/);
  state={revision:'two',fixture:{homeScore:1}};assert.match(decode((await reader.read()).value),/id: two/);abort.abort();assert.equal((await reader.read()).done,true);
  const replay=liveStream(async()=>state,{duration:1000}).body.getReader();await replay.read();assert.match(decode((await replay.read()).value),/id: two/);await replay.cancel();
+});
+
+test('LiveScore requests follow one global cadence across every process and revision', async () => {
+  const {liveTick} = await import('../../lib/football/live.mjs');
+  const {database} = await import('../football-db.mjs');
+  const {IntelligenceService} = await import('../../lib/football/intelligence.mjs');
+  const {store, sqlite} = database(); let now = Date.parse('2026-11-21T12:00:00Z'); store.now = () => now;
+  try {
+    await store.init(); let calls = 0;
+    const service = new IntelligenceService(store, {MNEMBA_LIVESCORE_ENABLED: '1'}, {fetcher: async () => { calls++; return Response.json({Stages: []}); }, sleep: async () => {}}); await service.initialize();
+    await liveTick(service);
+    const first = calls;
+    assert.equal((await liveTick(service)).state, 'not-due', 'a second process within the interval makes no request');
+    assert.equal(calls, first);
+    now += 6 * 60000; await liveTick(service);           // past the interval and the 5-minute discovery cache
+    assert.ok(calls > first, 'the next interval polls again');
+  } finally { sqlite.close(); }
 });

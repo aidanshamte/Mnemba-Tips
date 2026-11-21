@@ -5,7 +5,8 @@
 //
 // - Works league by league (12 months on Pro), checkpointed per page (football_cache "fdfa:history:<league>"); an
 //   interrupted run resumes where it stopped.
-// - Shares the database rate limiter with the scheduled jobs (never more than 9 requests per clock minute in total),
+// - Shares the database rate limiter (never more than 9 requests per clock minute in total) and fills at most the first 5
+//   slots of a minute, so live updates, scheduled jobs and grading always keep at least 4;
 //   honours Retry-After and the circuit breaker, and stops cleanly at its time limit.
 // - Holds its own lease ("fdfa-backfill"), so two backfills cannot overlap. It does not take the scheduled jobs'
 //   advisory lock, so they keep running; writes are idempotent upserts of finished matches only.
@@ -25,7 +26,7 @@ try {
   await service.initialize();
   owner = await store.lock('fdfa-backfill', (minutes + 5) * 60000);
   if (!owner) throw new FdfaStop('Another backfill is running');
-  const started = Date.now(), client = new FiveDollarClient(service, {budget: Infinity, stopAt: started + minutes * 60000});
+  const started = Date.now(), client = new FiveDollarClient(service, {budget: Infinity, stopAt: started + minutes * 60000, perMinute: Number(process.env.MNEMBA_BACKFILL_PER_MINUTE ?? 5)});
   const catalog = await client.leagues(), summary = {history: {leagues: 0, pages: 0, fixtures: 0, inserted: 0, rejected: 0}};
   try { await backfillHistory(service, client, catalog, summary, {maxPages, upcomingOnly: false}); out.complete = true; }
   catch (error) { if (error instanceof FdfaStop) { out.complete = false; out.stoppedBecause = error.message; } else throw error; }
