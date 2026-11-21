@@ -232,7 +232,7 @@ test('standings normalization validates the envelope; jobs are scheduled hourly 
   assert.throws(() => normalizeFdfaStandings({season: '2026'}), /envelope/);
   assert.ok(CRON_JOBS['0 * * * *'].includes('fivedollar'));
   assert.ok(CRON_JOBS['20 */3 * * *'].includes('fivedollar-details'));
-  assert.ok(CRON_JOBS['0 * * * *'].indexOf('fivedollar') < CRON_JOBS['0 * * * *'].indexOf('models'), 'results confirmed before grading');
+  for (const [cron, stage] of [['0 * * * *', 'fivedollar'], ['20 */3 * * *', 'fivedollar-details']]) assert.equal(CRON_JOBS[cron].at(-1), stage, 'provider stages run last so they cannot starve existing stages');
 });
 
 test('the competition page prefers the provider league table over the reconstructed one', async () => {
@@ -290,4 +290,34 @@ test('a network error that echoes the Authorization header is sanitized before i
     assert.ok(!logged.some(l => l.includes(SECRET)));
     assert.equal(await dumpContains(w.sqlite, SECRET), null);
   } finally { console.log = original; w.sqlite.close(); }
+});
+
+test('the stage time box stops before the next request and never runs within 45 s of the run deadline', async () => {
+  const w = await world();
+  try {
+    w.setFixtures([raw(71, 'scheduled')]);
+    // Each request is spaced 6.5 s by SourceHttp; a 15 s box allows at most three.
+    const boxed = await syncFiveDollar(w.service, {mode: 'core', timeLimitMs: 15000});
+    assert.match(boxed.deferred, /time limit/); assert.ok(boxed.requests <= 3, String(boxed.requests));
+    assert.equal(boxed.errors.length, 0);
+    // A scheduled run with 40 s left: no provider request at all.
+    w.service.runDeadline = w.clock.now + 40000;
+    const calls = w.calls.length;
+    const late = await syncFiveDollar(w.service, {mode: 'core'});
+    assert.match(late.deferred, /time limit/); assert.equal(w.calls.length, calls);
+  } finally { w.sqlite.close(); }
+});
+
+test('provider ingestion takes the cheap path: no grading or prediction recomputation inside the provider stage', async () => {
+  const w = await world();
+  try {
+    const seen = [];
+    const original = w.service.saveFixtures.bind(w.service);
+    w.service.saveFixtures = (fixtures, options = {}) => { seen.push(options.liveOnly === true); return original(fixtures, options); };
+    w.setFixtures([raw(81, 'finished', {kickoff_ts: Date.parse('2026-11-20T09:00:00Z') / 1000}), raw(82, 'scheduled', {kickoff_ts: Date.parse('2026-11-21T15:00:00Z') / 1000})]);
+    await syncFiveDollar(w.service, {mode: 'core'});
+    w.advance(3 * 3600000);
+    await syncFiveDollar(w.service, {mode: 'details'});
+    assert.ok(seen.length > 0 && seen.every(Boolean), JSON.stringify(seen));
+  } finally { w.sqlite.close(); }
 });

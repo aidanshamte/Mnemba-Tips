@@ -35,7 +35,7 @@ test('cron records failures, respects due times and releases its own lease',asyn
   try {
     await store.run("INSERT INTO update_jobs(id,interval_ms,next_run,state,payload) VALUES('fixtures',1,?,'success','{}')",Date.now()+3600000);
     const result=await runScheduled({cron:'0 * * * *',scheduledTime:124},{DB:db},{service:{initialize:async()=>{},sync:async job=>{called.push(job);if(job==='results')throw Error('Provider unavailable');return {outcome:'success'};}}});
-    assert.equal(result.state,'partial');assert.deepEqual(called,['results','fivedollar','models','snapshots','media']);
+    assert.equal(result.state,'partial');assert.deepEqual(called,['results','models','snapshots','media','fivedollar']);
     assert.equal((await store.one('SELECT state FROM cron_runs')).state,'partial');
     assert.equal(await store.one("SELECT * FROM sync_locks WHERE id='cloudflare-cron'"),null);
   }finally{sqlite.close();}
