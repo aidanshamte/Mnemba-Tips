@@ -88,3 +88,15 @@ test('the matchday view reads only the rows it needs (no whole-table reads of id
     }
   } finally { w.sqlite.close(); }
 });
+
+test('a past kickoff still marked not-started is not counted as awaiting analysis', async () => {
+  const w = await world();
+  try {
+    await w.service.sync('analysis-states');
+    w.at('2026-11-05T12:30:00Z');                         // kickoff passed; providers have not updated the status yet
+    await w.service.store.run("DELETE FROM football_cache WHERE id LIKE 'matchday:%'");
+    const view = await matchdayView(w.service, params());
+    assert.equal(view.count, 3, 'still listed');
+    assert.equal(view.analysis.pending, 0, 'no unclearable analysis backlog');
+  } finally { w.sqlite.close(); }
+});
