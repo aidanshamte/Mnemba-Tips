@@ -10,7 +10,9 @@ export function useLiveMatch(id:string){
   void read();
   if(typeof EventSource!=='undefined'){
    source=new EventSource(`/api/football/live?stream=1&id=${encodeURIComponent(id)}`);
-   source.onopen=()=>{connected=true;setConnection('live');};source.onerror=()=>{connected=false;setConnection('reconnecting');};
+   // Bounded streams end about every 55 s and reopen at once; only a reconnect lasting over 10 s is shown.
+   let grace:ReturnType<typeof setTimeout>|undefined;
+   source.onopen=()=>{connected=true;clearTimeout(grace);setConnection('live');};source.onerror=()=>{connected=false;clearTimeout(grace);grace=setTimeout(()=>{if(!connected)setConnection('reconnecting');},10000);};
    source.addEventListener('match',event=>{try{apply(JSON.parse((event as MessageEvent).data));}catch{}});
   }
   const timer=setInterval(()=>{if(!connected&&!document.hidden)void read();},30000);
