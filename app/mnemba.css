@@ -521,8 +521,8 @@
 /* Compact prediction card: small heading, outcome first, compact probabilities, details on request. */
 .intel .mt-card-heading{font:650 var(--mt-type-card-title-size)/var(--mt-type-card-title-line) var(--mt-font-ui);margin:0}
 .intel .prediction-pick{font:650 var(--mt-type-prediction-size)/var(--mt-type-prediction-line) var(--mt-font-ui);margin:var(--mt-space-sm) 0}
-.intel .mt-prob-compact{gap:var(--mt-space-sm)}
-.intel .mt-prob-compact>div{padding:var(--mt-space-sm) var(--mt-space-md)}
+.intel .mt-prob-compact{gap:var(--mt-space-sm);grid-template-columns:repeat(auto-fit,minmax(min(100%,5.5rem),1fr))}
+.intel .mt-prob-compact>div{padding:var(--mt-space-sm) var(--mt-space-md);min-width:0}
 .intel .mt-prob-compact span{font-size:var(--mt-type-label-size);line-height:var(--mt-type-label-line);text-transform:none;letter-spacing:0}
 .intel .mt-prob-compact strong{font:650 var(--mt-type-stat-size)/var(--mt-type-stat-line) var(--mt-font-ui)}
 .intel .mt-card-meta{font-size:var(--mt-type-supporting-size);line-height:var(--mt-type-supporting-line);color:var(--mt-color-text-secondary);margin:var(--mt-space-xs) 0}
