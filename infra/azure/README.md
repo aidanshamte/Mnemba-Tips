@@ -38,13 +38,64 @@ Private evidence and manifests: `.sites-runtime/azure-migration/`. Off-repositor
 
 | Azure job | UTC cron | Work |
 |---|---|---|
-| `mnemba-update-0` | `0 * * * *` | Fixtures, results, prediction models, snapshots |
-| `mnemba-update-1` | `20 */3 * * *` | News, video metadata, configured documents |
+| `mnemba-update-0` | `0 * * * *` | Fixtures, results, 5DollarFootballAPI fixtures and results, prediction models, snapshots |
+| `mnemba-update-1` | `20 */3 * * *` | News, OpenLigaDB, 5DollarFootballAPI events, statistics, odds and standings, video metadata, configured documents |
 | `mnemba-update-2` | `40 3 * * *` | Retention, country/entity reconciliation, search index, calibration, rosters |
 
 Each scheduled container uses 0.5 vCPU / 1 GiB, one replica, a 300-second execution timeout, zero automatic retries, and a 240-second cooperative application deadline. A PostgreSQL advisory lock prevents overlapping scheduled executions. `MNEMBA_ENABLE_UPDATES=1` is required. Partial source failures make the job fail visibly; cached records remain available. The `cron_runs` and `update_jobs` tables retain protected details. Check both Azure execution status and these application outcomes: process success alone is insufficient.
 
 No API-Football, Football-Data, NewsAPI, or YouTube API keys were available in the local environment or Cloudflare secret inventory. Do not invent or expose them. Existing keyless sources are used; paid-provider coverage is not claimed. Basketball remains the existing labelled model/demo experience, not a live data feed.
+
+### 5DollarFootballAPI (Pro)
+
+The key is the Container Apps secret `fdfa-api-key`. It is exposed to the code only as the server-side variable `FIVE_DOLLAR_FOOTBALL_API_KEY` (`secretref:fdfa-api-key`) on `mnemba-web` and the jobs `mnemba-update-0`, `-1` and `-2`. The key is sent only in the `Authorization` header. It is never placed in URLs, caches, logs, API responses or client code. Never read the secret back (`secret show`, `listSecrets` and similar) to "verify" it. Check references by name instead:
+
+```sh
+az containerapp job show -g mnemba-azure -n mnemba-update-0 --query "properties.template.containers[0].env[?name=='FIVE_DOLLAR_FOOTBALL_API_KEY'].secretRef" -o tsv
+```
+
+**Request discipline (`lib/football/fivedollar.mjs`):**
+- At most 9 requests in any clock minute, shared through the database. The account limit is 10 per 60 seconds.
+- A 6.5-second minimum gap between requests.
+- A per-run budget: 8 requests hourly, 12 three-hourly.
+- `Retry-After` and exponential backoff.
+- A circuit breaker:
+  - 3 consecutive failures open it for 15 minutes, doubling up to 2 hours;
+  - an authentication or plan error opens it for 6 hours.
+- Responses are cached, and work resumes from page cursors.
+
+**Data handling:**
+- A result settles only on an unqualified `finished` status. Cup scores may include extra time, so they are not graded from this provider alone.
+- Records link to another provider's fixture only when the kickoff is within 15 minutes and both teams match, including women's, youth and reserve markers.
+- A linked match keeps one forecast. Disagreeing results open a conflict and grading is withheld.
+- Odds are stored as evidence only and are not displayed.
+
+**Emergency disable.** This takes effect on the next job execution and creates no new web revision:
+
+```sh
+for j in mnemba-update-0 mnemba-update-1 mnemba-update-2; do az containerapp job update -g mnemba-azure -n $j --set-env-vars MNEMBA_FDFA_DISABLED=1 --only-show-errors --output none; done
+```
+
+To re-enable, set `MNEMBA_FDFA_DISABLED=0` the same way. Alternatively, an administrator can set `source_registry.user_enabled=0` for `fivedollar`.
+
+**Rotation.** Run this in your own PowerShell window, entering the key with masked input (see the `Read-Host -MaskInput` / `-AsSecureString` pattern). Do not keep a transcript.
+
+```powershell
+az containerapp secret set -g mnemba-azure -n mnemba-web --secrets "fdfa-api-key=$apiKey" --only-show-errors --output none
+foreach ($j in "mnemba-update-0","mnemba-update-1","mnemba-update-2") { az containerapp job secret set -g mnemba-azure -n $j --secrets "fdfa-api-key=$apiKey" --only-show-errors --output none }
+$apiKey = $null; Remove-Variable apiKey -ErrorAction SilentlyContinue
+```
+
+Jobs read the new value on their next execution. A web revision reads secrets at start. The web does not call the provider, but if a running revision needs the new value, restart it with:
+
+```sh
+az containerapp revision restart -g mnemba-azure -n mnemba-web --revision <revision>
+```
+
+**Rollback.**
+- Code: point the jobs back at the previous image with `scripts/azure/release.sh jobs <previous-image>`. Without the adapter code, the variable is simply unused.
+- References: `az containerapp job update -g mnemba-azure -n <job> --remove-env-vars FIVE_DOLLAR_FOOTBALL_API_KEY`, then optionally `az containerapp job secret remove -g mnemba-azure -n <job> --secret-names fdfa-api-key`.
+- Stored provider rows are namespaced `fivedollar:*`. They can be left in place, or removed after a verified backup.
 
 ## GitHub deployment
 
