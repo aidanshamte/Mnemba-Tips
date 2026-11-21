@@ -116,7 +116,8 @@ test('core sync stores fixtures, respects the shared per-minute limit and never 
   try {
     w.setFixtures([raw(11, 'finished', {kickoff_ts: Date.parse('2026-11-20T09:00:00Z') / 1000}), raw(12, 'in_play'), raw(13, 'scheduled', {kickoff_ts: Date.parse('2026-11-21T15:00:00Z') / 1000})]);
     const result = await w.service.sync('fivedollar');
-    assert.equal(result.outcome, 'success', JSON.stringify(result.errors) + result.deferred);
+    // The 8-request budget runs out before every window is read, so the stage is accurately incomplete, with no errors.
+    assert.equal(result.outcome, result.deferred ? 'incomplete' : 'success', JSON.stringify(result.errors)); assert.equal(result.errors.length, 0);
     assert.equal((await fixtureRow(w.store, 'fivedollar:11')).status, 'FT');
     assert.equal((await fixtureRow(w.store, 'fivedollar:12')).status, '1H');
     assert.equal((await fixtureRow(w.store, 'fivedollar:13')).status, 'NS');
@@ -350,5 +351,25 @@ test('history backfill gives provider-only teams the three results a forecast ne
     w.advance(3600000);
     await syncFiveDollar(w.service, {mode: 'core', budget: 20, timeLimitMs: 600000});
     assert.equal(w.calls.filter(c => /\/leagues\/100\/fixtures/.test(c.path)).length, calls, 'not repeated within 7 days');
+  } finally { w.sqlite.close(); }
+});
+
+test('a provider stage that reaches its time limit is recorded as incomplete, never as success', async () => {
+  const w = await world();
+  try {
+    w.setFixtures([raw(201, 'scheduled')]);
+    w.service.runDeadline = w.clock.now + 40000;           // under the 45 s floor: the stage stops immediately
+    const stopped = await w.service.sync('fivedollar');
+    assert.equal(stopped.outcome, 'incomplete');
+    const job = await w.store.one("SELECT state,last_success FROM update_jobs WHERE id='fivedollar'");
+    assert.equal(job.state, 'incomplete'); assert.equal(job.last_success, null, 'not recorded as a successful completion');
+    w.service.runDeadline = undefined; w.advance(3600000);
+    const full = await w.service.sync('fivedollar', '');
+    assert.ok(['success', 'incomplete'].includes(full.outcome));
+    const {runScheduled} = await import('../../lib/football/scheduled.mjs');
+    const ran = [];
+    const r = await runScheduled({cron: '0 * * * *', scheduledTime: 7}, {DB: w.db}, {service: {initialize: async () => {}, sync: async job => { ran.push(job); return {outcome: job === 'fivedollar' ? 'incomplete' : 'success'}; }}});
+    assert.equal(r.state, 'success', 'an incomplete provider stage does not fail the run');
+    assert.equal(r.results.find(x => x.job === 'fivedollar').state, 'incomplete', 'but cron_runs records it accurately');
   } finally { w.sqlite.close(); }
 });
