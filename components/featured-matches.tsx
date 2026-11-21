@@ -4,12 +4,13 @@ import {useEffect,useRef,useState} from 'react';
 import LocalTime from './local-time';
 import {competitionLabel} from '@/lib/football/competition-catalog.mjs';
 import {featuredFixtures} from '@/lib/football/featured.mjs';
+import {useFavouriteLeagues} from './use-favourite-leagues';
 type Fixture={recommendation?:{primary?:{label:string;probabilities:{win:number}};reasons?:string[];uncertainty?:string;createdAt?:number};id:string;competition:{id?:string;name:string};home:{id:string;name:string;logo?:string};away:{id:string;name:string;logo?:string};startsAt:number;status:string;label:string;homeScore:number|null;awayScore:number|null};
 type Overview={note?:string;upcoming?:Fixture[];results?:Fixture[];today?:Fixture[]};
 export default function FeaturedMatches({data}:{data:Overview|null}){
  const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[focused,setFocused]=useState(false);
  const [analysis,setAnalysis]=useState<{id:string;reason?:string;probabilities?:number[]}|null>(null),touch=useRef<number|null>(null);
- const fixtures:Fixture[]=featuredFixtures(data?.upcoming??[]);
+ const {favourites}=useFavouriteLeagues();const fixtures:Fixture[]=featuredFixtures(data?.upcoming??[],favourites);
  const f=fixtures[index%Math.max(fixtures.length,1)],current=analysis?.id===f?.id?analysis:null;
  useEffect(()=>{const media=matchMedia('(prefers-reduced-motion: reduce)');const update=()=>setReduced(media.matches);update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
  useEffect(()=>{if(paused||reduced||focused||fixtures.length<2)return;const t=setInterval(()=>{if(!document.hidden)setIndex(i=>i+1);},8000);return()=>clearInterval(t);},[paused,reduced,focused,fixtures.length]);

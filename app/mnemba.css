@@ -9,7 +9,9 @@
   background:var(--mt-color-background-primary);color:var(--mt-color-text-primary);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
-.intel :where(h1,h2,h3){font-family:var(--mt-font-display);letter-spacing:0}
+/* Condensed display type for page titles only; section and card headings use the interface font. */
+.intel :where(h1){font-family:var(--mt-font-display);letter-spacing:0}
+.intel :where(h2,h3){font-family:var(--mt-font-ui);font-weight:650;letter-spacing:0}
 .intel :where(h1){font-weight:700;font-size:var(--mt-type-page-title-size);line-height:var(--mt-type-page-title-line);letter-spacing:-.005em;margin:0}
 .intel :where(h2){font-weight:600;font-size:var(--mt-type-section-title-size);line-height:var(--mt-type-section-title-line);margin:0}
 .intel :where(h3){font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-card-title-size);line-height:var(--mt-type-card-title-line);letter-spacing:-.005em;margin:0}
@@ -23,10 +25,10 @@
 /* Typographic roles (Figma text styles) for new markup */
 .mt-display{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-display-size);line-height:var(--mt-type-display-line);letter-spacing:-.005em}
 .mt-page-title{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-page-title-size);line-height:var(--mt-type-page-title-line)}
-.mt-section-title{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-section-title-size);line-height:var(--mt-type-section-title-line)}
+.mt-section-title{font-family:var(--mt-font-ui);font-weight:650;font-size:var(--mt-type-section-title-size);line-height:var(--mt-type-section-title-line)}
 .mt-card-title{font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-card-title-size);line-height:var(--mt-type-card-title-line);letter-spacing:-.005em}
-.mt-team-name{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-team-size);line-height:var(--mt-type-team-line)}
-.mt-prediction{font-family:var(--mt-font-display);font-weight:700;font-size:var(--mt-type-prediction-size);line-height:var(--mt-type-prediction-line)}
+.mt-team-name{font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-team-size);line-height:var(--mt-type-team-line)}
+.mt-prediction{font-family:var(--mt-font-ui);font-weight:650;font-size:var(--mt-type-prediction-size);line-height:var(--mt-type-prediction-line)}
 .mt-body{font-size:var(--mt-type-body-size);line-height:var(--mt-type-body-line)}
 .mt-supporting{font-size:var(--mt-type-supporting-size);line-height:var(--mt-type-supporting-line);color:var(--mt-color-text-secondary)}
 .mt-label{font-family:var(--mt-font-ui);font-weight:600;font-size:var(--mt-type-label-size);line-height:var(--mt-type-label-line);letter-spacing:.06em;text-transform:uppercase}
@@ -91,7 +93,7 @@
 .intel-match-meta{font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-secondary);margin-bottom:var(--mt-space-lg);gap:var(--mt-space-md)}
 .intel-match-meta>span{min-width:0;overflow-wrap:anywhere}
 .intel-team{display:flex;align-items:center;justify-content:space-between;gap:var(--mt-space-md);padding:var(--mt-space-xs) 0}
-.intel-team .team-name{min-width:0;font-family:var(--mt-font-display);font-weight:600;font-size:20px;line-height:24px}
+.intel-team .team-name{min-width:0;font-family:var(--mt-font-ui);font-weight:600;font-size:20px;line-height:24px}
 .intel-team .team-name .football-identity>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .intel-team b{font-family:var(--mt-font-display);font-weight:600;font-size:var(--mt-type-stat-small-size);font-variant-numeric:tabular-nums;color:var(--mt-color-text-primary)}
 .intel-match-foot{border-top:var(--mt-border-width-hairline) solid var(--mt-color-border-default);margin-top:var(--mt-space-lg);padding-top:var(--mt-space-md);font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-secondary);align-items:center}
@@ -335,7 +337,7 @@
 .mt-fixture-team{display:flex;align-items:center;gap:var(--mt-space-sm);min-width:0}
 .mt-fixture-home{justify-content:flex-end;text-align:right}
 .mt-fixture-team .mt-team-name{font-size:20px;line-height:24px}
-.mt-fixture-score{text-align:center;font:600 18px/22px var(--mt-font-display);color:var(--mt-color-text-secondary);font-variant-numeric:tabular-nums}
+.mt-fixture-score{text-align:center;font:650 1rem/1.375rem var(--mt-font-ui);color:var(--mt-color-text-secondary);font-variant-numeric:tabular-nums}
 .mt-fixture-go{color:var(--mt-color-text-tertiary)}
 @media (max-width:767px){
   .mt-fixture-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"when when" "home score" "away score";row-gap:var(--mt-space-xs)}
@@ -383,9 +385,9 @@
 .mt-match-competition{display:flex;align-items:center;flex-wrap:wrap;gap:var(--mt-space-sm);font-size:14px;line-height:20px;color:var(--mt-color-text-inverse-secondary)}
 .intel .match-hero .match-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:var(--mt-space-xl);margin:var(--mt-space-xl) 0;font-family:var(--mt-font-display);letter-spacing:0}
 .intel .match-hero .match-score>a{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;color:var(--mt-color-text-inverse)}
-.intel .match-hero .match-score .football-identity{flex-direction:column;gap:var(--mt-space-md);font-size:var(--mt-type-page-title-size);line-height:var(--mt-type-page-title-line);font-weight:700}
+.intel .match-hero .match-score .football-identity{flex-direction:column;gap:var(--mt-space-sm);font-size:1.0625rem;line-height:1.375rem;font-weight:650;font-family:var(--mt-font-ui)}
 .intel .match-hero .match-score .football-identity>span:last-child{overflow-wrap:anywhere}
-.intel .match-hero .match-score>strong{font:600 var(--mt-type-stat-size)/var(--mt-type-stat-line) var(--mt-font-display);color:var(--mt-color-text-inverse);font-variant-numeric:tabular-nums;white-space:nowrap}
+.intel .match-hero .match-score>strong{font:650 var(--mt-type-score-size)/var(--mt-type-score-line) var(--mt-font-ui);color:var(--mt-color-text-inverse);font-variant-numeric:tabular-nums;white-space:nowrap}
 .intel .match-hero .identity-badge.mnemba-fallback{color:var(--mt-color-text-inverse-secondary)}
 .intel .match-hero .match-score .identity-badge{--badge-size:96px}
 .intel .mt-match-competition .identity-badge{--badge-size:24px}
@@ -515,3 +517,29 @@
 .mt-analysis-full{color:var(--mt-color-text-primary);font-weight:600}
 .mt-filter-notice{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mt-space-sm,8px)}
 .mt-filter-notice button{min-height:44px;padding:0 var(--mt-space-md,12px)}
+
+/* Compact prediction card: small heading, outcome first, compact probabilities, details on request. */
+.intel .mt-card-heading{font:650 var(--mt-type-card-title-size)/var(--mt-type-card-title-line) var(--mt-font-ui);margin:0}
+.intel .prediction-pick{font:650 var(--mt-type-prediction-size)/var(--mt-type-prediction-line) var(--mt-font-ui);margin:var(--mt-space-sm) 0}
+.intel .mt-prob-compact{gap:var(--mt-space-sm)}
+.intel .mt-prob-compact>div{padding:var(--mt-space-sm) var(--mt-space-md)}
+.intel .mt-prob-compact span{font-size:var(--mt-type-label-size);line-height:var(--mt-type-label-line);text-transform:none;letter-spacing:0}
+.intel .mt-prob-compact strong{font:650 var(--mt-type-stat-size)/var(--mt-type-stat-line) var(--mt-font-ui)}
+.intel .mt-card-meta{font-size:var(--mt-type-supporting-size);line-height:var(--mt-type-supporting-line);color:var(--mt-color-text-secondary);margin:var(--mt-space-xs) 0}
+.intel .mt-details>summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.mt-group-tail{display:inline-flex;align-items:center;gap:var(--mt-space-xs,4px);flex:none}
+.mt-pin{display:inline-grid;place-items:center;min-width:44px;min-height:44px;border:0;background:none;color:var(--mt-color-text-secondary);border-radius:999px;cursor:pointer}
+.mt-pin[aria-pressed="true"]{color:var(--mt-color-accent-gold-text)}
+.mt-pin:hover{background:var(--mt-color-background-secondary)}
+.mt-pin:focus-visible{outline:2px solid currentColor;outline-offset:-4px}
+.mt-fixture-group-head{font:600 1rem/1.4 var(--mt-font-ui);padding:var(--mt-space-sm,8px) var(--mt-space-md,12px)}
+.mt-fixture-group-head small{font-size:.75rem}
+.mt-card-titlebar{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--mt-space-sm)}.mt-card-titlebar h3{min-width:0;overflow-wrap:anywhere}
+/* Compact UI: news cards show image, headline and a short excerpt; long names wrap. */
+.intel-news{gap:var(--mt-space-lg)}
+.news-card-copy{padding:var(--mt-space-md)}
+.news-card h3,.intel .intel-news>.news-card h3{font:600 1rem/1.35 var(--mt-font-ui);overflow-wrap:anywhere}
+.news-summary{font-size:.875rem;line-height:1.4}
+@media (min-width:1024px){.intel .intel-news>.news-card:first-child h3{font:650 1.25rem/1.3 var(--mt-font-ui)}}
+.mt-team-name,.intel-team .team-name,.mt-fixture-group-head{overflow-wrap:anywhere}
+@media (max-width:767px){.intel-matches,.mt-fixture-groups,.intel-news{gap:var(--mt-space-sm)}.intel .intel-main{padding-top:var(--mt-space-md)}}
