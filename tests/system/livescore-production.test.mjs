@@ -23,26 +23,26 @@ test('real captured responses persist additively through the worker and final-ma
  const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();
  const calls=[];const service=new IntelligenceService(store,{MNEMBA_LIVESCORE_ENABLED:'1'},{sleep:async()=>{},fetcher:async url=>{const path=new URL(url).pathname;calls.push(path);return Response.json(sample(path.includes('/live/')?'discovery':path.split('/')[4]));}});await service.initialize();
  try{
-  const first=await liveTick(service);assert.equal(first.state,'success');assert.equal(first.raw,2);assert.equal(first.accepted,2);assert.equal(first.persisted,2);
+  const first=await liveTick(service,{cadenceMs:0});assert.equal(first.state,'success');assert.equal(first.raw,2);assert.equal(first.accepted,2);assert.equal(first.persisted,2);
   assert.equal((await store.one("SELECT COUNT(*) n FROM fixture_identities WHERE fixture_id LIKE 'livescore:%'")).n,2);
   // Select the real international match for the representative vertical slice.
   await store.run("UPDATE fixtures SET starts_at=? WHERE id='livescore:1881159'",store.now()-2*86400000);
-  for(let i=0;i<3;i++)assert.equal((await liveTick(service)).state,'success');
+  for(let i=0;i<3;i++)assert.equal((await liveTick(service,{cadenceMs:0})).state,'success');
   const state=await liveSnapshot(store,'livescore:1894365');assert.equal(state.fixture.homeScore,2);assert.equal(state.details.fixture_events.length,3);assert.equal(state.details.lineups.length,2);
   const original=JSON.parse((await store.one("SELECT payload FROM fixtures WHERE id='livescore:1894365'")).payload);original.status='FT';await store.run("UPDATE fixtures SET status='FT',payload=? WHERE id=?",JSON.stringify(original),original.id);
   await store.run("DELETE FROM football_cache WHERE id LIKE 'live:poll:%'");
-  assert.equal((await liveTick(service)).state,'success');assert.ok(calls.some(p=>p.includes('/lineups/')));
+  assert.equal((await liveTick(service,{cadenceMs:0})).state,'success');assert.ok(calls.some(p=>p.includes('/lineups/')));
  }finally{sqlite.close();}
 });
 test('real unpublished detail envelopes preserve data and defer only that match task',async()=>{
  const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();
  const raw=sample('discovery'),service=new IntelligenceService(store,{MNEMBA_LIVESCORE_ENABLED:'1'},{sleep:async()=>{},fetcher:async url=>{const path=new URL(url).pathname;return Response.json(path.includes('/live/')?raw:path.includes('/incidents/')?{}:sample('scoreboard'));}});await service.initialize();
  try{
-  assert.equal((await liveTick(service)).state,'success');
+  assert.equal((await liveTick(service,{cadenceMs:0})).state,'success');
   await store.run("UPDATE fixtures SET starts_at=? WHERE id='livescore:1881159'",store.now()-2*86400000);
   await store.putCache('live:poll:selected:livescore:1894365',{at:store.now()},600000);
   await store.upsert('fixture_events',{fixture_id:'livescore:1894365',label:'Live',payload:'[{"type":"Goal"}]',updated_at:store.now()});
-  const result=await liveTick(service);assert.equal(result.state,'unavailable');assert.equal(result.fixtureId,'livescore:1894365');
+  const result=await liveTick(service,{cadenceMs:0});assert.equal(result.state,'unavailable');assert.equal(result.fixtureId,'livescore:1894365');
   assert.equal(await store.cache('live:backoff:livescore'),null);assert.ok(await store.cache('live:poll:events:livescore:1894365'));
   assert.equal((await store.one("SELECT payload FROM fixture_events WHERE fixture_id='livescore:1894365'")).payload,'[{"type":"Goal"}]');
   const {LiveScoreAdapter}=await import('../../lib/football/livescore.mjs');

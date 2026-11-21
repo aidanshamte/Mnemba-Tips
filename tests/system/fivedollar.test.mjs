@@ -410,3 +410,79 @@ test('history backfill checkpoints per page, resumes after a stop, and continues
     assert.equal((await w.store.one("SELECT COUNT(*) n FROM analysis_forecasts WHERE fixture_id IN ('fivedollar:5001','fivedollar:5002','fivedollar:5003')")).n, 0, 'no forecast for a finished historical match');
   } finally { w.sqlite.close(); }
 });
+
+test('live tick: one batched request per interval, only changes published, finals fetched when a match leaves the live list', async () => {
+  const {fdfaLiveTick, LIVE_INTERVAL_MS} = await import('../../lib/football/fivedollar.mjs');
+  const {liveSnapshot, publishLive} = await import('../../lib/football/live.mjs');
+  const w = await world({start: '2026-11-20T18:20:00Z'});
+  try {
+    const inPlay = raw(301, 'in_play', {status_code: '20', goals: {home: 1, away: 0, half_home: null, half_away: null}});
+    w.setFixtures([inPlay]);
+    const published = [];
+    const publish = id => { published.push(id); return publishLive(w.service, id); };
+    const first = await fdfaLiveTick(w.service, {publish});
+    assert.equal(first.state, 'success'); assert.equal(first.live, 1); assert.equal(first.requests, 1, 'one batched request');
+    assert.ok(w.calls.at(-1).params.include.includes('events'), 'events and statistics in the same request');
+    assert.deepEqual(published, ['fivedollar:301']);
+    assert.equal((await fixtureRow(w.store, 'fivedollar:301')).status, '1H');
+    assert.equal((await fdfaLiveTick(w.service, {publish})).state, 'not-due', 'cadence holds within the interval');
+    // Same observation a minute later: nothing written or published.
+    w.advance(LIVE_INTERVAL_MS); published.length = 0;
+    const same = await fdfaLiveTick(w.service, {publish});
+    assert.equal(same.changed, 0); assert.deepEqual(published, []);
+    // A goal: the change is written and published; the live state carries the new score.
+    w.advance(LIVE_INTERVAL_MS);
+    w.setFixtures([{...inPlay, status_code: '55', goals: {home: 2, away: 0, half_home: 1, half_away: 0}}]);
+    await fdfaLiveTick(w.service, {publish});
+    const state = await liveSnapshot(w.store, 'fivedollar:301');
+    assert.equal(state.fixture.homeScore, 2); assert.equal(state.fixture.status, '2H');
+    // Full time: the match leaves the live list; its final is fetched in the same tick.
+    w.advance(LIVE_INTERVAL_MS);
+    w.setFixtures([raw(301, 'finished', {goals: {home: 2, away: 1, half_home: 1, half_away: 0}})]);
+    const done = await fdfaLiveTick(w.service, {publish});
+    assert.equal(done.finals, 1);
+    assert.deepEqual({...await fixtureRow(w.store, 'fivedollar:301')}, {status: 'FT', home_score: 2, away_score: 1});
+    // A late, stale in-play observation never replaces the final.
+    w.advance(LIVE_INTERVAL_MS);
+    w.setFixtures([{...inPlay, status_code: '88'}]);
+    await fdfaLiveTick(w.service, {publish});
+    assert.equal((await fixtureRow(w.store, 'fivedollar:301')).status, 'FT');
+    assert.equal(await dumpContains(w.sqlite, SECRET), null);
+  } finally { w.sqlite.close(); }
+});
+
+test('live tick makes no request when disabled, and a linked page reads the freshest live state', async () => {
+  const {fdfaLiveTick} = await import('../../lib/football/fivedollar.mjs');
+  const {liveSnapshot} = await import('../../lib/football/live.mjs');
+  const off = await world({env: {FIVE_DOLLAR_FOOTBALL_API_KEY: SECRET, MNEMBA_FDFA_DISABLED: '1'}});
+  try { assert.equal((await fdfaLiveTick(off.service)).state, 'disabled'); assert.equal(off.calls.length, 0); } finally { off.sqlite.close(); }
+  const w = await world();
+  try {
+    const catalog = new Map(LEAGUES.map(l => [l.id, l]));
+    const ours = normalizeFdfaFixture(raw(9, 'in_play'), catalog);
+    const theirs = {...ours, id: 'livescore:9', provider: 'livescore', externalId: '9', home: {...ours.home, id: 'livescore:t10', provider: 'livescore'}, away: {...ours.away, id: 'livescore:t20', provider: 'livescore'}, competition: {...ours.competition, id: 'livescore:100', provider: 'livescore', seasons: [{...ours.competition.seasons[0], id: 'livescore:100:2026', competitionId: 'livescore:100'}]}, seasonId: 'livescore:100:2026'};
+    await w.service.saveFixtures([theirs, ours], {liveOnly: true});
+    const c = (await w.store.one("SELECT canonical_id FROM fixture_identities WHERE fixture_id='livescore:9'")).canonical_id;
+    await w.store.run("UPDATE fixture_identities SET canonical_id=?,verification='provider-match' WHERE fixture_id='fivedollar:9'", c);
+    await w.store.putCache('live:state:livescore:9', {fixture: {homeScore: 0}, updatedAt: 1000, revision: 'old'}, 86400000);
+    await w.store.putCache('live:state:fivedollar:9', {fixture: {homeScore: 1}, updatedAt: 2000, revision: 'new'}, 86400000);
+    const s = await liveSnapshot(w.store, 'livescore:9');
+    assert.equal(s.fixture.homeScore, 1, 'freshest linked state'); assert.equal(s.resolvedFor, 'livescore:9');
+  } finally { w.sqlite.close(); }
+});
+
+test('a backfill client fills at most its share of the shared minute window, leaving room for live updates', async () => {
+  const {FiveDollarClient} = await import('../../lib/football/fivedollar.mjs');
+  const w = await world();
+  try {
+    const backfill = new FiveDollarClient(w.service, {budget: Infinity, perMinute: 5});
+    const minute = () => Math.floor(w.clock.now / 60000);
+    for (let i = 0; i < 7; i++) await backfill.get('/leagues', {page: i});
+    const perMinute = new Map(); for (const c of w.calls) perMinute.set(Math.floor(c.at / 60000), (perMinute.get(Math.floor(c.at / 60000)) ?? 0) + 1);
+    assert.ok(Math.max(...perMinute.values()) <= 5, JSON.stringify([...perMinute]));
+    // Within the same minute a live client still has room.
+    const m = minute(), used = (await w.store.one("SELECT used FROM source_request_usage WHERE source_id='fivedollar' AND day=?", `m:${String(m).padStart(10, '0')}`))?.used ?? 0;
+    assert.ok(Number(used) <= 5);
+    assert.ok(9 - Number(used) >= 4, 'at least 4 of the 9 slots remain for live updates, jobs and grading');
+  } finally { w.sqlite.close(); }
+});
