@@ -293,3 +293,26 @@ test('a possible-duplicate review hides a licensed-provider newcomer but never a
     assert.ok(!again.includes('fivedollar:l9'), 'newcomer hidden when it is the compared side');
   } finally { sqlite.close(); }
 });
+
+test('a new stage record of a provider already in a canonical competition joins it before the next identity run', async () => {
+  const {database, apiFixture} = await import('../football-db.mjs');
+  const {catalogCompetitions} = await import('../../lib/football/identity-migration.mjs');
+  const {IntelligenceService} = await import('../../lib/football/intelligence.mjs');
+  const {normalizeFixture} = await import('../../lib/football/providers.mjs');
+  const {store, sqlite} = database(); store.now = () => Date.parse('2026-11-01T12:00:00Z');
+  try {
+    await store.init(); const service = new IntelligenceService(store); await service.initialize();
+    const base = normalizeFixture('api-football', apiFixture(9001, 'NS', '2026-11-05T12:00:00Z'));
+    const league = c => ({...base.competition, ...c, seasons: [{...base.competition.seasons[0], id: `${c.id}:2026`, competitionId: c.id}]});
+    const main = {...base, id: 'livescore:9001', provider: 'livescore', externalId: '9001', home: {...base.home, id: 'livescore:t1', provider: 'livescore', externalId: 't1'}, away: {...base.away, id: 'livescore:t2', provider: 'livescore', externalId: 't2'}, competition: league({id: 'livescore:100', provider: 'livescore', externalId: '100', name: 'Allsvenskan', country: {id: 'livescore:SE', provider: 'livescore', externalId: 'SE', name: 'Sweden', code: 'SE', continent: 'Europe'}}), seasonId: 'livescore:100:2026'};
+    await service.saveFixtures([main]); await service.sync('competition-identities');
+    // A later LiveScore stage record of the same competition, not yet mapped; and another provider's same-named record.
+    const stage = {...main, id: 'livescore:9002', externalId: '9002', competition: league({...main.competition, id: 'livescore:101', externalId: '101'}), seasonId: 'livescore:101:2026', home: {...main.home, id: 'livescore:t3', externalId: 't3', name: 'Team 3'}, away: {...main.away, id: 'livescore:t4', externalId: 't4', name: 'Team 4'}};
+    const other = {...main, id: 'thesportsdb:9003', provider: 'thesportsdb', externalId: '9003', competition: league({...main.competition, id: 'thesportsdb:555', provider: 'thesportsdb', externalId: '555', country: {...main.competition.country, id: 'thesportsdb:SE', provider: 'thesportsdb'}}), seasonId: 'thesportsdb:555:2026', home: {...main.home, id: 'thesportsdb:t5', provider: 'thesportsdb', externalId: 't5', name: 'Team 5'}, away: {...main.away, id: 'thesportsdb:t6', provider: 'thesportsdb', externalId: 't6', name: 'Team 6'}};
+    await service.saveFixtures([stage, other]);
+    const cards = (await catalogCompetitions(store)).filter(c => c.name === 'Allsvenskan');
+    const withMain = cards.find(c => c.providerIds.includes('livescore:100'));
+    assert.ok(withMain.providerIds.includes('livescore:101'), 'same-provider stage record joins the persisted group');
+    assert.ok(!withMain.providerIds.includes('thesportsdb:555'), 'another provider is never joined by name');
+  } finally { sqlite.close(); }
+});
