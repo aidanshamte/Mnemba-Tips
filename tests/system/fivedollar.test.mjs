@@ -15,6 +15,8 @@ const KICKOFF = Date.parse('2026-11-20T18:00:00Z');
 const LEAGUES = [
   {id: 100, name: 'Ghana Premier League', country: {code: 'GH', name: 'Ghana'}, is_popular: true, has_standings: true, seasons: [{season: '2026', current: true}]},
   {id: 200, name: 'Ghana FA Cup', country: {code: 'GH', name: 'Ghana'}, is_popular: false, has_standings: false, seasons: []},
+  {id: 300, name: 'Ghana Division Two', country: {code: 'GH', name: 'Ghana'}, is_popular: false, has_standings: false, last_fixture_ts: Date.parse('2024-05-01T00:00:00Z') / 1000, seasons: []},
+  {id: 400, name: 'Club Friendlies', country: null, is_popular: false, has_standings: false, seasons: []},
 ];
 const raw = (id, status, extra = {}) => ({
   id, league: {id: 100, name: 'Ghana Premier League'}, teams: {home: {id: 10, name: 'Team 10'}, away: {id: 20, name: 'Team 20'}},
@@ -112,7 +114,7 @@ test('core sync stores fixtures, respects the shared per-minute limit and never 
   try {
     w.setFixtures([raw(11, 'finished', {kickoff_ts: Date.parse('2026-11-20T09:00:00Z') / 1000}), raw(12, 'in_play'), raw(13, 'scheduled', {kickoff_ts: Date.parse('2026-11-21T15:00:00Z') / 1000})]);
     const result = await w.service.sync('fivedollar');
-    assert.equal(result.outcome, 'success', JSON.stringify(result.errors));
+    assert.equal(result.outcome, 'success', JSON.stringify(result.errors) + result.deferred);
     assert.equal((await fixtureRow(w.store, 'fivedollar:11')).status, 'FT');
     assert.equal((await fixtureRow(w.store, 'fivedollar:12')).status, '1H');
     assert.equal((await fixtureRow(w.store, 'fivedollar:13')).status, 'NS');
@@ -248,4 +250,44 @@ test('the competition page prefers the provider league table over the reconstruc
     assert.match(view.standings.label, /5DollarFootballAPI after round 12/);
     assert.deepEqual({w: view.standings.rows[0].wins, d: view.standings.rows[0].draws, l: view.standings.rows[0].losses, pts: view.standings.rows[0].points}, {w: 9, d: 2, l: 1, pts: 29});
   } finally { w.sqlite.close(); }
+});
+
+test('the live league catalog is mapped dynamically; unmapped provider leagues stay out of the public catalog', async () => {
+  const {catalogCompetitions} = await import('../../lib/football/identity-migration.mjs');
+  const w = await world();
+  try {
+    w.setFixtures([raw(61, 'finished', {kickoff_ts: Date.parse('2026-11-20T09:00:00Z') / 1000})]);
+    const first = await syncFiveDollar(w.service, {mode: 'core'});
+    assert.equal(first.catalog.total, LEAGUES.length, 'count comes from the provider response');
+    const map = async () => new Map((await w.store.cache('fdfa:catalog-map')).data.rows.map(r => [r.providerLeagueId, r]));
+    let rows = await map();
+    assert.equal(rows.get(100).status, 'awaiting-identity-run');
+    assert.equal(rows.get(200).status, 'awaiting-fixtures');
+    assert.equal(rows.get(300).status, 'retired');
+    for (const r of rows.values()) for (const k of ['providerLeagueId', 'providerName', 'country', 'available', 'lastObservedAt', 'status']) assert.ok(k in r, k);
+    assert.ok(!(await catalogCompetitions(w.store)).some(c => c.providerIds.includes('fivedollar:l100')), 'not public before mapping');
+    await w.service.sync('competition-identities');
+    w.advance(3600000);
+    const second = await syncFiveDollar(w.service, {mode: 'core'});
+    rows = await map();
+    assert.equal(rows.get(100).status, 'mapped-auto'); assert.match(rows.get(100).canonicalId, /^competition:/);
+    assert.equal(second.catalog.mappedAuto, 1);
+    assert.ok((await catalogCompetitions(w.store)).some(c => c.providerIds.includes('fivedollar:l100')), 'public once mapped');
+    // An open identity review keeps the league out of the public catalog.
+    await w.store.run("INSERT INTO verification_queue(id,kind,entity_id,source_url,payload,status,created_at) VALUES('identity:competition-merge:fivedollar:l100','competition-merge','fivedollar:l100','https://example.invalid','{}','pending',0)");
+    assert.ok(!(await catalogCompetitions(w.store)).some(c => c.providerIds.includes('fivedollar:l100')), 'ambiguous stays private');
+  } finally { w.sqlite.close(); }
+});
+
+test('a network error that echoes the Authorization header is sanitized before it reaches results, logs or the database', async () => {
+  const w = await world({respond: (_u, n) => { throw Object.assign(new Error(`connect failed; request headers: Authorization: Bearer ${SECRET}`), {headers: {authorization: `Bearer ${SECRET}`}}); }});
+  const logged = [], original = console.log; console.log = (...a) => { logged.push(a.join(' ')); };
+  try {
+    const result = await syncFiveDollar(w.service, {mode: 'core'});
+    console.log = original;
+    assert.ok(result.deferred, 'the run stops instead of throwing');
+    assert.ok(!JSON.stringify(result).includes(SECRET));
+    assert.ok(!logged.some(l => l.includes(SECRET)));
+    assert.equal(await dumpContains(w.sqlite, SECRET), null);
+  } finally { console.log = original; w.sqlite.close(); }
 });
