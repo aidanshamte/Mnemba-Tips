@@ -9,7 +9,7 @@ export type SourceKind='confirmed'|'estimate'|'exploratory'|'unavailable';
 const SOURCE:Record<SourceKind,{label:string;Icon:typeof Info}>={
  confirmed:{label:'Confirmed by source',Icon:ShieldCheck},
  estimate:{label:'Model estimate',Icon:Sparkles},
- exploratory:{label:'Exploratory analysis',Icon:ChartColumn},
+ exploratory:{label:'Early estimate',Icon:ChartColumn},
  unavailable:{label:'Not available yet',Icon:Info},
 };
 export function SourceTag({kind,label}:{kind:SourceKind;label?:string}){const {Icon,label:fallback}=SOURCE[kind];return <span className={`mt-tag mt-source-${kind}`}><Icon aria-hidden="true" size={14}/>{label??fallback}</span>;}
@@ -54,4 +54,4 @@ export function Notice({kind,children}:{kind:'stale'|'missing'|'offline'|'error'
 export function Skeleton({lines=3,label='Loading'}:{lines?:number;label?:string}){return <div className="mt-skeleton" aria-busy="true"><span className="mt-visually-hidden">{label}</span>{Array.from({length:lines},(_,i)=><span key={i} className="mt-skeleton-line" style={{width:`${92-i*14}%`}}/>)}</div>;}
 
 export type UncertaintyLevel='lower'|'moderate'|'higher'|'unknown';
-export function Uncertainty({level}:{level:UncertaintyLevel}){const bars={lower:1,moderate:2,higher:3,unknown:0}[level];return <span className={`mt-uncertainty mt-uncertainty-${level}`}><span className="mt-meter" aria-hidden="true">{[1,2,3].map(i=><i key={i} className={i<=bars?'on':''}/>)}</span>{level==='unknown'?'Uncertainty: not enough data':`Uncertainty: ${level}`}</span>;}
+export function Uncertainty({level}:{level:UncertaintyLevel}){const bars={lower:1,moderate:2,higher:3,unknown:0}[level];return <span className={`mt-uncertainty mt-uncertainty-${level}`}><span className="mt-meter" aria-hidden="true">{[1,2,3].map(i=><i key={i} className={i<=bars?'on':''}/>)}</span>{level==='unknown'?'Uncertainty unknown':`${level[0].toUpperCase()}${level.slice(1)} uncertainty`}</span>;}

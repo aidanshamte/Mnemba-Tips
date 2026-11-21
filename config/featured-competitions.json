@@ -1,0 +1,27 @@
+{
+  "note": "Editorial starting preferences by canonical competition ID. Presentation order only: never used by prediction probabilities, eligibility, recommendation quality, ingestion or grading. Not a measure of popularity.",
+  "featured": [
+    "competition:england:premier-league",
+    "competition:spain:laliga",
+    "competition:uefa:uefa-champions-league",
+    "competition:italy:serie-a",
+    "competition:germany:bundesliga",
+    "competition:france:ligue-1",
+    "competition:uefa:uefa-europa-league"
+  ],
+  "regional": [
+    "competition:netherlands:eredivisie",
+    "competition:portugal:primeira-liga",
+    "competition:uefa:uefa-conference-league",
+    "competition:brazil:brazilian-serie-a",
+    "competition:argentina:liga-profesional",
+    "competition:united-states:major-league-soccer",
+    "competition:mexico:liga-mx",
+    "competition:saudi-arabia:saudi-pro-league",
+    "competition:saudi-arabia:pro-league",
+    "competition:japan:j1-league",
+    "competition:egypt:egyptian-premier-league",
+    "competition:caf:caf-champions-league",
+    "competition:tanzania:nbc-premier-league"
+  ]
+}

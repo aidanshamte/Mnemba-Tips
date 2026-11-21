@@ -1,12 +1,15 @@
+'use client';
 // Figma: Compact fixture row + competition group header (Fixtures screen).
 // Rendered inside client components; uses only real fixture fields.
-import {ChevronRight} from 'lucide-react';
+import {ChevronRight,Star} from 'lucide-react';
+import {useFavouriteLeagues} from './use-favourite-leagues';
+import {orderByCompetition} from '@/lib/football/featured-competitions.mjs';
 import {IdentityBadge,CompetitionIdentity} from './football-identity';
 import LocalTime from './local-time';
 import {StatusTag,matchStatusKind} from './mt-ui';
 type Side={id?:string;name?:string};
 type AnalysisState={state:'full'|'provisional'|'waiting';label:string;reason?:string;main?:{outcome:string;probability:number}|null};
-type Fixture={id:string;status?:string;kickoffPrecision?:string;startsAt:number;homeScore?:number|null;awayScore?:number|null;home?:Side;away?:Side;competition?:{id?:string;name:string};analysisState?:AnalysisState};
+type Fixture={id:string;status?:string;kickoffPrecision?:string;startsAt:number;homeScore?:number|null;awayScore?:number|null;home?:Side;away?:Side;competition?:{id?:string;name:string};competitionCanonical?:string;competitionName?:string;analysisState?:AnalysisState};
 
 export function FixtureRow({f}:{f:Fixture}){
  const kind=matchStatusKind(f.status,f.kickoffPrecision,f.startsAt),scored=f.homeScore!=null&&f.awayScore!=null;
@@ -19,13 +22,21 @@ export function FixtureRow({f}:{f:Fixture}){
  </a>;
 }
 
-/** Group fixtures by competition, keeping the order the API returned. */
+/** Group fixtures by canonical competition: favourites, then featured, then the rest; matches chronological inside each group. */
 export function FixtureGroups({fixtures}:{fixtures:Fixture[]}){
- const groups=new Map<string,{competition:Fixture['competition'];items:Fixture[]}>();
- for(const f of fixtures){// Providers can list the same competition under different IDs; group by the displayed name.
- const key=String(f.competition?.name??f.competition?.id??'other').toLowerCase();if(!groups.has(key))groups.set(key,{competition:f.competition,items:[]});groups.get(key)!.items.push(f);}
- return <div className="mt-fixture-groups">{[...groups.entries()].map(([key,g])=><section key={key} className="mt-fixture-group" aria-label={g.competition?.name??'Other fixtures'}>
-  <header className="mt-fixture-group-head">{g.competition?<CompetitionIdentity id={g.competition.id} name={g.competition.name} variant="medium"/>:<span>Other fixtures</span>}<small>{g.items.length} {g.items.length===1?'match':'matches'}</small></header>
-  {g.items.map(f=><FixtureRow key={f.id} f={f}/>)}
- </section>)}</div>;
+ const {favourites,isFavourite,toggle}=useFavouriteLeagues();
+ const groups=new Map<string,{key:string;canonical?:string;competition:Fixture['competition'];items:Fixture[]}>();
+ for(const f of fixtures){// Providers can list one competition under different IDs; the canonical id (or the displayed name) joins them.
+ const key=f.competitionCanonical??String(f.competition?.name??f.competition?.id??'other').toLowerCase();
+ if(!groups.has(key))groups.set(key,{key,canonical:f.competitionCanonical,competition:f.competitionName&&f.competition?{...f.competition,name:f.competitionName}:f.competition,items:[]});
+ const g=groups.get(key)!;if(!g.items.some(x=>x.id===f.id))g.items.push(f);}
+ type Group={key:string;canonical?:string;competition:Fixture['competition'];items:Fixture[]};
+ const ordered:Group[]=orderByCompetition([...groups.values()],(g:Group)=>g.canonical??'',favourites);
+ return <div className="mt-fixture-groups">{ordered.map(g=>{const name=g.competition?.name??'Other fixtures',fav=!!g.canonical&&isFavourite(g.canonical);
+  return <section key={g.key} className="mt-fixture-group" aria-label={name}>
+  <header className="mt-fixture-group-head">{g.competition?<CompetitionIdentity id={g.competition.id} name={g.competition.name} variant="medium"/>:<span>Other fixtures</span>}
+   <span className="mt-group-tail"><small>{g.items.length} {g.items.length===1?'match':'matches'}</small>
+   {g.canonical&&<button type="button" className="mt-pin" aria-pressed={fav} aria-label={fav?`Unpin ${name}`:`Pin ${name} to the top`} title={fav?'Pinned on this device':'Pin to the top on this device'} onClick={()=>toggle(g.canonical!)}><Star size={16} aria-hidden fill={fav?'currentColor':'none'}/></button>}</span></header>
+  {[...g.items].sort((a,b)=>a.startsAt-b.startsAt).map(f=><FixtureRow key={f.id} f={f}/>)}
+ </section>;})}</div>;
 }

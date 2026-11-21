@@ -10,7 +10,7 @@ const ids=[...new Set([acceptance,...history.matches.slice(0,2).map(m=>m.fixture
 const browser=await chromium.launch({headless:true,env:process.env}),evidence={origin,matches:[],images:[],errors:[]};mkdirSync(output,{recursive:true});
 try{for(const width of [1440,390]){const page=await browser.newPage({viewport:{width,height:900}});page.on('pageerror',e=>evidence.errors.push(e.message));
  for(const id of ids){const data=await get({view:'match-context',id});assert.ok(data.fixture);const response=await page.goto(origin+'/football/match/'+encodeURIComponent(id),{waitUntil:'networkidle'});assert.equal(response.status(),200);await page.locator('.prediction-center').waitFor();
- if(data.analysis.archive?.exploratory.length||data.analysis.archive?.selected){assert.ok(data.analysis.probabilities,'Saved predictions remain visible');await page.getByText('Best-supported result:',{exact:false}).waitFor();assert.ok(data.analysis.asOf);}
+ if(data.analysis.archive?.exploratory.length||data.analysis.archive?.selected){assert.ok(data.analysis.probabilities,'Saved predictions remain visible');await page.locator('.prediction-pick').first().waitFor();assert.ok(data.analysis.asOf);}
  if(data.analysis.needsRefresh)await page.getByText('Needs refresh · showing the saved prediction',{exact:true}).waitFor();
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Match overflow');
  await page.waitForLoadState('networkidle');const images=await page.locator('.match-score .team-badge').evaluateAll(nodes=>nodes.map(e=>{const img=e.querySelector('img');return{name:e.textContent||img?.alt,loaded:!!img&&img.complete&&img.naturalWidth>0,fallback:e.classList.contains('team-name-fallback')}}));

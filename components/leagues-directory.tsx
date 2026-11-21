@@ -2,7 +2,9 @@
 // Leagues directory: one card per canonical competition (lib/football/identity-migration.mjs catalogCompetitions).
 // Stages, groups, qualification rounds and play-offs live inside the competition page, never as separate cards.
 import {useMemo, useState} from 'react';
-import {Search} from 'lucide-react';
+import {Search, Star} from 'lucide-react';
+import {useFavouriteLeagues} from './use-favourite-leagues';
+import {orderByCompetition, competitionRank} from '@/lib/football/featured-competitions.mjs';
 import {CompetitionIdentity} from './football-identity';
 import {SourceTag, StatePanel} from './mt-ui';
 import {routeToken} from '@/lib/football/consumer.mjs';
@@ -26,8 +28,12 @@ export default function LeaguesDirectory({competitions, onFixtures}: {competitio
   }), [competitions, continent]);
   const shown = competitions.filter(c => (!q || `${c.name} ${regionOf(c)}`.toLowerCase().includes(q.toLowerCase())) && (!continent || c.country?.continent === continent) && (!country || regionOf(c) === country)
     && (!scope || c.scope === scope) && (!who || category(c) === who) && (!tier || String(c.tier ?? '') === tier) && (!activeOnly || c.active) && (!coverage || c.coverage === coverage));
+  const {favourites, isFavourite, toggle} = useFavouriteLeagues();
+  // Favourites and featured leagues first (ordering only; nothing is hidden), then every other league by region.
   const groups = new Map<string, Competition[]>();
-  for (const c of shown) { const k = regionOf(c); if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(c); }
+  for (const c of (orderByCompetition(shown, (x: Competition) => x.id, favourites) as Competition[])) {
+    const k = (competitionRank(c.id, favourites)[0] ?? 3) <= 1 ? 'Featured leagues' : regionOf(c); if (!groups.has(k)) groups.set(k, []); groups.get(k)!.push(c);
+  }
   const select = (label: string, value: string, set: (v: string) => void, items: [string, string][]) =>
     <label className="mt-filter"><span>{label}</span><select value={value} onChange={e => set(e.target.value)} aria-label={label}><option value="">All</option>{items.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>;
   return <>
@@ -47,7 +53,8 @@ export default function LeaguesDirectory({competitions, onFixtures}: {competitio
       {list.map(c => {
         const next = dateText(c.nextFixtureAt), last = dateText(c.latestResultAt);
         return <article className="intel-match intel-competition" key={c.id}>
-          <h3><a className="mt-card-link" href={`/football/competition/${routeToken(c.id)}`}><CompetitionIdentity id={c.emblemId ?? c.id} name={c.name} variant="medium"/></a></h3>
+          <div className="mt-card-titlebar"><h3><a className="mt-card-link" href={`/football/competition/${routeToken(c.id)}`}><CompetitionIdentity id={c.emblemId ?? c.id} name={c.name} variant="medium"/></a></h3>
+            <button type="button" className="mt-pin" aria-pressed={isFavourite(c.id)} aria-label={isFavourite(c.id) ? `Unpin ${c.name}` : `Pin ${c.name} to the top`} title={isFavourite(c.id) ? 'Pinned on this device' : 'Pin to the top on this device'} onClick={() => toggle(c.id)}><Star size={16} aria-hidden fill={isFavourite(c.id) ? 'currentColor' : 'none'}/></button></div>
           <p>{regionOf(c)}{c.currentSeason ? ` · Season ${c.currentSeason}` : ''}{category(c) !== 'men' ? ` · ${category(c) === 'women' ? "Women's" : c.age ?? 'Youth'}` : ''}</p>
           <p>{(c.teamCount ?? 0).toLocaleString()} teams · {(c.fixtureCount ?? 0).toLocaleString()} distinct fixtures</p>
           <SourceTag kind={c.coverage === 'limited' ? 'unavailable' : 'confirmed'} label={COVERAGE[c.coverage ?? 'limited']}/>

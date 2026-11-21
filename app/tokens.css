@@ -104,25 +104,25 @@
   --mt-motion-duration-fast:120ms;--mt-motion-duration-base:200ms;--mt-motion-duration-slow:320ms;--mt-motion-ease:cubic-bezier(.2,.7,.2,1);
 
   /* ---------- Typography scale (Figma text styles) ---------- */
-  --mt-type-display-size:72px;--mt-type-display-line:72px;
-  --mt-type-page-title-size:44px;--mt-type-page-title-line:48px;
-  --mt-type-section-title-size:28px;--mt-type-section-title-line:34px;
-  --mt-type-card-title-size:18px;--mt-type-card-title-line:24px;
-  --mt-type-team-size:22px;--mt-type-team-line:26px;
-  --mt-type-prediction-size:26px;--mt-type-prediction-line:30px;
-  --mt-type-body-size:16px;--mt-type-body-line:24px;
-  --mt-type-supporting-size:14px;--mt-type-supporting-line:20px;
-  --mt-type-label-size:12px;--mt-type-label-line:16px;
-  --mt-type-caption-size:12px;--mt-type-caption-line:16px;
-  --mt-type-stat-size:32px;--mt-type-stat-line:36px;
-  --mt-type-stat-small-size:18px;--mt-type-stat-small-line:22px;
+  --mt-type-display-size:2.5rem;--mt-type-display-line:2.75rem;
+  --mt-type-page-title-size:1.75rem;--mt-type-page-title-line:2.125rem;
+  --mt-type-section-title-size:1.25rem;--mt-type-section-title-line:1.625rem;
+  --mt-type-card-title-size:1rem;--mt-type-card-title-line:1.375rem;
+  --mt-type-team-size:0.9375rem;--mt-type-team-line:1.25rem;
+  --mt-type-prediction-size:1.25rem;--mt-type-prediction-line:1.625rem;
+  --mt-type-body-size:0.9375rem;--mt-type-body-line:1.375rem;
+  --mt-type-supporting-size:0.8125rem;--mt-type-supporting-line:1.125rem;
+  --mt-type-label-size:0.75rem;--mt-type-label-line:1rem;
+  --mt-type-caption-size:0.75rem;--mt-type-caption-line:1rem;
+  --mt-type-stat-size:1.25rem;--mt-type-stat-line:1.625rem;--mt-type-score-size:1.625rem;--mt-type-score-line:2rem;
+  --mt-type-stat-small-size:0.9375rem;--mt-type-stat-small-line:1.25rem;
   color-scheme:light;
 }
 
 /* Layout values per breakpoint (Figma Layout modes) */
 @media (max-width:1279px){:root{--mt-layout-viewport-width:1024px;--mt-layout-margin:40px;--mt-layout-gutter:20px;--mt-layout-content-max:944px}}
 @media (max-width:1023px){:root{--mt-layout-viewport-width:768px;--mt-layout-columns:8;--mt-layout-margin:32px;--mt-layout-gutter:16px;--mt-layout-content-max:704px}}
-@media (max-width:767px){:root{--mt-layout-viewport-width:375px;--mt-layout-columns:4;--mt-layout-margin:16px;--mt-layout-gutter:12px;--mt-layout-content-max:343px;--mt-type-display-size:44px;--mt-type-display-line:46px;--mt-type-page-title-size:32px;--mt-type-page-title-line:36px}}
+@media (max-width:767px){:root{--mt-layout-viewport-width:375px;--mt-layout-columns:4;--mt-layout-margin:16px;--mt-layout-gutter:12px;--mt-layout-content-max:343px;--mt-type-display-size:1.75rem;--mt-type-display-line:2.125rem;--mt-type-page-title-size:1.375rem;--mt-type-page-title-line:1.75rem}}
 @media (max-width:359px){:root{--mt-layout-viewport-width:320px;--mt-layout-margin:12px;--mt-layout-gutter:8px;--mt-layout-content-max:296px}}
 
 /* ---------- Color · Dark (opt-in via data-theme="dark"; light remains the default) ---------- */
