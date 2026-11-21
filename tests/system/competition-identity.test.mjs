@@ -228,3 +228,40 @@ test('catalog, competition page and daily task use the evidence-checked identity
     assert.equal((await service.read(new URLSearchParams({view: 'catalog'}))).competitions.filter(x => /A-League/.test(x.name)).length, 2);
   } finally { sqlite.close(); }
 });
+
+test('provider naming variants merge only on shared matches; tiers, women and cups stay separate', async () => {
+  const {planCompetitionIdentities} = await import('../../lib/football/competition-identity.mjs');
+  const de = {name: 'Germany', code: 'DE'};
+  const comps = [
+    {id: 'openligadb:bl1', provider: 'openligadb', name: 'Bundesliga', country: de, type: 'league'},
+    {id: 'openligadb:bl2', provider: 'openligadb', name: '2. Bundesliga', country: de, type: 'league'},
+    {id: 'fivedollar:l1', provider: 'fivedollar', name: 'Germany Bundesliga I', country: de, type: null},
+    {id: 'fivedollar:l2', provider: 'fivedollar', name: 'Germany Bundesliga II', country: de, type: null},
+    {id: 'fivedollar:l3', provider: 'fivedollar', name: 'Germany Frauen Bundesliga', country: de, type: null},
+    {id: 'fivedollar:l4', provider: 'fivedollar', name: 'Germany DFB Pokal', country: de, type: null},
+    {id: 'fivedollar:l5', provider: 'fivedollar', name: 'Germany Regionalliga', country: de, type: null},
+  ];
+  const day = i => Date.parse('2026-10-01T15:30:00Z') + i * 86400000;
+  const top = ['FC Bayern München', 'Borussia Dortmund', 'RB Leipzig', 'Bayer 04 Leverkusen', 'VfB Stuttgart', 'Eintracht Frankfurt', 'SC Freiburg', 'VfL Wolfsburg', 'TSG Hoffenheim', 'Werder Bremen', '1. FC Union Berlin', 'FC Augsburg'];
+  const second = ['Hamburger SV', 'FC Schalke 04', 'Hertha BSC', 'Fortuna Düsseldorf', 'Hannover 96', '1. FC Nürnberg', 'Karlsruher SC', 'SC Paderborn 07', 'SV Darmstadt 98', 'Arminia Bielefeld', '1. FC Magdeburg', 'Holstein Kiel'];
+  const fx = [];
+  const league = (id, teams, rename = n => n, offset = 0) => { for (let i = 0; i < 6; i++) fx.push({competitionId: id, startsAt: day(i * 7 + offset), home: rename(teams[2 * i]), away: rename(teams[2 * i + 1])}); for (let i = 0; i < 6; i++) fx.push({competitionId: id, startsAt: day(i * 7 + 3 + offset), home: rename(teams[2 * i + 1]), away: rename(teams[(2 * i + 2) % 12])}); };
+  league('openligadb:bl1', top); league('fivedollar:l1', top, n => n.replace('FC Bayern München', 'Bayern Munich').replace('Bayer 04 Leverkusen', 'Bayer Leverkusen'));
+  league('openligadb:bl2', second); league('fivedollar:l2', second);
+  league('fivedollar:l3', top);                 // identical clubs and days, but a women's competition
+  league('fivedollar:l4', top, n => n, 1);      // the same clubs in a cup, never the same match
+  // Weak overlap: two shared matches only.
+  fx.push({competitionId: 'fivedollar:l5', startsAt: day(0), home: top[0], away: top[1]}, {competitionId: 'fivedollar:l5', startsAt: day(7), home: top[2], away: top[3]});
+  for (let i = 0; i < 6; i++) fx.push({competitionId: 'fivedollar:l5', startsAt: day(50 + i), home: `Regional ${i}a`, away: `Regional ${i}b`});
+  const plan = planCompetitionIdentities(comps, fx);
+  const canon = id => plan.memberships.find(m => m.providerId === id).canonicalId;
+  assert.equal(canon('fivedollar:l1'), canon('openligadb:bl1'), 'Germany Bundesliga I is the Bundesliga');
+  assert.equal(plan.memberships.find(m => m.providerId === 'fivedollar:l1').evidence.basis, 'shared-matches');
+  assert.equal(canon('fivedollar:l2'), canon('openligadb:bl2'), 'Germany Bundesliga II is the 2. Bundesliga');
+  assert.notEqual(canon('openligadb:bl1'), canon('openligadb:bl2'), 'tiers stay separate');
+  assert.notEqual(canon('fivedollar:l3'), canon('openligadb:bl1'), "women's competition never merges with the men's");
+  assert.notEqual(canon('fivedollar:l4'), canon('openligadb:bl1'), 'a cup with the same clubs is not the league');
+  assert.notEqual(canon('fivedollar:l5'), canon('openligadb:bl1'), 'two shared matches are not enough');
+  assert.ok(plan.reviews.some(r => r.providerId === 'fivedollar:l5' && r.evidence.basis === 'shared-matches'), 'weak overlap goes to review');
+  assert.equal(new Set(plan.groups.map(g => g.canonicalId)).size, plan.groups.length, 'no duplicate canonical groups');
+});
