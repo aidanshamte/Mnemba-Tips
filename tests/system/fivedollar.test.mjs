@@ -321,3 +321,13 @@ test('provider ingestion takes the cheap path: no grading or prediction recomput
     assert.ok(seen.length > 0 && seen.every(Boolean), JSON.stringify(seen));
   } finally { w.sqlite.close(); }
 });
+
+test('substitution, period and score details from provider events are kept; both standings field spellings are accepted', async () => {
+  const {fdfaDetails} = await import('../../lib/football/fivedollar.mjs');
+  const catalog = new Map(LEAGUES.map(l => [l.id, l])), f = normalizeFdfaFixture(raw(91, 'finished'), catalog);
+  const d = fdfaDetails({events: [{type: 'substitution', minute: 60, team: 'home', player_in: 'R. Lewis', player_out: 'J. Cole'}, {type: 'period_score', period: 'first_half', score: {home: 1, away: 0}}]}, f);
+  assert.deepEqual([d.events[0].player, d.events[0].playerOut, d.events[0].type], ['R. Lewis', 'J. Cole', 'Substitution']);
+  assert.deepEqual([d.events[1].detail, d.events[1].score], ['first_half', {home: 1, away: 0}]);
+  const documented = normalizeFdfaStandings({season: '26/27', table: [{position: 1, team: {id: 1, name: 'A'}, played: 3, points: 9, total_for: 7, total_against: 2}]});
+  assert.deepEqual([documented.rows[0].goalsFor, documented.rows[0].goalsAgainst, documented.rows[0].goalDifference], [7, 2, 5]);
+});

@@ -109,6 +109,13 @@ jobs:
           [[ "${{ inputs.weight }}" == 100 ]] || { echo 'only weight=100 (atomic cutover) is supported'; exit 1; }
           stable=$(az containerapp ingress traffic show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query "sort_by([?revisionName!='${{ inputs.revision }}' && weight>\`0\`],&weight)[-1].revisionName" -o tsv)
           echo "stable=$stable" >> "$GITHUB_OUTPUT"
+          # Warm the candidate's caches first: on a cold replica the first fixtures view takes ~25 s, and public traffic
+          # arriving at once timed out the first verification round (2026-11-21 07:37, rolled back automatically).
+          domain=$(az containerapp show -g "$AZURE_RESOURCE_GROUP" -n "$AZURE_APP" --query properties.configuration.ingress.fqdn -o tsv | cut -d. -f2-)
+          for pass in 1 2; do for path in /api/health "/api/intelligence?view=fixtures" "/api/intelligence?view=catalog" "/api/intelligence?view=news" /football /; do
+            code=$(curl -s -o /dev/null -m 90 -w '%{http_code}' "https://$AZURE_APP---candidate.$domain$path"); echo "warm pass $pass $path $code"
+            [[ $pass == 1 || $code == 200 ]] || { echo "candidate not ready: $path $code"; exit 1; }
+          done; done
           bash scripts/azure/release.sh traffic "${{ inputs.revision }}" "${{ inputs.weight }}"
           mkdir -p .sites-runtime/azure-release
           for i in 1 2 3 4 5; do node scripts/azure/verify-revision.mjs https://aidanshamte.me ".sites-runtime/azure-release/public-$i.json"; sleep 30; done
