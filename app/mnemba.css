@@ -509,3 +509,9 @@
 /* Pagination on prediction history and published picks: 44px targets. */
 .intel .mt-pager{min-height:44px;min-width:44px;margin:var(--mt-space-sm) var(--mt-space-sm) 0 0;padding:0 var(--mt-space-lg);border-radius:var(--mt-radius-md);border:var(--mt-border-width-hairline) solid var(--mt-color-border-strong);background:var(--mt-color-surface-default);color:var(--mt-color-text-primary);font:600 14px/20px var(--mt-font-ui);cursor:pointer}
 .mt-pager:focus-visible{outline:none;box-shadow:var(--mt-focus-ring)}
+
+/* Analysis state on fixture rows: full analysis, early estimate, waiting for data (never used to hide a fixture). */
+.mt-analysis-chip{font:500 12px/16px var(--mt-font-ui);color:var(--mt-color-text-secondary);max-width:100%}
+.mt-analysis-full{color:var(--mt-color-text-primary);font-weight:600}
+.mt-filter-notice{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mt-space-sm,8px)}
+.mt-filter-notice button{min-height:44px;padding:0 var(--mt-space-md,12px)}

@@ -5,12 +5,13 @@ import {IdentityBadge,CompetitionIdentity} from './football-identity';
 import LocalTime from './local-time';
 import {StatusTag,matchStatusKind} from './mt-ui';
 type Side={id?:string;name?:string};
-type Fixture={id:string;status?:string;kickoffPrecision?:string;startsAt:number;homeScore?:number|null;awayScore?:number|null;home?:Side;away?:Side;competition?:{id?:string;name:string}};
+type AnalysisState={state:'full'|'provisional'|'waiting';label:string;reason?:string;main?:{outcome:string;probability:number}|null};
+type Fixture={id:string;status?:string;kickoffPrecision?:string;startsAt:number;homeScore?:number|null;awayScore?:number|null;home?:Side;away?:Side;competition?:{id?:string;name:string};analysisState?:AnalysisState};
 
 export function FixtureRow({f}:{f:Fixture}){
  const kind=matchStatusKind(f.status,f.kickoffPrecision,f.startsAt),scored=f.homeScore!=null&&f.awayScore!=null;
  return <a className="mt-fixture-row" href={`/football/match/${encodeURIComponent(f.id)}`}>
-  <span className="mt-fixture-when"><LocalTime fixture={{startsAt:f.startsAt,kickoffPrecision:f.kickoffPrecision}}/>{kind!=='scheduled'&&<StatusTag kind={kind}/>}</span>
+  <span className="mt-fixture-when"><LocalTime fixture={{startsAt:f.startsAt,kickoffPrecision:f.kickoffPrecision}}/>{kind!=='scheduled'&&<StatusTag kind={kind}/>}{kind==='scheduled'&&f.analysisState&&<span className={`mt-analysis-chip mt-analysis-${f.analysisState.state}`} title={f.analysisState.reason}>{f.analysisState.label}{f.analysisState.main?` · ${f.analysisState.main.outcome} ${Math.round(f.analysisState.main.probability*100)}%`:''}</span>}</span>
   <span className="mt-fixture-team mt-fixture-home"><span className="mt-team-name mt-clamp-2">{f.home?.name}</span><IdentityBadge id={f.home?.id} name={f.home?.name??'Home team'} variant="small" decorative/></span>
   <span className="mt-fixture-score" aria-label={scored?`Score ${f.homeScore} to ${f.awayScore}`:undefined}>{scored?`${f.homeScore} : ${f.awayScore}`:'vs'}</span>
   <span className="mt-fixture-team mt-fixture-away"><IdentityBadge id={f.away?.id} name={f.away?.name??'Away team'} variant="small" decorative/><span className="mt-team-name mt-clamp-2">{f.away?.name}</span></span>

@@ -127,8 +127,8 @@ test('scheduler continues after empty and degraded jobs and reports the run as p
     const calls = [];
     const service = {initialize: async () => {}, sync: async j => { calls.push(j); return {outcome: outcomes[j], complete: true}; }};
     const run = await runScheduled({cron: '0 * * * *', scheduledTime: NOW}, {DB: db}, {now: () => NOW, service});
-    assert.deepEqual(calls, ['fixtures', 'results', 'models', 'snapshots', 'media', 'fivedollar']);
-    assert.deepEqual(run.results.map(r => r.state), ['empty', 'degraded', 'success', 'success', 'success', 'success']);
+    assert.deepEqual(calls, ['fixtures', 'results', 'models', 'snapshots', 'media', 'analysis-states', 'fivedollar']);
+    assert.deepEqual(run.results.map(r => r.state), ['empty', 'degraded', 'success', 'success', 'success', 'success', 'success']);
     assert.equal(run.state, 'partial');
     const all = await runScheduled({cron: '0 * * * *', scheduledTime: NOW + 3600000}, {DB: db}, {now: () => NOW, service: {initialize: async () => {}, sync: async () => ({outcome: 'success', complete: true})}});
     assert.equal(all.state, 'success');
