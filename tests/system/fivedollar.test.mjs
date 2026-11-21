@@ -280,7 +280,7 @@ test('the live league catalog is mapped dynamically; unmapped provider leagues s
 });
 
 test('a network error that echoes the Authorization header is sanitized before it reaches results, logs or the database', async () => {
-  const w = await world({respond: (_u, n) => { throw Object.assign(new Error(`connect failed; request headers: Authorization: Bearer ${SECRET}`), {headers: {authorization: `Bearer ${SECRET}`}}); }});
+  const w = await world({respond: () => { throw Object.assign(new Error(`connect failed; request headers: Authorization: Bearer ${SECRET}`), {headers: {authorization: `Bearer ${SECRET}`}}); }});
   const logged = [], original = console.log; console.log = (...a) => { logged.push(a.join(' ')); };
   try {
     const result = await syncFiveDollar(w.service, {mode: 'core'});
