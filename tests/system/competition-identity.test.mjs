@@ -262,6 +262,27 @@ test('provider naming variants merge only on shared matches; tiers, women and cu
   assert.notEqual(canon('fivedollar:l3'), canon('openligadb:bl1'), "women's competition never merges with the men's");
   assert.notEqual(canon('fivedollar:l4'), canon('openligadb:bl1'), 'a cup with the same clubs is not the league');
   assert.notEqual(canon('fivedollar:l5'), canon('openligadb:bl1'), 'two shared matches are not enough');
-  assert.ok(plan.reviews.some(r => r.providerId === 'fivedollar:l5' && r.evidence.basis === 'shared-matches'), 'weak overlap goes to review');
+  assert.ok(plan.reviews.some(r => r.providerId === 'fivedollar:l5' && r.kind === 'competition-possible-duplicate' && r.evidence.basis === 'shared-matches'), 'weak overlap goes to review');
   assert.equal(new Set(plan.groups.map(g => g.canonicalId)).size, plan.groups.length, 'no duplicate canonical groups');
+});
+
+test('a possible-duplicate review hides a licensed-provider newcomer but never an established competition', async () => {
+  const {database} = await import('../football-db.mjs');
+  const {catalogCompetitions} = await import('../../lib/football/identity-migration.mjs');
+  const {IntelligenceService} = await import('../../lib/football/intelligence.mjs');
+  const {normalizeFixture} = await import('../../lib/football/providers.mjs');
+  const {apiFixture} = await import('../football-db.mjs');
+  const {store, sqlite} = database(); store.now = () => Date.parse('2026-11-01T12:00:00Z');
+  try {
+    await store.init(); const service = new IntelligenceService(store); await service.initialize();
+    const established = normalizeFixture('api-football', apiFixture(8001, 'NS', '2026-11-05T12:00:00Z'));
+    const newcomer = {...normalizeFixture('api-football', apiFixture(8002, 'NS', '2026-11-05T12:00:00Z', 30, 40)), id: 'fivedollar:8002', provider: 'fivedollar',
+      competition: {...established.competition, id: 'fivedollar:l9', provider: 'fivedollar', externalId: '9', name: 'Ghana Premier League', seasons: [{...established.competition.seasons[0], id: 'fivedollar:l9:2026', competitionId: 'fivedollar:l9'}]}, seasonId: 'fivedollar:l9:2026'};
+    await service.saveFixtures([established, newcomer]);
+    await service.sync('competition-identities');
+    for (const id of [established.competition.id, 'fivedollar:l9']) await store.run("INSERT INTO verification_queue(id,kind,entity_id,source_url,payload,status,created_at) VALUES(?,?,?,?,?,?,?)", `identity:competition-possible-duplicate:${id}`, 'competition-possible-duplicate', id, 'https://example.invalid', '{}', 'pending', 0);
+    const ids = (await catalogCompetitions(store)).flatMap(c => c.providerIds);
+    assert.ok(ids.includes(established.competition.id), 'established competition stays visible');
+    assert.ok(!ids.includes('fivedollar:l9'), 'licensed-provider newcomer is hidden until reviewed');
+  } finally { sqlite.close(); }
 });
