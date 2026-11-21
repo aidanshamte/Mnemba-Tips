@@ -42,6 +42,8 @@ async function world({env = {FIVE_DOLLAR_FOOTBALL_API_KEY: SECRET}, start = '202
     if (custom) return custom;
     const json = (body, status = 200) => new Response(JSON.stringify(body), {status, headers: {'content-type': 'application/json', 'x-ratelimit-limit': '10', 'x-ratelimit-remaining': '5', 'x-ratelimit-reset': String(Math.ceil(clock.now / 60000) * 60)}});
     if (u.pathname === '/v1/leagues') return json({success: 1, data: LEAGUES, pagination: {page: 1, per_page: 100, count: 2, has_more: false}});
+    const lf = u.pathname.match(/^\/v1\/leagues\/(\d+)\/fixtures$/);
+    if (lf) { const rows = fixtures.filter(f => f.league.id === Number(lf[1]) && f.status === 'finished' && (!params.end_time || f.kickoff_ts < Number(params.end_time))); return json({success: 1, data: rows, pagination: {page: Number(params.page ?? 1), per_page: 100, count: rows.length, has_more: false}}); }
     if (u.pathname === '/v1/standings') return standings ? json({success: 1, data: standings}) : json({success: 0, error: {type: 'invalid_request', code: 'standings_not_available'}}, 404);
     if (u.pathname === '/v1/fixtures') {
       const want = {live: 'in_play', finished: 'finished', scheduled: 'scheduled'}[params.status];
@@ -330,4 +332,22 @@ test('substitution, period and score details from provider events are kept; both
   assert.deepEqual([d.events[1].detail, d.events[1].score], ['first_half', {home: 1, away: 0}]);
   const documented = normalizeFdfaStandings({season: '26/27', table: [{position: 1, team: {id: 1, name: 'A'}, played: 3, points: 9, total_for: 7, total_against: 2}]});
   assert.deepEqual([documented.rows[0].goalsFor, documented.rows[0].goalsAgainst, documented.rows[0].goalDifference], [7, 2, 5]);
+});
+
+test('history backfill gives provider-only teams the three results a forecast needs, once per league', async () => {
+  const w = await world({start: '2026-11-20T08:00:00Z'});
+  try {
+    const past = [1, 2, 3, 4].map(i => raw(100 + i, 'finished', {kickoff_ts: Date.parse(`2026-10-0${i}T15:00:00Z`) / 1000}));
+    const upcoming = raw(110, 'scheduled', {kickoff_ts: Date.parse('2026-11-22T15:00:00Z') / 1000});
+    w.setFixtures([...past, upcoming]);
+    const first = await syncFiveDollar(w.service, {mode: 'core', budget: 20, timeLimitMs: 600000});
+    assert.equal(first.history.leagues, 1, JSON.stringify(first.history)); assert.ok(first.history.inserted >= 4);
+    const history = await w.service.history('fivedollar:t10', 'fivedollar:t20', Date.parse('2026-11-22T15:00:00Z'));
+    assert.ok(history.length >= 4, 'team results recorded before kickoff');
+    const calls = w.calls.filter(c => /\/leagues\/100\/fixtures/.test(c.path)).length;
+    assert.ok(calls >= 1, 'history endpoint was called');
+    w.advance(3600000);
+    await syncFiveDollar(w.service, {mode: 'core', budget: 20, timeLimitMs: 600000});
+    assert.equal(w.calls.filter(c => /\/leagues\/100\/fixtures/.test(c.path)).length, calls, 'not repeated within 7 days');
+  } finally { w.sqlite.close(); }
 });
