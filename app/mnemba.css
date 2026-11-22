@@ -544,3 +544,29 @@
 .mt-team-name,.intel-team .team-name,.mt-fixture-group-head{overflow-wrap:anywhere}
 @media (max-width:767px){.intel-matches,.mt-fixture-groups,.intel-news{gap:var(--mt-space-sm)}.intel .intel-main{padding-top:var(--mt-space-md)}}
 .intel details,.intel details>div,.intel .market-explorer{min-width:0;max-width:100%}.intel .table-scroll{overflow-x:auto;contain:inline-size}
+/* Compact toolbar: search row, flat date tabs, one-line summary. Visual controls are small; hit areas stay 44px. */
+.mt-utility{margin-bottom:var(--mt-space-sm);gap:var(--mt-space-sm)}
+.mt-search-entry{min-height:44px;padding:0 var(--mt-space-md);gap:var(--mt-space-sm);font-size:.875rem}
+.mt-utility .mt-btn{min-height:44px;padding:0 var(--mt-space-md);font:500 .8125rem/1.2 var(--mt-font-ui)}
+.intel .matchday-selector.mt-toolbar{padding:0;margin:0;background:none;border:0;border-bottom:var(--mt-border-width-hairline) solid var(--mt-color-border-default);border-radius:0;box-shadow:none}
+.mt-toolbar .matchday-presets{display:flex;flex-wrap:nowrap;align-items:center;gap:0;margin:0;overflow-x:auto;scrollbar-width:none}
+.mt-toolbar .matchday-presets::-webkit-scrollbar{display:none}
+.intel .mt-toolbar .matchday-presets button{flex:none;min-height:44px;padding:0 var(--mt-space-md);border:0;border-radius:0;background:none;color:var(--mt-color-text-secondary);font:500 .8125rem/1.2 var(--mt-font-ui);box-shadow:inset 0 -2px 0 transparent}
+.intel .mt-toolbar .matchday-presets button:hover{color:var(--mt-color-text-primary);background:none}
+.intel .mt-toolbar .matchday-presets button[aria-pressed=true]{background:none;color:var(--mt-color-text-primary);font-weight:600;box-shadow:inset 0 -2px 0 var(--mt-color-accent-gold)}
+.intel .mt-toolbar .matchday-presets button[aria-pressed=true]::before{display:none}
+.intel .mt-toolbar .matchday-presets button:focus-visible{outline:2px solid var(--mt-color-border-focus);outline-offset:-4px}
+[data-theme="dark"] .intel .mt-toolbar .matchday-presets button[aria-pressed=true]{background:none;color:var(--mt-color-text-primary)}
+.mt-help{position:relative;flex:none;margin-left:auto}
+.mt-help>summary{list-style:none;display:grid;place-items:center;width:44px;height:44px;cursor:pointer;color:var(--mt-color-text-secondary);font:600 .8125rem var(--mt-font-ui)}
+.mt-help>summary::-webkit-details-marker{display:none}
+.mt-help>summary::after{content:"";position:absolute;inset:12px;border:1px solid currentColor;border-radius:999px}
+.mt-help>summary:focus-visible{outline:2px solid var(--mt-color-border-focus);outline-offset:-6px}
+.mt-help>p{position:absolute;right:0;top:100%;z-index:20;width:min(18rem,80vw);margin:0;padding:var(--mt-space-sm) var(--mt-space-md);background:var(--mt-color-surface-default);border:var(--mt-border-width-hairline) solid var(--mt-color-border-default);border-radius:var(--mt-radius-md);box-shadow:var(--mt-shadow-2,var(--mt-shadow-1));font:400 .8125rem/1.4 var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.mt-toolbar .mt-date-range{margin:var(--mt-space-sm) 0}
+.intel .intel-filters label,.intel .intel-filters>select{min-height:44px;padding:0 var(--mt-space-md);font-size:1rem;line-height:1.5}
+.intel .intel-filters{gap:var(--mt-space-sm);margin:var(--mt-space-sm) 0}
+.intel .mt-summary{margin:var(--mt-space-sm) 0;font:400 .8125rem/1.4 var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.intel .mt-filter-notice{margin:0 0 var(--mt-space-sm);font:400 .8125rem/1.4 var(--mt-font-ui);gap:var(--mt-space-xs)}
+.intel .mt-filter-notice strong{font-weight:600;color:var(--mt-color-text-primary)}
+.intel .mt-filter-notice button{font:500 .8125rem var(--mt-font-ui)}
