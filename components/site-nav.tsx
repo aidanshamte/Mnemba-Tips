@@ -3,7 +3,7 @@
 // Mobile top bar, Mobile bottom navigation, Searchable mobile sheet, Timezone control).
 // ≥1280px: fixed 264px rail · 768–1279px: top bar + menu sheet · <768px: top bar + bottom nav.
 import {useEffect,useRef,useState,type MouseEvent} from 'react';
-import {Home,CalendarDays,Trophy,Users,Newspaper,History,Bookmark,Search,Menu,X,Globe,ChartColumn,Layers3,Image as ImageIcon,Volleyball} from 'lucide-react';
+import {Home,CalendarDays,Trophy,Users,Newspaper,History,Bookmark,Search,Menu,X,Globe,ChartColumn,Layers3,Image as ImageIcon,Volleyball,Radio} from 'lucide-react';
 import {TimePreference} from './local-time';
 import BrandLogo from './brand-logo';
 
@@ -12,6 +12,7 @@ type Item={key:string;label:string;href:string;tab?:string;Icon:typeof Home};
 const PRIMARY:Item[]=[
  {key:'home',label:'Home',href:'/football',tab:'Predictions',Icon:Home},
  {key:'fixtures',label:'Fixtures',href:'/football?tab=Fixtures',tab:'Fixtures',Icon:CalendarDays},
+ {key:'live',label:'Live scores',href:'/football?tab=Live',tab:'Live',Icon:Radio},
  {key:'leagues',label:'Leagues',href:'/football?tab=Leagues',tab:'Leagues',Icon:Trophy},
  {key:'search',label:'Teams and players',href:'/football/search',Icon:Users},
  {key:'news',label:'News',href:'/football?tab=News',tab:'News',Icon:Newspaper},
@@ -24,8 +25,8 @@ const SECONDARY:Item[]=[
  {key:'credits',label:'Visual credits',href:'/football/visual-credits',Icon:ImageIcon},
  {key:'basketball',label:'Basketball',href:'/basketball',Icon:Volleyball},
 ];
-const BOTTOM=['home','fixtures','search','news'];
-export const TAB_KEY:Record<string,string>={Predictions:'home',Fixtures:'fixtures',Leagues:'leagues','Teams & Players':'search',News:'news'};
+const BOTTOM=['home','fixtures','live','search','news'];
+export const TAB_KEY:Record<string,string>={Predictions:'home',Fixtures:'fixtures',Live:'live',Leagues:'leagues','Teams & Players':'search',News:'news'};
 
 /** Derive the active item from the URL (after mount, so server and first client render match). */
 function activeFromLocation():string{
@@ -70,7 +71,7 @@ export default function SiteNav({active,onTab}:{active?:string;onTab?:(tab:strin
    <button type="button" className="mt-icon-btn mt-topbar-menu" aria-label="Open menu" aria-haspopup="dialog" onClick={()=>open(sheet.current)}><Menu aria-hidden="true" size={22}/></button>
   </header>
   <nav className="mt-bottom-nav" aria-label="Quick navigation">
-   {PRIMARY.filter(i=>BOTTOM.includes(i.key)).map(i=>link(i.key==='search'?{...i,label:'Search'}:i,'mt-tab'))}
+   {PRIMARY.filter(i=>BOTTOM.includes(i.key)).map(i=>link(i.key==='search'?{...i,label:'Search'}:i.key==='live'?{...i,label:'Live'}:i,'mt-tab'))}
    <button type="button" className="mt-tab" aria-haspopup="dialog" onClick={()=>open(sheet.current)}><Menu aria-hidden="true" size={20} strokeWidth={1.75}/><span>More</span></button>
   </nav>
   <dialog ref={sheet} className="mt-sheet" aria-label="Menu" onClick={closeOnBackdrop}>
