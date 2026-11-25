@@ -122,3 +122,11 @@ test('5DollarFootballAPI event ids do not depend on list position', () => {
   const a = fdfaDetails({events: ev}, FX).events.map(e => e.id), b = fdfaDetails({events: [{type: 'corner', minute: 5, team: 'home'}, ...ev]}, FX).events.map(e => e.id);
   assert.deepEqual(b.slice(1), a);
 });
+
+test('public read-only board is shared for 15 s within a process', async () => {
+  let reads = 0;
+  const store = {readOnly: true, db: {}, now: () => NOW, all: async sql => { if (sql.startsWith("SELECT payload FROM fixtures")) reads++; return []; }, cache: async () => null};
+  const service = {store, deduplicateFixtures: async f => f};
+  const [a, b] = await Promise.all([liveBoard(service), liveBoard(service)]); await liveBoard(service);
+  assert.equal(a, b); assert.equal(reads, 1, 'one fixtures query for concurrent and repeated visitors');
+});
