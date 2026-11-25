@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
-type State={unavailable?:boolean;revision?:string;updatedAt:number;fixture:Record<string,unknown>;details:Record<string,unknown[]>;players:unknown[];connection?:'live'|'reconnecting'|'polling'};
+type State={unavailable?:boolean;revision?:string;updatedAt:number;fixture:Record<string,unknown>;details:Record<string,unknown[]>;players:unknown[];inplay?:Record<string,any>|null; // eslint-disable-line @typescript-eslint/no-explicit-any -- server payload
+connection?:'live'|'reconnecting'|'polling'};
 export function useLiveMatch(id:string){
  const [snapshot,setSnapshot]=useState<{id:string;value:State}|null>(null),[connection,setConnection]=useState<'live'|'reconnecting'|'polling'>('polling');
  useEffect(()=>{

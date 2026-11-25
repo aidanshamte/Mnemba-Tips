@@ -591,3 +591,6 @@
 .mt-event-disallowed .mt-event-text strong{text-decoration:line-through}
 .mt-timeline h3{margin-top:var(--mt-space-md)}
 .intel section[aria-labelledby="delayed"]{margin-bottom:var(--mt-space-xl)}
+.mt-live-markets{list-style:none;margin:var(--mt-space-sm) 0 0;padding:0;display:grid;gap:2px;font:400 .875rem/1.4 var(--mt-font-ui)}
+.mt-live-markets strong{font-weight:600;font-variant-numeric:tabular-nums}
+.mt-live-prediction{border-left:3px solid var(--mt-color-accent-gold)}
