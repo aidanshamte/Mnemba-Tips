@@ -570,3 +570,23 @@
 .intel .mt-filter-notice{margin:0 0 var(--mt-space-sm);font:400 .8125rem/1.4 var(--mt-font-ui);gap:var(--mt-space-xs)}
 .intel .mt-filter-notice strong{font-weight:600;color:var(--mt-color-text-primary)}
 .intel .mt-filter-notice button{font:500 .8125rem var(--mt-font-ui)}
+/* Live scores and match event timeline */
+.mt-live-status{display:flex;align-items:center;gap:var(--mt-space-xs);margin:0 0 var(--mt-space-md);font:500 .8125rem/1.4 var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.mt-live-status .mt-live-dot{width:8px;height:8px;border-radius:50%;background:var(--mt-color-text-tertiary)}
+.mt-live-fresh .mt-live-dot{background:#16a34a}
+.mt-live-stale .mt-live-dot{background:var(--mt-color-accent-gold)}
+.mt-live-stale,.mt-live-offline{color:var(--mt-color-text-primary)}
+.mt-live-offline .mt-live-dot{background:#dc2626}
+.intel section[aria-labelledby="live-now"],.intel section[aria-labelledby="recent"]{margin-bottom:var(--mt-space-xl)}
+.mt-card-heading small{margin-left:var(--mt-space-xs);font:400 .8125rem var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.mt-toolbar-link{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--mt-space-md);font:500 .8125rem/1.2 var(--mt-font-ui);color:var(--mt-color-text-secondary);white-space:nowrap}
+.mt-toolbar-link:hover{color:var(--mt-color-text-primary)}
+.mt-event-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.mt-event{display:grid;grid-template-columns:3.25rem 1.75rem minmax(0,1fr);align-items:baseline;gap:var(--mt-space-xs);padding:var(--mt-space-xs) 0;border-bottom:var(--mt-border-width-hairline) solid var(--mt-color-border-default);font:400 .875rem/1.4 var(--mt-font-ui)}
+.mt-event-minute{font-variant-numeric:tabular-nums;color:var(--mt-color-text-secondary);text-align:right}
+.mt-event-icon{text-align:center;font-size:.8125rem}
+.mt-event-text{overflow-wrap:anywhere}
+.mt-event-text small{color:var(--mt-color-text-secondary);font-size:.8125rem}
+.mt-event-period{background:var(--mt-color-background-secondary);font-weight:600}
+.mt-event-disallowed .mt-event-text strong{text-decoration:line-through}
+.mt-timeline h3{margin-top:var(--mt-space-md)}
