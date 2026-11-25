@@ -70,6 +70,9 @@ test('live board: live, half-time and finished sections; stale and offline state
   // Per-source freshness: a match from a feed that stopped updating is listed as delayed, never as live.
   const mixed = classifyBoard([{...f('x', '2H', 60, 70), provider: 'fivedollar'}, {...f('y', '2H', 60, 70), provider: 'livescore'}], NOW, {lastUpdate: NOW - 20000, sources: {fivedollar: NOW - 20000, livescore: null}});
   assert.deepEqual([mixed.live.map(x => x.id), mixed.delayed.map(x => x.id), mixed.state], [['x'], ['y'], 'fresh']);
+  // Per match: a match observed recently is live; one whose own observation is old is delayed, whatever the feed did.
+  const perMatch = classifyBoard([{...f('p', '2H', 60, 70), provider: 'livescore', observedAt: NOW - 30000}, {...f('q', '2H', 100, 90), provider: 'livescore', observedAt: NOW - 3600000}], NOW, {lastUpdate: NOW - 10000, sources: {fivedollar: null, livescore: NOW - 10000}});
+  assert.deepEqual([perMatch.live.map(x => x.id), perMatch.delayed.map(x => x.id)], [['p'], ['q']]);
   assert.equal(liveLabel(f('a', '1H', 30, 30)), '30′'); assert.equal(liveLabel(f('b', 'HT', 50, null)), 'Half-time');
   assert.equal(liveLabel({status: 'PEN'}), 'After penalties'); assert.equal(liveLabel({status: '2H'}), 'In progress', 'no manufactured minute');
 });
@@ -129,7 +132,7 @@ test('5DollarFootballAPI event ids do not depend on list position', () => {
 
 test('public read-only board is shared for 15 s within a process', async () => {
   let reads = 0;
-  const store = {readOnly: true, db: {}, now: () => NOW, all: async sql => { if (sql.startsWith("SELECT payload FROM fixtures")) reads++; return []; }, cache: async () => null};
+  const store = {readOnly: true, db: {}, now: () => NOW, all: async sql => { if (/FROM fixtures WHERE starts_at/.test(sql)) reads++; return []; }, cache: async () => null};
   const service = {store, deduplicateFixtures: async f => f};
   const [a, b] = await Promise.all([liveBoard(service), liveBoard(service)]); await liveBoard(service);
   assert.equal(a, b); assert.equal(reads, 1, 'one fixtures query for concurrent and repeated visitors');
