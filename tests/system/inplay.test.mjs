@@ -175,3 +175,16 @@ test('worker capture stores one snapshot per state, and the read path pauses a s
     assert.equal(later.state, 'paused'); assert.equal(later.previous.input.home, 1, 'previous estimate kept with its original state');
   } finally { db.sqlite.close(); }
 });
+
+test('a live match without any in-play result gets a stated reason, not silence', async () => {
+  const {liveSnapshot, publishLive} = await import('../../lib/football/live.mjs');
+  const db = database(); db.store.now = () => NOW; await db.store.init();
+  const service = new IntelligenceService(db.store); await service.initialize();
+  try {
+    const live = {...normalizeFixture('api-football', apiFixture(9400, '2H', '2026-11-25T19:00:00Z', 10, 20)), elapsed: 50, homeScore: 0, awayScore: 0};
+    await service.saveFixtures([live]); await publishLive(service, live.id);
+    await db.store.run("DELETE FROM football_cache WHERE id LIKE 'inplay:%'");
+    const snap = await liveSnapshot(db.store, live.id);
+    assert.equal(snap.inplay.state, 'paused'); assert.match(snap.inplay.reason, /waiting for fresh data/);
+  } finally { db.sqlite.close(); }
+});
