@@ -188,3 +188,16 @@ test('a live match without any in-play result gets a stated reason, not silence'
     assert.equal(snap.inplay.state, 'paused'); assert.match(snap.inplay.reason, /waiting for fresh data/);
   } finally { db.sqlite.close(); }
 });
+
+test('worker sweep gives every live match an in-play result without waiting for a change', async () => {
+  const {sweepInplay} = await import('../../lib/football/inplay.mjs');
+  const db = database(); db.store.now = () => NOW; await db.store.init();
+  const service = new IntelligenceService(db.store); await service.initialize();
+  try {
+    const live = {...normalizeFixture('api-football', apiFixture(9500, '1H', '2026-11-25T19:40:00Z', 10, 20)), elapsed: 20, homeScore: 0, awayScore: 0};
+    await service.saveFixtures([live]);
+    const r = await sweepInplay(service);
+    assert.equal(r.refreshed, 1); assert.ok((await db.store.cache(`inplay:${live.id}`)).data.state);
+    assert.equal((await sweepInplay(service)).refreshed, 0, 'not recomputed within a minute');
+  } finally { db.sqlite.close(); }
+});
