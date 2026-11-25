@@ -590,3 +590,4 @@
 .mt-event-period{background:var(--mt-color-background-secondary);font-weight:600}
 .mt-event-disallowed .mt-event-text strong{text-decoration:line-through}
 .mt-timeline h3{margin-top:var(--mt-space-md)}
+.intel section[aria-labelledby="delayed"]{margin-bottom:var(--mt-space-xl)}

@@ -6,7 +6,7 @@ import {FixtureGroups} from './fixture-row';
 import {StatePanel} from './mt-ui';
 
 type Fixture = Parameters<typeof FixtureGroups>[0]["fixtures"][number];
-type Board = {generatedAt: number; lastUpdate: number | null; state: 'fresh' | 'stale' | 'offline'; live: Fixture[]; finished: Fixture[]; unconfirmed: number; refreshSeconds: number; note: string};
+type Board = {generatedAt: number; lastUpdate: number | null; state: 'fresh' | 'stale' | 'offline'; live: Fixture[]; delayed?: Fixture[]; finished: Fixture[]; unconfirmed: number; refreshSeconds: number; note: string};
 const ago = (ms: number) => { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? `${s} s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : `${Math.round(s / 3600)} h ago`; };
 
 export default function LiveScores() {
@@ -38,6 +38,9 @@ export default function LiveScores() {
     <section aria-labelledby="live-now"><h2 id="live-now" className="mt-card-heading">Live now <small>{board.live.length}</small></h2>
       {board.live.length ? <FixtureGroups fixtures={board.live}/> : <StatePanel kind="empty" title="No matches in progress">No covered match is being played right now. Recently finished matches are listed below.</StatePanel>}
     </section>
+    {(board.delayed?.length ?? 0) > 0 && <section aria-labelledby="delayed"><h2 id="delayed" className="mt-card-heading">Not currently updating <small>{board.delayed!.length}</small></h2>
+      <p className="mt-supporting">The feed for these matches has not updated in the last few minutes. The last recorded score is shown; it may be out of date.</p>
+      <FixtureGroups fixtures={board.delayed!}/></section>}
     {board.unconfirmed > 0 && <p className="mt-supporting">{board.unconfirmed} {board.unconfirmed === 1 ? 'match' : 'matches'} started more than four hours ago without a confirmed result and {board.unconfirmed === 1 ? 'is' : 'are'} not shown as live.</p>}
     <section aria-labelledby="recent"><h2 id="recent" className="mt-card-heading">Recently finished <small>{board.finished.length}</small></h2>
       {board.finished.length ? <FixtureGroups fixtures={board.finished}/> : <p className="mt-supporting">No match has finished in the last few hours.</p>}

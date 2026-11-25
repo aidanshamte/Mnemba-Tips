@@ -67,6 +67,9 @@ test('live board: live, half-time and finished sections; stale and offline state
   assert.equal(fresh.unconfirmed, 1); assert.equal(fresh.state, 'fresh');
   assert.equal(classifyBoard(fixtures, NOW, {lastUpdate: NOW - STALE_MS - 1000}).state, 'stale');
   assert.equal(classifyBoard(fixtures, NOW, {lastUpdate: null}).state, 'offline');
+  // Per-source freshness: a match from a feed that stopped updating is listed as delayed, never as live.
+  const mixed = classifyBoard([{...f('x', '2H', 60, 70), provider: 'fivedollar'}, {...f('y', '2H', 60, 70), provider: 'livescore'}], NOW, {lastUpdate: NOW - 20000, sources: {fivedollar: NOW - 20000, livescore: null}});
+  assert.deepEqual([mixed.live.map(x => x.id), mixed.delayed.map(x => x.id), mixed.state], [['x'], ['y'], 'fresh']);
   assert.equal(liveLabel(f('a', '1H', 30, 30)), '30′'); assert.equal(liveLabel(f('b', 'HT', 50, null)), 'Half-time');
   assert.equal(liveLabel({status: 'PEN'}), 'After penalties'); assert.equal(liveLabel({status: '2H'}), 'In progress', 'no manufactured minute');
 });
@@ -77,6 +80,7 @@ test('live board moves a match from live to recently finished when the stored st
     const base = normalizeFixture('api-football', apiFixture(6001, '2H', '2026-11-25T08:30:00Z', 10, 20));
     await w.service.saveFixtures([{...base, elapsed: 80}]);
     await w.store.putCache('live:fdfa:tick', {observedAt: NOW - 20000}, 86400000);
+    await w.store.putCache('live:worker', {state: 'success', at: NOW - 20000}, 86400000);
     let b = await liveBoard(w.service);
     assert.deepEqual([b.live.length, b.finished.length, b.state], [1, 0, 'fresh']);
     await w.service.saveFixtures([{...base, status: 'FT', elapsed: 90}]);
