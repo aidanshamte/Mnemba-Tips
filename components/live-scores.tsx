@@ -13,24 +13,28 @@ export default function LiveScores() {
   const [board, setBoard] = useState<Board | null>(null), [failed, setFailed] = useState(0), [now, setNow] = useState(() => Date.now());
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    let alive = true, failures = 0;
+    // Every 10 s while visible; one request at a time (a new load aborts an obsolete one); paused while hidden and
+    // refreshed at once on return; exponential backoff after errors. Reads Mnemba's shared board only.
+    let alive = true, failures = 0, inflight: AbortController | null = null;
     const load = async () => {
-      if (document.visibilityState === 'hidden') { schedule(30000); return; }
+      if (document.visibilityState === 'hidden') return;
+      inflight?.abort(); const ctl = new AbortController(); inflight = ctl;
       try {
-        const r = await fetch('/api/intelligence?view=live', {headers: {accept: 'application/json'}});
+        const r = await fetch('/api/intelligence?view=live', {headers: {accept: 'application/json'}, signal: ctl.signal, cache: 'no-store'});
         if (!r.ok) throw Error(String(r.status));
-        const b = await r.json() as Board; if (!alive) return;
-        setBoard(b); failures = 0; setFailed(0); schedule((b.refreshSeconds ?? 30) * 1000);
-      } catch { if (!alive) return; failures++; setFailed(failures); schedule(Math.min(300000, 30000 * 2 ** failures)); }
+        const b = await r.json() as Board; if (!alive || ctl.signal.aborted) return;
+        setBoard(b); failures = 0; setFailed(0); schedule((b.refreshSeconds ?? 10) * 1000);
+      } catch { if (!alive || ctl.signal.aborted) return; failures++; setFailed(failures); schedule(Math.min(300000, 10000 * 2 ** failures)); }
+      finally { if (inflight === ctl) inflight = null; }
     };
     const schedule = (ms: number) => { if (timer.current) clearTimeout(timer.current); timer.current = setTimeout(load, ms); };
-    const visible = () => { if (document.visibilityState === 'visible') void load(); };
+    const visible = () => { if (document.visibilityState === 'visible') void load(); else { if (timer.current) clearTimeout(timer.current); inflight?.abort(); } };
     void load(); document.addEventListener('visibilitychange', visible);
-    const tick = setInterval(() => setNow(Date.now()), 15000);
-    return () => { alive = false; if (timer.current) clearTimeout(timer.current); clearInterval(tick); document.removeEventListener('visibilitychange', visible); };
+    const tick = setInterval(() => setNow(Date.now()), 5000);
+    return () => { alive = false; inflight?.abort(); if (timer.current) clearTimeout(timer.current); clearInterval(tick); document.removeEventListener('visibilitychange', visible); };
   }, []);
   if (!board) return failed ? <StatePanel kind="error" title="Live scores are unavailable">Mnemba could not load live scores. Retrying automatically.</StatePanel> : <StatePanel kind="loading" title="Loading live scores…"/>;
-  const updated = board.lastUpdate ? `Updated ${ago(now - board.lastUpdate)}` : 'No live update recorded yet';
+  const updated = board.lastUpdate ? `Feed checked ${ago(now - board.lastUpdate)}` : 'No live update recorded yet';
   return <>
     <p className={`mt-live-status mt-live-${failed ? 'offline' : board.state}`} role="status">
       <span className="mt-live-dot" aria-hidden="true"/>{failed ? 'Connection lost · showing the last scores received' : board.state === 'fresh' ? 'Live' : board.state === 'stale' ? 'Scores may be delayed' : 'Live feed offline'} · {updated}

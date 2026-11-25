@@ -3,7 +3,7 @@ import {Store} from '../../lib/football/store.mjs';
 import {IntelligenceService} from '../../lib/football/intelligence.mjs';
 import {liveTick,publishLive} from '../../lib/football/live.mjs';
 import {fdfaLiveTick} from '../../lib/football/fivedollar.mjs';
-const pool=createPool(),store=new Store(postgresDatabase(pool));let stopping=false,timer,wake;
+const pool=createPool(),store=new Store(postgresDatabase(pool));let stopping=false,timer,wake,fdfaLive=0;
 const stop=()=>{stopping=true;clearTimeout(timer);wake?.();};process.on('SIGTERM',stop);process.on('SIGINT',stop);
 const pause=ms=>new Promise(resolve=>{wake=resolve;timer=setTimeout(resolve,ms);});
 try{
@@ -14,11 +14,13 @@ try{
    // Batched paid-provider live tick first (own cadence, shared limiter), then the per-fixture LiveScore task.
    const fdfa=await fdfaLiveTick(service,{publish:id=>publishLive(service,id)}).catch(e=>({state:'error',error:String(e.message).slice(0,200)}));
    if(fdfa.state!=='not-due')console.log('mnemba_live_fdfa',JSON.stringify(fdfa));
+   if(Number.isFinite(fdfa.live))fdfaLive=fdfa.live;
    result=await liveTick(service);
   }}
   catch{result={state:'database-unavailable'};}
   finally{await client.query('SELECT pg_advisory_unlock(714026)').catch(()=>{});client.release();}
   if(result)console.log('mnemba_live',JSON.stringify(result));
-  if(!stopping)await pause(result?.state==='not-configured'?300000:Math.max(15000,Number(process.env.MNEMBA_LIVE_TICK_MS)||30000));
+  // While matches are live, wake every 10 s so the 20 s provider cadence is met; providers enforce their own cadence.
+  if(!stopping)await pause(result?.state==='not-configured'&&!(fdfaLive>0)?300000:fdfaLive>0?10000:Math.max(15000,Number(process.env.MNEMBA_LIVE_TICK_MS)||30000));
  }
 }finally{await pool.end();}
