@@ -76,22 +76,52 @@ test('one batched request researches several fixtures, counts billed searches an
 
 test('rolling stage: imminent lineups first, per-run and budget limits, research stored per fixture, no probability change', async () => {
   let n = 0;
-  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '2', OPENAI_BATCH_SIZE: '3'}, async (url, init) => { n++; const body = JSON.parse(init.body); const ids = body.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json(responseFor(ids, {lineup: body.input.includes('officially announced') ? {status: 'confirmed', source_url: SRC, published_at: new Date(NOW).toISOString(), home: {starters: xi('H')}, away: {starters: xi('A')}} : undefined})); });
+  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '1'}, async (url, init) => { n++; const body = JSON.parse(init.body); const ids = body.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json(responseFor(ids, {lineup: body.input.includes('officially announced') ? {status: 'confirmed', source_url: SRC, published_at: new Date(NOW).toISOString(), home: {starters: xi('H')}, away: {starters: xi('A')}} : undefined})); });
   try {
     const soon = normalizeFixture('api-football', apiFixture(7801, 'NS', '2026-11-27T13:00:00Z', 31, 32));
     const later = [2, 3, 4, 5].map(i => normalizeFixture('api-football', apiFixture(7800 + i, 'NS', '2026-11-28T15:00:00Z', 40 + i, 50 + i)));
     await w.service.saveFixtures([soon, ...later]);
     const r = await researchUpcoming(w.service);
-    assert.equal(r.requests, 2); assert.equal(r.stopped, 'per-run limit');
+    assert.equal(r.requests, 1); assert.equal(r.stopped, 'per-run limit');
     const first = (await w.store.cache(`research:${soon.id}`)).data;
     assert.equal(first.lineup.status, 'confirmed', 'the match kicking off within 100 minutes was researched first for its lineup');
     assert.equal(r.confirmed, 1);
     const st = await intelligenceStatus(w.service);
-    assert.equal(st.openai.requests, 2); assert.equal(st.openai.billedSearches, 4); assert.ok(st.openai.remainingUsd < 5);
+    assert.equal(st.openai.requests, 1); assert.equal(st.openai.billedSearches, 2); assert.ok(st.openai.remainingUsd < 5);
     assert.doesNotMatch(JSON.stringify(st), /sk-test-not-real/);
     // Budget exhausted: no request is sent and the stage stops cleanly.
     await w.store.run("UPDATE source_request_usage SET used=? WHERE source_id='openai' AND day='spend-total-usd-micro'", 5e6); const before = n;
     w.advance(3600000);
     const r2 = await researchUpcoming(w.service); assert.equal(r2.stopped, 'total budget'); assert.equal(n, before);
   } finally { w.sqlite.close(); }
+});
+
+test('ambiguous failures keep the worst case as spent and are never retried; 4xx releases the reservation', async () => {
+  let calls = 0;
+  const w = await world(ENV, async () => { calls++; return new Response('{"error":{"message":"server"}}', {status: 503}); });
+  try {
+    const fx = [normalizeFixture('api-football', apiFixture(7901, 'NS', '2026-11-27T19:00:00Z', 61, 62))];
+    const r = await researchBatch(w.service, fx);
+    assert.equal(r.state, 'ambiguous'); assert.equal(calls, 1, 'no automatic retry of a possibly billed request');
+    assert.ok(Math.abs(await spent(w.store) - r.record.estimatedUsd) < 1e-6, 'the full worst case is counted');
+  } finally { w.sqlite.close(); }
+  const w2 = await world(ENV, async () => new Response('{"error":{"message":"bad"}}', {status: 400}));
+  try {
+    const r = await researchBatch(w2.service, [normalizeFixture('api-football', apiFixture(7902, 'NS', '2026-11-27T19:00:00Z', 63, 64))]);
+    assert.equal(r.state, 'error'); assert.equal(await spent(w2.store), 0, 'a rejected request costs nothing');
+  } finally { w2.sqlite.close(); }
+  const w3 = await world(ENV, async () => { throw new TypeError('socket hang up'); });
+  try {
+    const r = await researchBatch(w3.service, [normalizeFixture('api-football', apiFixture(7903, 'NS', '2026-11-27T19:00:00Z', 65, 66))]);
+    assert.equal(r.state, 'ambiguous'); assert.ok(await spent(w3.store) > 0, 'a lost connection is counted at worst case');
+  } finally { w3.sqlite.close(); }
+});
+
+test('batch sizes 5, 10 and 20 are each tried, then the most enriched fixtures per dollar wins', async () => {
+  const {chooseBatchSize} = await import('../../lib/football/openai-research.mjs');
+  assert.equal(chooseBatchSize({}), 5);
+  assert.equal(chooseBatchSize({5: {requests: 2}}), 10);
+  assert.equal(chooseBatchSize({5: {requests: 2}, 10: {requests: 2}}), 20);
+  const stats = {5: {requests: 2, fixtures: 10, enriched: 9, usd: 0.08}, 10: {requests: 2, fixtures: 20, enriched: 16, usd: 0.09}, 20: {requests: 2, fixtures: 40, enriched: 12, usd: 0.1}};
+  assert.equal(chooseBatchSize(stats), 10, '20 enriches under half; 10 beats 5 per dollar');
 });
