@@ -1,2 +1,2 @@
-import DemoStudio from "@/components/internal-demo-studio";
-export default function BasketballPage() { return <DemoStudio initialSport="basketball" />; }
+import BasketballCentre from '@/components/basketball-centre';
+export default function BasketballPage() { return <BasketballCentre/>; }
