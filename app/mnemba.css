@@ -600,3 +600,4 @@
 @media (min-width:768px){.mt-research .mt-lineups{grid-template-columns:1fr 1fr}.mt-research .mt-lineups>p{grid-column:1/-1}}
 .mt-availability{margin:var(--mt-space-sm) 0 0;padding-left:1.1rem;font:400 .875rem/1.45 var(--mt-font-ui)}
 .mt-cite{font-size:.8125rem;text-decoration:underline;text-underline-offset:2px;color:var(--mt-color-text-secondary);overflow-wrap:anywhere}
+.mt-bb-standings{display:grid;gap:var(--mt-space-md)}@media (min-width:1024px){.mt-bb-standings{grid-template-columns:1fr 1fr}}.mt-bb-standings caption{text-align:left;font:600 .875rem var(--mt-font-ui);padding:var(--mt-space-xs) 0}.match-score-line{font:650 1.625rem/2rem var(--mt-font-ui);margin:var(--mt-space-sm) 0}
