@@ -91,3 +91,55 @@ test('health signals count stalled live records; CSV carries corner/card settlem
     assert.deepEqual([col('cards_state'), col('cards_count'), col('cards_over_3.5_outcome')], ['settled', '5', 'over'], 'yellow + red as counted by the source');
   } finally { w.sqlite.close(); }
 });
+
+test('reconciliation has a reserved slot even when other polls are due, but never displaces an in-play scoreboard poll', async () => {
+  const board = JSON.parse(readFileSync(new URL('../fixtures/livescore/scoreboard.json', import.meta.url)));
+  const kickoff = Date.parse('2026-09-24T14:00:00Z'), urls = [];
+  const fetcher = async url => { urls.push(String(url)); const id = String(url).split('/').pop(); return Response.json({...board, Eid: Number(id), Eps: 'FT', Esid: 6}); };
+  const w = await world(kickoff + 2 * 864e5, {MNEMBA_LIVESCORE_ENABLED: '1'}, fetcher);
+  try {
+    const base = normalizeLiveScore(board, board.Stg, {compactTimestampTimezone: 'UTC'});
+    // A recent finished match whose events/lineups polls are always due, and a match stuck in play two days ago.
+    const recent = {...base, id: 'livescore:5550001', externalId: '5550001', status: 'FT', startsAt: kickoff + 2 * 864e5 - 3 * 3600000};
+    const stuck = {...base, status: '2H'};
+    await w.service.saveFixtures([recent, stuck]);
+    await w.store.putCache('live:discovery:livescore', {count: 0}, 86400000);
+    await liveTick(w.service, {cadenceMs: 60000});
+    assert.match(urls[0], /1894365$/, 'the reserved slot reconciles the stuck match first');
+    w.advance(61000); await liveTick(w.service, {cadenceMs: 60000});
+    assert.doesNotMatch(urls[1], /1894365$/, 'next minute serves the normal queue');
+    // An in-play match keeps priority over reconciliation.
+    const another = {...base, id: 'livescore:5550002', externalId: '5550002', status: '2H', startsAt: kickoff + 2 * 864e5 - 3 * 864e5 + 3600000};
+    const playing = {...base, id: 'livescore:5550003', externalId: '5550003', status: '2H', startsAt: kickoff + 2 * 864e5 - 30 * 60000};
+    await w.service.saveFixtures([another, playing]);
+    w.advance(5 * 60000); urls.length = 0; await liveTick(w.service, {cadenceMs: 60000});
+    assert.match(urls[0], /5550003$/, 'scoreboard of the match in play, not reconciliation');
+  } finally { w.sqlite.close(); }
+});
+
+test('settlements recorded before market states are re-checked once: partial where next goal is unresolved, prior kept', async () => {
+  const now = Date.parse('2026-11-26T12:00:00Z'), w = await world(now);
+  try {
+    const f = {...normalizeFixture('api-football', apiFixture(9801, 'FT', '2026-11-26T08:00:00Z', 10, 20)), homeScore: 2, awayScore: 1};
+    await w.service.saveFixtures([f]);
+    await snapshot(w.store, 'old1', f.id, {home: 1, away: 1, status: '2H', elapsed: 70}, Date.parse('2026-11-26T09:10:00Z'));
+    await w.store.run("INSERT INTO live_grades(snapshot_id,fixture_id,state,settled_at,payload) VALUES('old1',?,'settled',?,?)", f.id, now - 3600000, JSON.stringify({final: {home: 2, away: 1}, result: {outcome: 'home'}, nextGoal: {state: 'unresolved'}}));
+    await gradeLive(w.service);
+    const g = await w.store.one('SELECT state,payload FROM live_grades'), p = JSON.parse(g.payload);
+    assert.equal(g.state, 'partial'); assert.equal(p.markets.nextGoal, 'unresolved'); assert.equal(p.revisions[0].state, 'settled');
+    await gradeLive(w.service); assert.equal(JSON.parse((await w.store.one('SELECT payload FROM live_grades')).payload).revisions.length, 1, 'no repeated relabelling');
+  } finally { w.sqlite.close(); }
+});
+
+test('a failed reconciliation cools down only that match; the provider is not backed off', async () => {
+  const board = JSON.parse(readFileSync(new URL('../fixtures/livescore/scoreboard.json', import.meta.url)));
+  const kickoff = Date.parse('2026-09-24T14:00:00Z');
+  const w = await world(kickoff + 2 * 864e5, {MNEMBA_LIVESCORE_ENABLED: '1'}, async () => Response.json({...board, Eid: 999}));
+  try {
+    await w.service.saveFixtures([{...normalizeLiveScore(board, board.Stg, {compactTimestampTimezone: 'UTC'}), status: '2H'}]);
+    await w.store.putCache('live:discovery:livescore', {count: 0}, 86400000);
+    await liveTick(w.service, {cadenceMs: 60000});
+    assert.equal(await w.store.cache('live:backoff:livescore'), null);
+    assert.ok(await w.store.cache('live:poll:reconcile:livescore:1894365'));
+  } finally { w.sqlite.close(); }
+});

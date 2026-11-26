@@ -20,7 +20,7 @@ test('captured incidents preserve two goals by the same player and lineups ident
  assert.ok(teams.every(t=>t.players.every(p=>p.position!=='COACH')));
 });
 test('real captured responses persist additively through the worker and final-match detail tasks',async()=>{
- const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();
+ const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();await store.putCache('live:reconcile:slot',{at:0},864e5);/* reconciliation is tested in closing-gaps */
  const calls=[];const service=new IntelligenceService(store,{MNEMBA_LIVESCORE_ENABLED:'1'},{sleep:async()=>{},fetcher:async url=>{const path=new URL(url).pathname;calls.push(path);return Response.json(sample(path.includes('/live/')?'discovery':path.split('/')[4]));}});await service.initialize();
  try{
   const first=await liveTick(service,{cadenceMs:0});assert.equal(first.state,'success');assert.equal(first.raw,2);assert.equal(first.accepted,2);assert.equal(first.persisted,2);
@@ -35,7 +35,7 @@ test('real captured responses persist additively through the worker and final-ma
  }finally{sqlite.close();}
 });
 test('real unpublished detail envelopes preserve data and defer only that match task',async()=>{
- const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();
+ const {store,sqlite}=database();store.now=()=>Date.parse('2026-09-24T15:44:00Z');await store.init();await store.putCache('live:reconcile:slot',{at:0},864e5);/* reconciliation is tested in closing-gaps */
  const raw=sample('discovery'),service=new IntelligenceService(store,{MNEMBA_LIVESCORE_ENABLED:'1'},{sleep:async()=>{},fetcher:async url=>{const path=new URL(url).pathname;return Response.json(path.includes('/live/')?raw:path.includes('/incidents/')?{}:sample('scoreboard'));}});await service.initialize();
  try{
   assert.equal((await liveTick(service,{cadenceMs:0})).state,'success');
