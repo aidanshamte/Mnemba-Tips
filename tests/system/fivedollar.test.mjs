@@ -235,7 +235,8 @@ test('standings normalization validates the envelope; jobs are scheduled hourly 
   assert.throws(() => normalizeFdfaStandings({season: '2026'}), /envelope/);
   assert.ok(CRON_JOBS['0 * * * *'].includes('fivedollar'));
   assert.ok(CRON_JOBS['20 */3 * * *'].includes('fivedollar-details'));
-  for (const [cron, stage] of [['0 * * * *', 'fivedollar'], ['20 */3 * * *', 'fivedollar-details']]) assert.equal(CRON_JOBS[cron].at(-1), stage, 'provider stages run last so they cannot starve existing stages');
+  assert.deepEqual(CRON_JOBS['0 * * * *'].slice(-2), ['fivedollar', 'research'], 'paid provider stages (5DollarFootballAPI, then OpenAI research) run last');
+  for (const [cron, stage] of [['20 */3 * * *', 'fivedollar-details']]) assert.equal(CRON_JOBS[cron].at(-1), stage, 'provider stages run last so they cannot starve existing stages');
   assert.deepEqual(CRON_JOBS['20 */3 * * *'].slice(-2), ['fivedollar', 'fivedollar-details'], 'three-hourly slot after every existing stage');
 });
 

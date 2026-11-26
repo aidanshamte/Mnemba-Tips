@@ -596,3 +596,7 @@
 .mt-live-prediction{border-left:3px solid var(--mt-color-accent-gold)}
 .mt-special{margin-top:var(--mt-space-sm)}.mt-special ul{margin:0;padding-left:1.1rem}
 .mt-ai{margin-top:var(--mt-space-sm)}.mt-ai ul{margin:0;padding-left:1.1rem}
+.mt-research .mt-lineups{display:grid;gap:var(--mt-space-sm);margin-top:var(--mt-space-sm)}
+@media (min-width:768px){.mt-research .mt-lineups{grid-template-columns:1fr 1fr}.mt-research .mt-lineups>p{grid-column:1/-1}}
+.mt-availability{margin:var(--mt-space-sm) 0 0;padding-left:1.1rem;font:400 .875rem/1.45 var(--mt-font-ui)}
+.mt-cite{font-size:.8125rem;text-decoration:underline;text-underline-offset:2px;color:var(--mt-color-text-secondary);overflow-wrap:anywhere}

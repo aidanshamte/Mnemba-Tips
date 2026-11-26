@@ -3,6 +3,7 @@ import EventTimeline from './event-timeline';
 import LivePrediction from './live-prediction';
 import SpecialMarkets from './special-markets';
 import AiExplanation from './ai-explanation';
+import PreMatchIntel from './pre-match-intel';
 import {TeamIdentity,CompetitionIdentity} from './football-identity';
 import {useEffect,useState} from 'react';
 import {fixtureTeamVisual} from '@/lib/football/visuals.mjs';
@@ -42,6 +43,7 @@ export default function MatchCenter({id}:{id:string}){
 <p className="mt-card-meta">Estimates, not guarantees.</p>
 <details className="mt-details"><summary>Analysis details</summary><ul>{a.explanations?.slice(0,3).map((reason:string)=><li key={reason}>{reason}</li>)}</ul>{a.btts!=null&&<p>Both teams to score {(a.btts*100).toFixed(1)}% · Over 2.5 goals {(a.over25*100).toFixed(1)}%</p>}<p>{a.label}{a.modelVersion?` · ${a.modelVersion}`:''}</p><AiExplanation ai={data!.aiExplanation}/><SpecialMarkets special={a.special}/>{a.estimateKind==='exploratory'&&<p>Early estimates are not included in tracked accuracy.</p>}{a.trackingNote&&a.estimateKind!=='exploratory'&&<p>{a.trackingNote}</p>}</details></>;})()}</section>
  {a.statusNotice&&<p className="intel-notice">{a.statusNotice}</p>}{a.archive&&<details><summary>Saved predictions and results</summary><ForecastArchive archive={a.archive}/></details>}
+ <PreMatchIntel research={data!.research} home={f.home?.name??'Home'} away={f.away?.name??'Away'}/>
  <EventTimeline rows={data!.details.fixture_events} fixture={f}/>
  {data!.recommendation&&<RecommendationDecision decision={data!.recommendation}/>}<details><summary>Explore markets</summary><MarketExplorer analysis={a}/>
  {a.markets&&<MarketAnalysis markets={a.markets}/>}</details><details><summary>Form, head-to-head and standings</summary><section><h2>Form before this match</h2><p>Cutoff: {new Date(data!.cutoff).toLocaleDateString()}. The analyzed result is excluded.</p><div className="match-columns">{data!.form.map((t:Data)=><article className="intel-panel" key={t.team.id}><h3><TeamIdentity id={t.team.id} name={t.team.name}/></h3><p>Overall {t.overall.results.join(' · ')||'No earlier results'}</p><p>Home {t.home.results.join(' · ')} · Away {t.away.results.join(' · ')}</p>{timeline(t.fixtures)}</article>)}</div></section>
