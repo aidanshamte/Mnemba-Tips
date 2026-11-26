@@ -4,6 +4,8 @@ import {useEffect, useState} from 'react';
 import SiteNav from './site-nav';
 import LocalTime from './local-time';
 import {StatePanel} from './mt-ui';
+import PreMatchIntel from './pre-match-intel';
+import AiExplanation from './ai-explanation';
 
 type Row = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- API payload
 const pct = (p?: number) => p == null ? '–' : `${Math.round(p * 100)}%`;
@@ -35,11 +37,13 @@ export default function BasketballGame({id}: {id: string}) {
           {d.grade && <p className="mt-supporting">Result: {d.grade.winnerCorrect ? 'winner called correctly' : 'winner missed'}; margin off by {Math.abs(d.grade.marginError).toFixed(1)}, total off by {Math.abs(d.grade.totalError).toFixed(1)} points.</p>}
           <p className="mt-supporting">{p.note} Estimates are not guarantees.</p></> : <p>No pre-game estimate was saved for this game{g.status === 'NS' ? ' yet' : ''}. Estimates need recorded games for both teams and are only saved before tip-off.</p>}
       </section>
+      <PreMatchIntel research={d.research} home={g.home.name} away={g.away.name}/>
+      {d.aiExplanation && <section className="intel-panel"><AiExplanation ai={d.aiExplanation}/></section>}
       <section className="intel-panel"><h2 className="mt-card-heading">Recent form</h2><div className="mt-lineups">{(['home', 'away'] as const).map(side => <div key={side}><strong>{g[side].name}</strong>
         <ul className="mt-availability">{d.form[side].length ? d.form[side].map((x: Row) => <li key={x.id}>{x.for > x.against ? 'W' : 'L'} {x.for}–{x.against} {x.home ? 'v' : '@'} {x.opponent}</li>) : <li>No recorded games before this one.</li>}</ul></div>)}</div>
         <p className="mt-supporting">This season: {g.home.abbreviation} at home {d.homeRecord.w}–{d.homeRecord.l} · {g.away.abbreviation} away {d.awayRecord.w}–{d.awayRecord.l}</p></section>
       <section className="intel-panel"><h2 className="mt-card-heading">Head-to-head</h2>{d.headToHead.length ? <ul className="mt-availability">{d.headToHead.map((x: Row) => <li key={x.id}><LocalTime fixture={{startsAt: x.startsAt, kickoffPrecision: 'date'}}/> · {x.home.abbreviation} {x.homeScore}–{x.awayScore} {x.away.abbreviation}</li>)}</ul> : <p className="mt-supporting">No recorded meetings.</p>}</section>
-      <p className="mt-supporting">NBA data from BALLDONTLIE (not official league data). Starting fives, injuries and player statistics are not available on the free data plan.</p>
+      <p className="mt-supporting">NBA data from BALLDONTLIE (not official league data). Starting fives and injuries appear only from cited web research; player statistics are not available on the free data plan.</p>
     </>}
   </main></div>;
 }

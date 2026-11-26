@@ -114,3 +114,51 @@ test('without a key nothing is requested and the page states it honestly; the pu
   const page = readFileSync(new URL('../../app/basketball/page.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(page, /demo/i);
 });
+
+test('limiter: concurrent callers across workers never get more than 5 BALLDONTLIE slots in one minute', async () => {
+  const {reserveMinute} = await import('../../lib/basketball/balldontlie.mjs');
+  const w = await world();
+  try {
+    const got = await Promise.all(Array.from({length: 12}, () => reserveMinute(w.store)));
+    assert.equal(got.filter(Boolean).length, 5);
+    w.at(Date.parse('2026-11-27T12:01:00Z')); assert.equal(await reserveMinute(w.store), true, 'next minute opens');
+  } finally { w.sqlite.close(); }
+});
+
+test('NBA starting five: confirmed needs exactly 5 distinct starters per team; NBA games join the shared research window', async () => {
+  const {validateFixtureResult, researchUpcoming, spent} = await import('../../lib/football/openai-research.mjs');
+  const SRC = 'https://www.nba.example/news/starters', now = Date.parse('2026-11-27T12:00:00Z');
+  const five = p => Array.from({length: 5}, (_, i) => ({name: `${p} ${i}`}));
+  const f = {id: 'balldontlie:1', startsAt: now + 3600000, sport: 'basketball'}, cited = new Set([SRC]);
+  assert.equal(validateFixtureResult({lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: five('H')}, away: {starters: five('A')}}}, f, cited, now).lineup.status, 'confirmed');
+  assert.equal(validateFixtureResult({lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: [...five('H'), {name: 'H 9'}]}, away: {starters: five('A')}}}, f, cited, now).lineup.status, 'predicted', 'six starters is not a confirmed five');
+  const prompts = [];
+  const w = await world({OPENAI_ENABLED: 'true', OPENAI_API_KEY: 'sk-test', OPENAI_MAX_REQUESTS_PER_RUN: '1'}, async (url, init) => { const b = JSON.parse(init.body); prompts.push(b.input); const ids = b.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json({usage: {input_tokens: 9000, output_tokens: 500}, output: [{type: 'web_search_call', action: {type: 'search'}}, {type: 'message', content: [{type: 'output_text', text: JSON.stringify({fixtures: ids.map(id => ({id, lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: five('H')}, away: {starters: five('A')}}}))}), annotations: [{type: 'url_citation', url: SRC}]}]}]}); });
+  try {
+    await saveGames(w.store, [normalizeGame(bdl(7100, '2026-11-27T13:00:00Z', 1, 2, null, null, {season: 2026}), now)]);
+    const r = await researchUpcoming(w.service);
+    assert.equal(r.requests, 1); assert.match(prompts[0], /basketball/); assert.match(prompts[0], /starting five/);
+    assert.equal((await w.store.cache('research:balldontlie:7100')).data.lineup.status, 'confirmed');
+    assert.ok(await spent(w.store) > 0, 'charged to the shared ledger');
+  } finally { w.sqlite.close(); }
+});
+
+test('basketball shadow: the per-absence effect is fitted on earlier games and scored on later ones; production unchanged', async () => {
+  const {evaluateBasketballShadow} = await import('../../lib/basketball/shadow.mjs');
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, rows = [];
+  for (let i = 0; i < 400; i++) { const d = rnd() < 0.4 ? (rnd() < 0.5 ? 2 : -2) : 0, p = 0.6, truth = 1 / (1 + Math.exp(-(Math.log(p / (1 - p)) - 0.25 * d))); rows.push({tipoff: i, pHome: p, absentDiff: d, doubtfulDiff: 0, homeWon: rnd() < truth}); }
+  const ev = evaluateBasketballShadow(rows);
+  assert.equal(ev.state, 'evaluated'); assert.ok(ev.availability.coefficients.perAbsence < 0, 'absences of the home side lower its chance');
+  assert.equal(ev.availability.coefficients.perDoubtful, 0, 'a feature that never varies gets no effect'); assert.equal(ev.production, 'unchanged until promotion criteria pass');
+  assert.equal(evaluateBasketballShadow(rows.slice(0, 50)).state, 'collecting');
+});
+
+test('Gemini NBA analysis uses only recorded facts (no grounding)', async () => {
+  const {basketballFacts} = await import('../../lib/basketball/service.mjs');
+  const {validateExplanation} = await import('../../lib/football/gemini-intelligence.mjs');
+  const g = JSON.parse(normalizeGame(bdl(7200, '2026-11-28T00:30:00Z', 1, 2), 0).payload), p = {winner: {home: 0.64, away: 0.36}, margin: {expected: 4.6}, total: {expected: 224.3}, context: {backToBack: {home: false, away: true}}};
+  const facts = basketballFacts(g, p, null, {form: {home: [{for: 110, against: 100}], away: []}, homeRecord: {w: 8, l: 3}, awayRecord: {w: 4, l: 6}});
+  assert.ok(facts.find(f => f.id === 'p_home').value === 64 && facts.find(f => f.id === 'away_back_to_back').value === 'yes');
+  assert.equal(validateExplanation({points: [{text: 'Alpha are 64 percent favourites at home.', facts: ['p_home']}]}, facts).points.length, 1);
+  assert.match(validateExplanation({points: [{text: 'Alpha shoot 48 percent from the field.', facts: ['p_home']}]}, facts).error, /Number 48/);
+});
