@@ -87,7 +87,9 @@ test('gradeLive is idempotent, records corrections and voids abandoned matches',
     await w.service.saveFixtures([{...f, homeScore: 2, awayScore: 1}]);
     const markets = inplayMarkets({home: 1, away: 1, lambda: L, mixture: remainingTime('2H', 70).mixture});
     await w.store.run('INSERT INTO live_snapshots(id,fixture_id,canonical_id,model_version,created_at,observed_at,minute,payload) VALUES(?,?,?,?,?,?,?,?)', 's1', f.id, null, 'inplay-poisson-1', NOW - 3600000, NOW - 3600000, 70, JSON.stringify({input: {home: 1, away: 1, status: '2H', elapsed: 70}, markets}));
-    assert.equal((await gradeLive(w.service)).settled, 1);
+    const g1 = await gradeLive(w.service);
+    assert.equal(g1.partial, 1, 'result settled, next goal unresolved without a goal sequence: partial, not fully settled');
+    assert.equal((await w.store.one('SELECT state FROM live_grades')).state, 'partial');
     await gradeLive(w.service);
     assert.equal(Number((await w.store.one('SELECT COUNT(*) n FROM live_grades')).n), 1, 'no duplicate grade');
     assert.equal(JSON.parse((await w.store.one('SELECT payload FROM live_grades')).payload).result.outcome, 'home');
