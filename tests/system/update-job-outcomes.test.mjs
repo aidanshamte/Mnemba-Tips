@@ -149,3 +149,15 @@ test('scheduler skips when the cron lease is held or the event already ran', asy
     assert.deepEqual(repeat, {state: 'skipped', reason: 'Event already recorded'});
   } finally { sqlite.close(); }
 });
+
+test('best-effort stages that get no time are incomplete, not a failed run; core stages still fail it', async () => {
+  const {runScheduled} = await import('../../lib/football/scheduled.mjs');
+  const {store, sqlite, db} = database(); await store.init();
+  try {
+    const service = {initialize: async () => {}, sync: async j => j === 'research' ? {skipped: 'Another synchronization is running'} : {outcome: 'success'}};
+    const run = await runScheduled({cron: '0 * * * *', scheduledTime: 1}, {DB: db}, {now: () => Date.now(), service});
+    assert.equal(run.state, 'success'); assert.equal(run.results.find(r => r.job === 'research').state, 'incomplete');
+    const core = {initialize: async () => {}, sync: async j => j === 'snapshots' ? {skipped: 'Another synchronization is running'} : {outcome: 'success'}};
+    assert.equal((await runScheduled({cron: '0 * * * *', scheduledTime: 2}, {DB: db}, {now: () => Date.now(), service: core})).state, 'partial');
+  } finally { sqlite.close(); }
+});
