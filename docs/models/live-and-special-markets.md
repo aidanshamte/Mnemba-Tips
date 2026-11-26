@@ -19,6 +19,7 @@ Written for maintainers. Criteria below were fixed on 2026-11-25, before any res
   - Next goal settles only from a complete goal sequence with known sides and no own goals; otherwise it is `unresolved`.
   - Abandoned or cancelled matches are void.
   - A changed result keeps the prior settlement in `revisions`.
+- **Abandoned matches (`abandoned` state):** markets already decided when play stopped stand. That means a total line already exceeded, both teams having scored, another goal having occurred, and the next goal if a complete goal sequence shows it. Everything else, including the result and double chance, is void. If the score at abandonment is unknown, everything is void. Pre-match forecasts for abandoned matches keep their established rule: withheld, and not counted in accuracy.
 - **Reporting:** separate from pre-match forecasts, by minute band, with each match weighted once per band.
 
 ## Corners and cards (`special-nb-1`, provisional)
