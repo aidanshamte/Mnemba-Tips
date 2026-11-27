@@ -620,3 +620,20 @@
 .insight-card .intel-match-meta{margin-bottom:var(--mt-space-sm)}
 .insight-card .intel-match-foot{margin-top:var(--mt-space-sm)}
 .mt-more-link{margin:var(--mt-space-md) 0;font:500 14px/20px var(--mt-font-ui)}
+
+/* Results list: score, counted prediction and its outcome; saved versions collapsed. */
+.result-list{display:grid;gap:var(--mt-space-md);grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.result-row{display:grid;gap:var(--mt-space-xs);padding:var(--mt-space-lg)}
+.result-meta{font:400 13px/18px var(--mt-font-ui);color:var(--mt-color-text-secondary);margin:0}
+.result-teams{display:grid;grid-template-columns:1fr auto;gap:var(--mt-space-xs) var(--mt-space-md);font:600 16px/22px var(--mt-font-ui);color:var(--mt-color-text-primary)}
+.result-teams b{font:700 20px/22px var(--mt-font-display);font-variant-numeric:tabular-nums;text-align:right}
+.result-pick{margin:var(--mt-space-xs) 0 0;font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-secondary)}
+.result-pick b{color:var(--mt-color-text-primary)}
+.result-muted{color:var(--mt-color-text-tertiary)}
+.result-state{justify-self:start;margin:0;font:700 13px/18px var(--mt-font-ui);padding:2px 10px;border-radius:999px}
+.result-correct{background:var(--mt-color-state-success-subtle);color:var(--mt-color-prediction-correct)}
+.result-incorrect{background:var(--mt-color-state-error-subtle);color:var(--mt-color-prediction-incorrect)}
+.result-pending{background:var(--mt-color-state-warning-subtle);color:var(--mt-color-prediction-pending)}
+.result-void{background:var(--mt-color-surface-sunken);color:var(--mt-color-text-secondary)}
+.result-saved{margin:0;font:400 12px/16px var(--mt-font-ui);color:var(--mt-color-text-tertiary)}
+.result-more summary{font:500 13px/18px var(--mt-font-ui);color:var(--mt-color-text-link);cursor:pointer}
