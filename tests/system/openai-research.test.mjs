@@ -132,3 +132,10 @@ test('a source matches the search results despite www, utm_source and trailing-s
   const r = validateFixtureResult({id: 'fx9', availability: [{team: 'home', player: 'A', status: 'injured', source_url: 'https://www.club.example/news/team-news'}, {team: 'away', player: 'B', status: 'doubtful', source_url: 'https://club.example/other'}]}, f, cited, NOW);
   assert.deepEqual(r.availability.map(a => a.player), ['A']); assert.equal(r.rejected.length, 1);
 });
+
+test('empty availability rows are ignored and injury-report words map to the stored statuses', () => {
+  const f = {id: 'fx8', startsAt: NOW + 3600000}, cited = new Set([SRC]);
+  const r = validateFixtureResult({id: 'fx8', availability: [{team: 'home', player: '', status: '', source_url: ''}, {team: 'away', player: 'C', status: 'Out', source_url: SRC}, {team: 'away', player: 'D', status: 'questionable', source_url: SRC}, {team: 'home', player: 'E', status: 'resting', source_url: SRC}]}, f, cited, NOW);
+  assert.deepEqual(r.availability.map(a => `${a.player}:${a.status}`), ['C:unavailable', 'D:doubtful']);
+  assert.equal(r.rejected.length, 1); assert.match(r.rejected[0], /status "resting"/);
+});
