@@ -32,7 +32,7 @@ export default function LivePrediction({inplay, home, away}: {inplay: Row | null
       <Markets m={inplay.markets} home={home} away={away}/>
     </> : <>
       <p className="intel-notice" role="status">{inplay.reason ?? 'Live prediction paused — waiting for fresh data.'}</p>
-      {prev?.markets && <details className="mt-details"><summary>Previous estimate ({prev.input?.home}–{prev.input?.away} at {minute(prev.input)}, <LocalTime fixture={{startsAt: prev.createdAt}}/>)</summary><Markets m={prev.markets} home={home} away={away}/></details>}
+      {prev?.markets && <details className="mt-details"><summary><span>Previous estimate · {prev.input?.home}–{prev.input?.away} at {minute(prev.input)}</span></summary><Markets m={prev.markets} home={home} away={away}/></details>}
     </>}
     {live && <details className="mt-details"><summary>Details</summary><ul className="mt-supporting">
       <li>Model {inplay.modelVersion}: remaining regulation goals per team are Poisson, using {inplay.baseline?.basis === 'pre-match-forecast' ? 'the saved pre-match forecast' : 'recorded results before kickoff'} for team strength (expected goals {inplay.baseline?.lambda?.map((x: number) => x.toFixed(2)).join(' – ')}), scaled to about {Math.round(inplay.markets.expectedRemainingMinutes)} remaining minutes.</li>

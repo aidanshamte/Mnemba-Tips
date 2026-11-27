@@ -95,7 +95,7 @@
 .match-hero .scoreboard-crest .identity-badge,.match-hero .scoreboard-crest img{width:1.875rem!important;height:1.875rem!important;object-fit:contain}
 .match-hero .scoreboard-name{font-size:.9375rem;font-weight:650;line-height:1.25;overflow-wrap:anywhere}
 .match-hero .scoreboard-score{font-size:1.625rem;font-weight:750;line-height:1;color:#ffce6b;font-variant-numeric:tabular-nums;min-width:1.5ch;text-align:right}
-.match-hero .match-freshness{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem;margin:.25rem 0 0;font-size:.8125rem;opacity:.85}
+.match-hero .match-freshness{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem .75rem;margin:.25rem 0 0;font-size:.8125rem;opacity:.85}
 .match-hero .mt-link-button{background:none;color:inherit;border:0;padding:.5rem .25rem;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer;min-height:2.25rem}
 .match-hero .mt-link-button:disabled{opacity:.7;cursor:progress}
 .mt-loading{margin:0;opacity:.8}
