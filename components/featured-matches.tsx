@@ -1,21 +1,20 @@
 'use client';
+import {pickLabel} from '@/lib/football/pick-label.mjs';
 import {TeamIdentity,CompetitionIdentity} from './football-identity';
 import {useEffect,useRef,useState} from 'react';
 import LocalTime from './local-time';
 import {competitionLabel} from '@/lib/football/competition-catalog.mjs';
 import {featuredFixtures} from '@/lib/football/featured.mjs';
 import {useFavouriteLeagues} from './use-favourite-leagues';
-type Fixture={recommendation?:{primary?:{label:string;probabilities:{win:number}};reasons?:string[];uncertainty?:string;createdAt?:number};id:string;competition:{id?:string;name:string};home:{id:string;name:string;logo?:string};away:{id:string;name:string;logo?:string};startsAt:number;status:string;label:string;homeScore:number|null;awayScore:number|null};
+type Fixture={recommendation?:{primary?:{label:string;market?:string;selection?:string;line?:number;probabilities:{win:number}};reasons?:string[];uncertainty?:string;createdAt?:number};id:string;competition:{id?:string;name:string};home:{id:string;name:string;logo?:string};away:{id:string;name:string;logo?:string};startsAt:number;status:string;label:string;homeScore:number|null;awayScore:number|null};
 type Overview={note?:string;upcoming?:Fixture[];results?:Fixture[];today?:Fixture[]};
 export default function FeaturedMatches({data}:{data:Overview|null}){
  const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[reduced,setReduced]=useState(false),[focused,setFocused]=useState(false);
- const [analysis,setAnalysis]=useState<{id:string;reason?:string;probabilities?:number[]}|null>(null),touch=useRef<number|null>(null);
+ const touch=useRef<number|null>(null);
  const {favourites}=useFavouriteLeagues();const fixtures:Fixture[]=featuredFixtures(data?.upcoming??[],favourites);
- const f=fixtures[index%Math.max(fixtures.length,1)],current=analysis?.id===f?.id?analysis:null;
+ const f=fixtures[index%Math.max(fixtures.length,1)];
  useEffect(()=>{const media=matchMedia('(prefers-reduced-motion: reduce)');const update=()=>setReduced(media.matches);update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
  useEffect(()=>{if(paused||reduced||focused||fixtures.length<2)return;const t=setInterval(()=>{if(!document.hidden)setIndex(i=>i+1);},8000);return()=>clearInterval(t);},[paused,reduced,focused,fixtures.length]);
- const fixtureId=f?.id;
- useEffect(()=>{if(!fixtureId)return;const c=new AbortController();void fetch(`/api/intelligence?view=analysis&id=${encodeURIComponent(fixtureId)}`,{signal:c.signal}).then(r=>{if(!r.ok)throw Error('Analysis temporarily unavailable.');return r.json() as Promise<{analysis:{reason?:string;probabilities?:number[]}}>;}).then(d=>setAnalysis({id:fixtureId,...d.analysis})).catch(e=>{if(!c.signal.aborted)setAnalysis({id:fixtureId,reason:e.message});});return()=>c.abort();},[fixtureId]);
  const next=(direction:number)=>setIndex(i=>(i+fixtures.length+direction)%Math.max(1,fixtures.length));
  const live=(data?.today??[]).filter(g=>['1H','2H','HT','ET','LIVE','IN_PLAY'].includes(g.status));
  return <><div className="broadcast-ticker"><strong>{'RECORDED SCORES'}</strong>{(live.length?live:data?.results??[]).slice(0,5).map(g=><a key={g.id} href={`/football/match/${encodeURIComponent(g.id)}`}><TeamIdentity id={g.home.id} name={g.home.name}/> {g.homeScore??'—'} : {g.awayScore??'—'} <TeamIdentity id={g.away.id} name={g.away.name}/></a>)}</div>
@@ -23,7 +22,7 @@ export default function FeaturedMatches({data}:{data:Overview|null}){
  {/* Local original art avoids remote image tracking and remains available offline. */}
  {/* eslint-disable-next-line @next/next/no-img-element */}
  <img className="broadcast-image" src="/football-night-1536.webp" srcSet="/football-night-768.webp 768w, /football-night-1536.webp 1536w" sizes="(max-width:760px) 100vw, 80vw" alt="Original illustration of a football beside a floodlit green pitch" width="1536" height="1024" fetchPriority="high" onError={e=>{e.currentTarget.srcset='';e.currentTarget.src='/football-night.png';}}/>
- <div className="broadcast-copy"><span className="intel-eyebrow">MNEMBA MATCHDAY PICKS · {f?<CompetitionIdentity id={f.competition.id} name={competitionLabel(f.competition)}/>: 'THE WORLD’S GAME'}</span><div aria-live={paused||focused?'polite':'off'}>{f?<><h1><TeamIdentity id={f.home.id} name={f.home.name}/><em>vs <TeamIdentity id={f.away.id} name={f.away.name}/></em></h1><p>{f.label} · <LocalTime fixture={f}/></p><p className="broadcast-insight">{f.recommendation?.primary?<><b>{f.recommendation.primary.label}</b> {Math.round(f.recommendation.primary.probabilities.win*100)}%</>:current?.probabilities?`Home ${Math.round(current.probabilities[0]*100)}% · Draw ${Math.round(current.probabilities[1]*100)}% · Away ${Math.round(current.probabilities[2]*100)}%`:current?'No estimate yet':''}</p></>:<><h1>The game.<em>A little clearer.</em></h1><p>{data?'No fixtures for the selected dates in the available sources. Choose another matchday.':'Opening your football desk…'}</p></>}</div>
+ <div className="broadcast-copy"><span className="intel-eyebrow">MNEMBA MATCHDAY PICKS · {f?<CompetitionIdentity id={f.competition.id} name={competitionLabel(f.competition)}/>: 'THE WORLD’S GAME'}</span><div aria-live={paused||focused?'polite':'off'}>{f?<><h1><TeamIdentity id={f.home.id} name={f.home.name}/><em>vs <TeamIdentity id={f.away.id} name={f.away.name}/></em></h1><p>{f.label} · <LocalTime fixture={f}/></p><p className="broadcast-insight">{f.recommendation?.primary?<><b>{pickLabel(f.recommendation.primary,f)}</b> · Estimated chance {Math.round(f.recommendation.primary.probabilities.win*100)}%</>:'No qualifying pick yet'}</p></>:<><h1>The game.<em>A little clearer.</em></h1><p>{data?'No fixtures for the selected dates in the available sources. Choose another matchday.':'Opening your football desk…'}</p></>}</div>
  <a className="broadcast-action" href={f?`/football/match/${encodeURIComponent(f.id)}`:'/football/search'}>{f?'Analyze Match ↗':'Explore football ↗'}</a>
  {fixtures.length>1&&<div className="broadcast-controls"><button onClick={()=>next(-1)} aria-label="Previous featured match">←</button><span>{index%fixtures.length+1} / {fixtures.length}</span><button onClick={()=>next(1)} aria-label="Next featured match">→</button><button onClick={()=>setPaused(p=>!p)} disabled={reduced}>{reduced?'Motion reduced':paused?'Play slideshow':'Pause slideshow'}</button></div>}</div><span className="art-credit">Original football artwork · illustrated stadium</span></section></>;
 }

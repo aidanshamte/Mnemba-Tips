@@ -1,14 +1,19 @@
-import {matchPick} from '@/lib/football/confidence.mjs';
-type Analysis={probabilities?:number[];factors?:Record<string,unknown>;estimateKind?:string};
+import {pickLabel} from '@/lib/football/pick-label.mjs';
+type Option={market:string;selection?:string;line?:number;label?:string;probabilities:{win:number}};
+export type Recommendation={primary?:Option|null;alternatives?:Option[];reason?:string;ruleVersion?:string}|null|undefined;
 type Side={name:string};
 const pct=(x:number)=>Math.round(x*100);
-/** Primary match-result pick: who, how likely, measured-confidence tier, and the full home/draw/away split as a bar. */
-export default function PickSummary({analysis,fixture}:{analysis?:Analysis|null;fixture:{home:Side;away:Side}}){
- const pick=matchPick(analysis,fixture);if(!pick||!analysis?.probabilities)return null;const p=analysis.probabilities;
+/**
+ * The selected recommendation (shared selector, any qualifying market), not automatically the largest 1X2
+ * probability. An estimated chance is not measured accuracy, so no confidence tier is attached to it.
+ */
+export default function PickSummary({recommendation,fixture,compact=false}:{recommendation:Recommendation;fixture:{home:Side;away:Side};compact?:boolean}){
+ const p=recommendation?.primary;
+ if(!p)return <p className="pick-none">No qualifying pick yet</p>;
+ const alts=(recommendation?.alternatives??[]).slice(0,2);
  return <div className="pick-summary">
-  <div className="pick-line"><span className="pick-name">{pick.pick}</span><strong className="pick-pct">{pct(pick.probability)}%</strong></div>
-  <span className={`pick-conf pick-conf-${pick.tier}`}>{pick.label}</span>
-  <div className="pick-bar" role="img" aria-label={`Home ${pct(p[0])}%, draw ${pct(p[1])}%, away ${pct(p[2])}%`}>{p.map((x,i)=><span key={i} className={`pick-seg pick-seg-${i}${i===pick.outcome?' is-pick':''}`} style={{flexGrow:x}}/>)}</div>
-  <div className="pick-legend" aria-hidden="true"><span>Home {pct(p[0])}%</span><span>Draw {pct(p[1])}%</span><span>Away {pct(p[2])}%</span></div>
+  <div className="pick-line"><span className="pick-name">{pickLabel(p,fixture)}</span><strong className="pick-pct">{pct(p.probabilities.win)}%</strong></div>
+  <p className="pick-chance">Estimated chance {pct(p.probabilities.win)}%</p>
+  {!compact&&alts.length>0&&<p className="pick-alts">Also: {alts.map(o=>`${pickLabel(o,fixture)} ${pct(o.probabilities.win)}%`).join(' · ')}</p>}
  </div>;
 }

@@ -637,3 +637,5 @@
 .result-void{background:var(--mt-color-surface-sunken);color:var(--mt-color-text-secondary)}
 .result-saved{margin:0;font:400 12px/16px var(--mt-font-ui);color:var(--mt-color-text-tertiary)}
 .result-more summary{font:500 13px/18px var(--mt-font-ui);color:var(--mt-color-text-link);cursor:pointer}
+.pick-chance{margin:.125rem 0 0;font-size:.8125rem;color:var(--mt-muted,inherit)}
+.pick-alts{margin:.25rem 0 0;font-size:.75rem;color:var(--mt-muted,inherit)}
