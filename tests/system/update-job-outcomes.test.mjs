@@ -132,6 +132,10 @@ test('scheduler continues after empty and degraded jobs and reports the run as p
     assert.equal(run.state, 'partial');
     const all = await runScheduled({cron: '0 * * * *', scheduledTime: NOW + 3600000}, {DB: db}, {now: () => NOW, service: {initialize: async () => {}, sync: async () => ({outcome: 'success', complete: true})}});
     assert.equal(all.state, 'success');
+    // A best-effort stage that runs out of run time is incomplete, not an error that fails the execution.
+    const late = await runScheduled({cron: '0 * * * *', scheduledTime: NOW + 7200000}, {DB: db}, {now: () => NOW, service: {initialize: async () => {}, sync: async j => { if (j === 'fivedollar') throw new Error('Scheduled run deadline exceeded'); if (j === 'snapshots') throw new Error('boom'); return {outcome: 'success', complete: true}; }}});
+    assert.equal(late.results.find(r => r.job === 'fivedollar').state, 'incomplete');
+    assert.equal(late.results.find(r => r.job === 'snapshots').state, 'error', 'real failures and core stages still fail');
   } finally { sqlite.close(); }
 });
 
