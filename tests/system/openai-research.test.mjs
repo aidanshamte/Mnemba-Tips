@@ -11,6 +11,10 @@ const NOW = Date.parse('2026-11-27T12:00:00Z');
 const ENV = {OPENAI_ENABLED: 'true', OPENAI_API_KEY: 'sk-test-not-real', OPENAI_MODEL: 'gpt-4o-mini'};
 const xi = p => Array.from({length: 11}, (_, i) => ({name: `${p} Player ${i + 1}`, number: i + 1, position: i ? 'MF' : 'GK'}));
 const SRC = 'https://www.club.example/news/team-news';
+// The cited page: names the teams, the suspended player and both starting XIs (verification reads the page itself).
+const PAGE = `<html><head><meta property="article:published_time" content="${new Date(NOW - 3600000).toISOString()}"></head><body><h1>Team news</h1><p>Ben Okoro is suspended after a red card.</p><p>Confirmed line-ups: ${xi('H').map(p => p.name).join(', ')}; ${xi('A').map(p => p.name).join(', ')}</p><script>ignored()</script></body></html>`;
+/** Network for a test: OpenAI calls go to `openai`; robots.txt is absent; any other URL serves `page`. */
+const route = (openai, page = PAGE) => async (url, init) => String(url).includes('api.openai.com') ? openai(url, init) : String(url).endsWith('/robots.txt') ? new Response('', {status: 404}) : new Response(page, {headers: {'content-type': 'text/html'}});
 
 test('off unless enabled with a key and a priced model; the budget is capped at $5', () => {
   assert.equal(openaiState({}).enabled, false);
@@ -62,7 +66,7 @@ const responseFor = (ids, {searches = 2, lineup} = {}) => ({id: 'resp_1', usage:
 
 test('one batched request researches several fixtures, counts billed searches and records the actual cost', async () => {
   const calls = [];
-  const w = await world(ENV, async (url, init) => { calls.push(JSON.parse(init.body)); return Response.json(responseFor(JSON.parse(init.body).input.match(/id=([^ ]+)/g).map(x => x.slice(3)))); });
+  const w = await world(ENV, route(async (url, init) => { calls.push(JSON.parse(init.body)); return Response.json(responseFor(JSON.parse(init.body).input.match(/id=([^ ]+)/g).map(x => x.slice(3)))); }));
   try {
     const fx = [1, 2, 3].map(i => normalizeFixture('api-football', apiFixture(7700 + i, 'NS', '2026-11-27T19:00:00Z', 10 + i, 20 + i)));
     const r = await researchBatch(w.service, fx);
@@ -71,13 +75,13 @@ test('one batched request researches several fixtures, counts billed searches an
     assert.deepEqual(calls[0].include, ['web_search_call.action.sources'], 'search sources are requested so citations can be verified');
     assert.equal(r.record.searches, 2); assert.ok(r.record.actualUsd < r.record.estimatedUsd, 'reservation covered the actual cost');
     assert.ok(Math.abs(await spent(w.store) - r.record.actualUsd) < 1e-6, 'ledger holds the actual cost, not the reservation');
-    assert.equal(r.results.every(x => x.availability[0].status === 'suspended'), true);
+    assert.equal(r.results.every(x => x.availability[0]?.status === 'suspended'), true, JSON.stringify(r.results[0]));
   } finally { w.sqlite.close(); }
 });
 
 test('rolling stage: imminent lineups first, per-run and budget limits, research stored per fixture, no probability change', async () => {
   let n = 0;
-  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '1'}, async (url, init) => { n++; const body = JSON.parse(init.body); const ids = body.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json(responseFor(ids, {lineup: body.input.includes('officially announced') ? {status: 'confirmed', source_url: SRC, published_at: new Date(NOW).toISOString(), home: {starters: xi('H')}, away: {starters: xi('A')}} : undefined})); });
+  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '1'}, route(async (url, init) => { n++; const body = JSON.parse(init.body); const ids = body.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json(responseFor(ids, {lineup: body.input.includes('officially announced') ? {status: 'confirmed', source_url: SRC, published_at: new Date(NOW).toISOString(), home: {starters: xi('H')}, away: {starters: xi('A')}} : undefined})); }));
   try {
     const soon = normalizeFixture('api-football', apiFixture(7801, 'NS', '2026-11-27T13:00:00Z', 31, 32));
     const later = [2, 3, 4, 5].map(i => normalizeFixture('api-football', apiFixture(7800 + i, 'NS', '2026-11-28T15:00:00Z', 40 + i, 50 + i)));
@@ -138,4 +142,40 @@ test('empty availability rows are ignored and injury-report words map to the sto
   const r = validateFixtureResult({id: 'fx8', availability: [{team: 'home', player: '', status: '', source_url: ''}, {team: 'away', player: 'C', status: 'Out', source_url: SRC}, {team: 'away', player: 'D', status: 'questionable', source_url: SRC}, {team: 'home', player: 'E', status: 'resting', source_url: SRC}]}, f, cited, NOW);
   assert.deepEqual(r.availability.map(a => `${a.player}:${a.status}`), ['C:unavailable', 'D:doubtful']);
   assert.equal(r.rejected.length, 1); assert.match(r.rejected[0], /status "resting"/);
+});
+
+test('page verification: a claim the cited page does not state is rejected; per-team states separate not found from rejected', async () => {
+  const {verifyAgainstSources} = await import('../../lib/football/openai-research.mjs'), {pageLoader} = await import('../../lib/football/source-verify.mjs');
+  const f = {id: 'fx7', startsAt: NOW + 6 * 3600000, home: {name: 'Team 11'}, away: {name: 'Team 21'}}, cited = new Set([SRC]);
+  const loader = pageLoader(route(async () => { throw Error('no OpenAI here'); }), {now: () => NOW});
+  const v = validateFixtureResult({id: 'fx7', availability: [{team: 'away', player: 'Ben Okoro', status: 'suspended', source_url: SRC}, {team: 'away', player: 'Sam Invented', status: 'injured', source_url: SRC}]}, f, cited, NOW);
+  const hosts = {}, r = await verifyAgainstSources(loader, v, f, hosts);
+  assert.deepEqual(r.availability.map(a => a.player), ['Ben Okoro']); assert.equal(r.rejectedCounts.not_on_page, 1);
+  assert.deepEqual(r.sides, {home: 'not_found', away: 'reported'}); assert.equal(r.outcome, 'enriched');
+  assert.deepEqual(hosts['club.example'], {claims: 2, verified: 1, not_on_page: 1});
+  const none = await verifyAgainstSources(loader, validateFixtureResult({id: 'fx7', teams: {home: {news: 'none_reported', source_url: SRC}}}, f, cited, NOW), f);
+  assert.equal(none.sides.home, 'rejected', 'the page does not say "no absences", so it is not accepted as none reported');
+  const blocked = pageLoader(async u => String(u).endsWith('/robots.txt') ? new Response('User-agent: *\nDisallow: /news', {status: 200}) : new Response(PAGE), {now: () => NOW});
+  const b = await verifyAgainstSources(blocked, validateFixtureResult({id: 'fx7', availability: [{team: 'away', player: 'Ben Okoro', status: 'suspended', source_url: SRC}]}, f, cited, NOW), f);
+  assert.equal(b.availability.length, 0); assert.equal(b.rejectedCounts.robots, 1);
+});
+
+test('contradictory statuses for one player are rejected; repeats are counted as duplicates', () => {
+  const f = {id: 'fx6', startsAt: NOW + 3600000}, cited = new Set([SRC]);
+  const r = validateFixtureResult({id: 'fx6', availability: [{team: 'home', player: 'A B', status: 'injured', source_url: SRC}, {team: 'home', player: 'A B', status: 'injured', source_url: SRC}, {team: 'home', player: 'C D', status: 'injured', source_url: SRC}, {team: 'home', player: 'C D', status: 'available_again', source_url: SRC}]}, f, cited, NOW);
+  assert.deepEqual(r.availability.map(a => a.player), ['A B']); assert.equal(r.duplicates, 1); assert.ok(r.rejectedCounts.contradictory >= 1);
+});
+
+test('priority: major competitions and imminent lineups first, small leagues keep a non-zero chance after a failure', async () => {
+  const P = await import('../../lib/football/research-priority.mjs');
+  const mk = (name, country, h) => ({id: name + h, sport: 'football', startsAt: NOW + h * 3600000, competition: {id: name, name, country: {name: country}}, home: {id: 'h' + name}, away: {id: 'a' + name}});
+  const ctx = {now: NOW, hasForecast: true, totalRequests: 10};
+  const epl = P.fixtureScore(mk('Premier League', 'England', 20), 'availability', ctx), small = P.fixtureScore(mk('Division 2', 'Ruritania', 20), 'availability', ctx);
+  assert.ok(epl > 2 * small, 'a major league is worth more');
+  const failed = P.fixtureScore(mk('Division 2', 'Ruritania', 20), 'availability', {...ctx, comp: {availability: {requests: 3, fixtures: 12, enriched: 0, lastAt: NOW - 864e5}}});
+  assert.ok(failed > 0 && failed < small, 'repeated failures lower but never remove a league');
+  assert.equal(P.fixtureScore(mk('Premier League', 'England', 1), 'lineups', {...ctx, providerLineup: true}), 0, 'no paid lineup search when a provider already has the team sheet');
+  assert.equal(P.fixtureScore(mk('Premier League', 'England', 20), 'availability', {...ctx, record: {verifiedAt: NOW - 3600000}}), 0, 'fresh research is not repeated');
+  const plan = P.planBatches([mk('Liga A', 'X', 20), mk('Liga B', 'X', 21), mk('Liga C', 'Y', 22)].map(f => ({f, score: 0.2})), 5);
+  assert.equal(plan[0].batch.length, 2, 'small competitions of one country share a request (shared national sources)');
 });

@@ -63,3 +63,34 @@ Environment for `mnemba-update-0` (hourly):
 - `OPENAI_ENABLED=true`;
 - `OPENAI_MODEL=gpt-4o-mini`;
 - `OPENAI_BUDGET_USD=5`.
+
+## Research priority, page verification and unknown availability (2026-11-27)
+
+- **Priority** (`lib/football/research-priority.mjs`): the next paid search goes to the batch with the highest value per
+  measured dollar. Fixture value = competition tier (name classifier; NBA top tier) × timing (team news mostly in the last
+  ~30 h) × measured success for that competition (Beta prior + exploration bonus, so a league that failed is retried
+  later, never excluded) × data value (a stored pre-kickoff forecast feeds the shadow models) × novelty (fresh team
+  research halves it; provider team sheets remove paid lineup checks; provider injuries reduce it). Lineup checks 30-100
+  min before the start carry weight 4 (one chance per match). Small competitions of one country share a request.
+  There is no server-side per-match user-interest signal (favourites are device-local), so none is used.
+- **Verification** (`lib/football/source-verify.mjs`): a URL in the search results is not proof. Each claim is checked
+  against the text of the page it cites: player named, team named, the status stated within ~400 characters of the
+  name, the page about this match (opponent named or published within 4 days), not older than 10 days. Only URLs that
+  this response's own web search returned are fetched; HTTPS only, robots.txt honoured, 8 s timeout, 1.5 MB cap; nothing
+  from the page is stored except the verdict. This is the one fetch path outside the fixed-host source registry.
+  Rejections are counted by reason (uncited, malformed, contradictory, not_on_page, wrong_fixture, outdated, unreachable,
+  robots); duplicates are counted separately.
+- **Not found ≠ none**: each team gets `reported`, `none_reported` (a verified page says no absences), `not_found` or
+  `rejected`. Shadow features and Gemini availability counts exist only when both teams are known; unknown is stated as
+  unknown to Gemini and is null (no effect) in the shadow models.
+- **Efficiency** is measured per batch size, competition and source host (`openai:batch-stats`,
+  `openai:competition-stats`, `openai:source-stats`; summarised in the internal status view).
+
+## Basketball model bball-elo-2
+
+One predictive distribution: margin ~ Normal(mu, sd_margin), total ~ Normal(tau, sd_total); team points (tau ± mu)/2;
+P(home win) = P(margin > 0); half-time margin = fitted share × mu. bball-elo-1 published a logistic win probability, a
+separately scaled margin and independently averaged team totals, which could disagree (e.g. +9.6 margin with team totals
+2 points apart). The win probability comes from the margin distribution only if that beats the calibrated logistic on
+both Brier and log loss in the chronological evaluation; otherwise the logistic probability is kept and the margin is
+derived from it, so published win probabilities do not change without measured improvement.

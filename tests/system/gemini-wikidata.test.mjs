@@ -29,7 +29,8 @@ test('explanations may only use supplied facts: invented numbers, unknown facts 
   assert.match(validateExplanation({points: [{text: 'The striker is injured and will miss the match.', facts: ['injury']}]}, facts).error, /unknown/);
   assert.match(validateExplanation({points: [{text: 'Persita Tangerang are a guaranteed winner here.', facts: ['p_away']}]}, facts).error, /certainty/);
   assert.match(validateExplanation('not json', facts).error, /JSON/);
-  assert.equal(validateExplanation({points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}], caveat: 'They won 9 of 10.'}, facts).caveat, null, 'caveat with numbers dropped');
+  assert.equal(validateExplanation({points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Persita Tangerang have 5 wins in recent form.', facts: ['away_wins']}], caveat: 'They won 9 of 10.'}, facts).caveat, null, 'caveat with numbers dropped');
+  assert.match(validateExplanation({points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Borneo FC are rated lower by the model.', facts: ['p_home']}]}, facts).error, /generic/, 'restating the probabilities is not an explanation');
 });
 
 async function world(env, fetcher) {
@@ -39,7 +40,7 @@ async function world(env, fetcher) {
 
 test('generation sends no search tool, sends the key only as a header, validates, and respects the daily budget', async () => {
   const seen = [];
-  const reply = {points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}], caveat: 'Estimates can be wrong.'};
+  const reply = {points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Persita Tangerang have 5 wins in recent form.', facts: ['away_wins']}], caveat: 'Estimates can be wrong.'};
   const fetcher = async (url, init) => { seen.push({url: String(url), init}); return Response.json({candidates: [{content: {parts: [{text: JSON.stringify(reply)}]}}], usageMetadata: {promptTokenCount: 300, candidatesTokenCount: 60}}); };
   const w = await world(ENV, fetcher);
   try {
@@ -58,7 +59,7 @@ test('generation sends no search tool, sends the key only as a header, validates
 });
 
 test('disabled module makes no request; scheduled explanations are stored per forecast and not regenerated', async () => {
-  let calls = 0; const fetcher = async () => { calls++; return Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side lead the estimate at 43 percent.', facts: ['p_away']}]})}]}}]}); };
+  let calls = 0; const fetcher = async () => { calls++; return Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}]})}]}}]}); };
   const off = await world({}, fetcher);
   try { assert.equal((await explainUpcoming(off.service)).state, 'disabled'); assert.equal(calls, 0); } finally { off.sqlite.close(); }
   const w = await world({...ENV, GEMINI_DAILY_REQUEST_LIMIT: '10'}, fetcher);

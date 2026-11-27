@@ -6,7 +6,7 @@ import {readFileSync} from 'node:fs';
 import {database} from '../football-db.mjs';
 import {IntelligenceService} from '../../lib/football/intelligence.mjs';
 import {normalizeGame, gameStatus, saveGames, syncBasketball, recentSeasons} from '../../lib/basketball/balldontlie.mjs';
-import {replay, features, evaluate, predict, fitCalibration} from '../../lib/basketball/model.mjs';
+import {replay, features, evaluate, predict, fitCalibration, normInv} from '../../lib/basketball/model.mjs';
 import {basketballStage, basketballView, basketballGame} from '../../lib/basketball/service.mjs';
 
 const team = (id, name, abbr, conference = 'East') => ({id, full_name: name, name, abbreviation: abbr, city: name, conference, division: 'Atlantic'});
@@ -133,7 +133,8 @@ test('NBA starting five: confirmed needs exactly 5 distinct starters per team; N
   assert.equal(validateFixtureResult({lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: five('H')}, away: {starters: five('A')}}}, f, cited, now).lineup.status, 'confirmed');
   assert.equal(validateFixtureResult({lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: [...five('H'), {name: 'H 9'}]}, away: {starters: five('A')}}}, f, cited, now).lineup.status, 'predicted', 'six starters is not a confirmed five');
   const prompts = [];
-  const w = await world({OPENAI_ENABLED: 'true', OPENAI_API_KEY: 'sk-test', OPENAI_MAX_REQUESTS_PER_RUN: '1'}, async (url, init) => { const b = JSON.parse(init.body); prompts.push(b.input); const ids = b.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json({usage: {input_tokens: 9000, output_tokens: 500}, output: [{type: 'web_search_call', action: {type: 'search'}}, {type: 'message', content: [{type: 'output_text', text: JSON.stringify({fixtures: ids.map(id => ({id, lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: five('H')}, away: {starters: five('A')}}}))}), annotations: [{type: 'url_citation', url: SRC}]}]}]}); });
+  const page = `<html><body><h1>Alpha v Bravo: starting lineups</h1><p>${five('H').map(x => x.name).join(', ')}</p><p>${five('A').map(x => x.name).join(', ')}</p></body></html>`;
+  const w = await world({OPENAI_ENABLED: 'true', OPENAI_API_KEY: 'sk-test', OPENAI_MAX_REQUESTS_PER_RUN: '1'}, async (url, init) => { if (!String(url).includes('api.openai.com')) return String(url).endsWith('/robots.txt') ? new Response('', {status: 404}) : new Response(page, {headers: {'content-type': 'text/html'}}); const b = JSON.parse(init.body); prompts.push(b.input); const ids = b.input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json({usage: {input_tokens: 9000, output_tokens: 500}, output: [{type: 'web_search_call', action: {type: 'search'}}, {type: 'message', content: [{type: 'output_text', text: JSON.stringify({fixtures: ids.map(id => ({id, lineup: {status: 'confirmed', source_url: SRC, published_at: new Date(now).toISOString(), home: {starters: five('H')}, away: {starters: five('A')}}}))}), annotations: [{type: 'url_citation', url: SRC}]}]}]}); });
   try {
     await saveGames(w.store, [normalizeGame(bdl(7100, '2026-11-27T13:00:00Z', 1, 2, null, null, {season: 2026}), now)]);
     const r = await researchUpcoming(w.service);
@@ -148,8 +149,8 @@ test('basketball shadow: the per-absence effect is fitted on earlier games and s
   let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647, rows = [];
   for (let i = 0; i < 400; i++) { const d = rnd() < 0.4 ? (rnd() < 0.5 ? 2 : -2) : 0, p = 0.6, truth = 1 / (1 + Math.exp(-(Math.log(p / (1 - p)) - 0.25 * d))); rows.push({tipoff: i, pHome: p, absentDiff: d, doubtfulDiff: 0, homeWon: rnd() < truth}); }
   const ev = evaluateBasketballShadow(rows);
-  assert.equal(ev.state, 'evaluated'); assert.ok(ev.availability.coefficients.perAbsence < 0, 'absences of the home side lower its chance');
-  assert.equal(ev.availability.coefficients.perDoubtful, 0, 'a feature that never varies gets no effect'); assert.equal(ev.production, 'unchanged until promotion criteria pass');
+  assert.equal(ev.state, 'evaluated'); assert.ok(ev.availability.coefficients.absentDiff < 0, 'absences of the home side lower its chance');
+  assert.equal(ev.availability.coefficients.doubtfulDiff, 0, 'a feature that never varies gets no effect'); assert.equal(ev.production, 'unchanged until promotion criteria pass');
   assert.equal(evaluateBasketballShadow(rows.slice(0, 50)).state, 'collecting');
 });
 
@@ -159,7 +160,9 @@ test('Gemini NBA analysis uses only recorded facts (no grounding)', async () => 
   const g = JSON.parse(normalizeGame(bdl(7200, '2026-11-28T00:30:00Z', 1, 2), 0).payload), p = {winner: {home: 0.64, away: 0.36}, margin: {expected: 4.6}, total: {expected: 224.3}, context: {backToBack: {home: false, away: true}}};
   const facts = basketballFacts(g, p, null, {form: {home: [{for: 110, against: 100}], away: []}, homeRecord: {w: 8, l: 3}, awayRecord: {w: 4, l: 6}});
   assert.ok(facts.find(f => f.id === 'p_home').value === 64 && facts.find(f => f.id === 'away_back_to_back').value === 'yes');
-  assert.equal(validateExplanation({points: [{text: 'Alpha are 64 percent favourites at home.', facts: ['p_home']}]}, facts).points.length, 1);
+  assert.equal(validateExplanation({points: [{text: 'Alpha are 64 percent favourites at home.', facts: ['p_home']}, {text: 'Bravo are playing on a back-to-back.', facts: ['away_back_to_back']}]}, facts).points.length, 2);
+  assert.equal(facts.find(f => f.id === 'home_availability_status').value, 'UNKNOWN (not researched)', 'no research is stated as unknown, never as zero absences');
+  assert.equal(facts.find(f => f.id === 'home_absent'), undefined);
   assert.match(validateExplanation({points: [{text: 'Alpha shoot 48 percent from the field.', facts: ['p_home']}]}, facts).error, /Number 48/);
 });
 
@@ -167,4 +170,31 @@ test('history covers the current NBA season, labelled by its October start year'
   assert.deepEqual(recentSeasons(Date.parse('2026-11-27T03:00:00Z')), [2023, 2024, 2025, 2026]);
   assert.deepEqual(recentSeasons(Date.parse('2027-03-01T00:00:00Z')), [2023, 2024, 2025, 2026]);
   assert.deepEqual(recentSeasons(Date.parse('2027-10-20T00:00:00Z')), [2024, 2025, 2026, 2027]);
+});
+
+test('bball-elo-2 is one coherent distribution: team points = (total ± margin)/2, P(win) = P(margin > 0)', () => {
+  const games = seasons(), rows = []; replay(games.filter(x => x.season === 2023), (st, x) => rows.push({f: features(st, x), game: x}));
+  const cal = fitCalibration(rows), st = replay(games.filter(x => x.status === 'FT'));
+  const g = {...games[games.length - 1], startsAt: games[games.length - 1].startsAt + 864e5}, f = features(st, g);
+  const Phi = z => 0.5 * (1 + Math.tanh(0.7978845608 * (z + 0.044715 * z ** 3)));
+  for (const mode of ['probability', 'margin']) {
+    const p = predict(f, cal, mode);
+    assert.equal(p.model, 'bball-elo-2');
+    assert.ok(Math.abs(p.teamTotals.home.expected - p.teamTotals.away.expected - p.margin.expected) < 1e-9, 'team points differ by the margin');
+    assert.ok(Math.abs(p.teamTotals.home.expected + p.teamTotals.away.expected - p.total.expected) < 1e-9, 'team points add up to the total');
+    assert.ok(Math.abs(Phi(p.margin.expected / cal.marginSd) - p.winner.home) < 2e-3, 'win probability is the chance of a positive margin');
+    if (p.firstHalf) assert.equal(p.firstHalf.homeLeads > 0.5, p.margin.expected > 0, 'half-time lead agrees in direction with the full-game margin');
+  }
+  assert.ok(Math.abs(predict(f, cal, 'probability').winner.home - f.pHome) < 1e-12, "'probability' mode keeps the calibrated win probability unchanged");
+  assert.ok(Math.abs(normInv(0.975) - 1.959964) < 1e-5);
+  const ev = evaluate(games); assert.ok(['margin', 'probability'].includes(ev.coherent.choice)); assert.ok(ev.coherent.teamTotalMae.coherent > 0);
+});
+
+test('shadow features: unknown availability is null (never zero absences); known only when both teams are known', async () => {
+  const {researchFeatures, availabilityKnown} = await import('../../lib/football/shadow-model.mjs'), {basketballFeatures} = await import('../../lib/basketball/shadow.mjs');
+  assert.equal(researchFeatures(null).absentDiff, null);
+  assert.equal(researchFeatures({sides: {home: 'reported', away: 'not_found'}, availability: [{team: 'home', status: 'injured'}]}).absentDiff, null, 'one side unknown: no difference can be computed');
+  assert.equal(researchFeatures({sides: {home: 'reported', away: 'none_reported'}, availability: [{team: 'home', status: 'injured'}]}).absentDiff, 1);
+  assert.equal(availabilityKnown({sides: {home: 'rejected', away: 'reported'}}), false);
+  assert.equal(basketballFeatures({sides: {home: 'not_found', away: 'not_found'}, availability: []}).absentDiff, null);
 });
