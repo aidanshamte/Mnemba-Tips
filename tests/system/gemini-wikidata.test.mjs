@@ -31,6 +31,11 @@ test('explanations may only use supplied facts: invented numbers, unknown facts 
   assert.match(validateExplanation('not json', facts).error, /JSON/);
   assert.equal(validateExplanation({points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Persita Tangerang have 5 wins in recent form.', facts: ['away_wins']}], caveat: 'They won 9 of 10.'}, facts).caveat, null, 'caveat with numbers dropped');
   assert.match(validateExplanation({points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Borneo FC are rated lower by the model.', facts: ['p_home']}]}, facts).error, /generic/, 'restating the probabilities is not an explanation');
+  // A number from the label of a cited fact (the 14-day window) is supplied text, not invented; the same number
+  // without citing that fact is still rejected.
+  const sched = [{id: 'home_matches_14d', label: 'Borneo FC recorded matches in previous 14 days', value: 3}, {id: 'p_home', label: 'Model probability Borneo FC win (%)', value: 31}];
+  assert.equal(validateExplanation({points: [{text: 'Borneo FC have played 3 matches in the previous 14 days.', facts: ['home_matches_14d']}]}, sched).points.length, 1);
+  assert.match(validateExplanation({points: [{text: 'Borneo FC have won 14 of their games at 31 percent odds.', facts: ['p_home']}]}, sched).error, /Number 14/);
 });
 
 async function world(env, fetcher) {
@@ -115,5 +120,18 @@ test('end to end: a verified link is added to the canonical identity and the med
     assert.equal((await s.one('SELECT state FROM media_enrichment WHERE entity_id=?', f.home.id)).state, 'pending', 'media stage retries with the new identity');
     const again = await wikidataMatch(w.service, {limit: 5}); assert.equal(again.checked, 0, 'resolved entities are not searched again');
     assert.ok(requests <= 3);
+  } finally { w.sqlite.close(); }
+});
+
+test('the scheduled ai-explain stage records an outcome (numeric error counts are not failure lists) and includes NBA', async () => {
+  const fetcher = async () => Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}]})}]}}]});
+  const w = await world({...ENV, GEMINI_DAILY_REQUEST_LIMIT: '10'}, fetcher);
+  try {
+    const f = normalizeFixture('api-football', apiFixture(9902, 'NS', '2026-11-26T18:00:00Z', 10, 20)); await w.service.saveFixtures([f]);
+    await w.store.run('INSERT INTO analysis_forecasts(id,fixture_id,model_version,as_of,kickoff_at,max_known_at,training_allowed,payload,evidence_ids) VALUES(?,?,?,?,?,?,?,?,?)', 'af2', f.id, 'poisson-temporal-1', Date.parse('2026-11-26T10:00:00Z'), f.startsAt, Date.parse('2026-11-26T09:00:00Z'), 1, JSON.stringify(FORECAST), '[]');
+    const r = await w.service.sync('ai-explain');
+    assert.equal(r.outcome, 'success', JSON.stringify(r).slice(0, 300));
+    assert.equal(r.ok, 1); assert.equal(typeof r.errors, 'number');
+    assert.ok(r.basketball && !r.basketball.error, 'NBA explanations ran in the same stage');
   } finally { w.sqlite.close(); }
 });
