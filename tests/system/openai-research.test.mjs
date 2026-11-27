@@ -68,6 +68,7 @@ test('one batched request researches several fixtures, counts billed searches an
     const r = await researchBatch(w.service, fx);
     assert.equal(r.state, 'ok'); assert.equal(calls.length, 1, 'one request for three fixtures');
     assert.deepEqual(calls[0].tools, [{type: 'web_search', search_context_size: 'low'}]); assert.equal(calls[0].max_tool_calls, 3); assert.equal(calls[0].store, false);
+    assert.deepEqual(calls[0].include, ['web_search_call.action.sources'], 'search sources are requested so citations can be verified');
     assert.equal(r.record.searches, 2); assert.ok(r.record.actualUsd < r.record.estimatedUsd, 'reservation covered the actual cost');
     assert.ok(Math.abs(await spent(w.store) - r.record.actualUsd) < 1e-6, 'ledger holds the actual cost, not the reservation');
     assert.equal(r.results.every(x => x.availability[0].status === 'suspended'), true);
@@ -124,4 +125,10 @@ test('batch sizes 5, 10 and 20 are each tried, then the most enriched fixtures p
   assert.equal(chooseBatchSize({5: {requests: 2}, 10: {requests: 2}}), 20);
   const stats = {5: {requests: 2, fixtures: 10, enriched: 9, usd: 0.08}, 10: {requests: 2, fixtures: 20, enriched: 16, usd: 0.09}, 20: {requests: 2, fixtures: 40, enriched: 12, usd: 0.1}};
   assert.equal(chooseBatchSize(stats), 10, '20 enriches under half; 10 beats 5 per dollar');
+});
+
+test('a source matches the search results despite www, utm_source and trailing-slash differences; others are rejected', () => {
+  const f = {id: 'fx9', startsAt: NOW + 3600000}, cited = new Set(['https://club.example/news/team-news/?utm_source=openai']);
+  const r = validateFixtureResult({id: 'fx9', availability: [{team: 'home', player: 'A', status: 'injured', source_url: 'https://www.club.example/news/team-news'}, {team: 'away', player: 'B', status: 'doubtful', source_url: 'https://club.example/other'}]}, f, cited, NOW);
+  assert.deepEqual(r.availability.map(a => a.player), ['A']); assert.equal(r.rejected.length, 1);
 });

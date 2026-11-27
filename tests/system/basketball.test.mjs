@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {database} from '../football-db.mjs';
 import {IntelligenceService} from '../../lib/football/intelligence.mjs';
-import {normalizeGame, gameStatus, saveGames, syncBasketball} from '../../lib/basketball/balldontlie.mjs';
+import {normalizeGame, gameStatus, saveGames, syncBasketball, recentSeasons} from '../../lib/basketball/balldontlie.mjs';
 import {replay, features, evaluate, predict, fitCalibration} from '../../lib/basketball/model.mjs';
 import {basketballStage, basketballView, basketballGame} from '../../lib/basketball/service.mjs';
 
@@ -161,4 +161,10 @@ test('Gemini NBA analysis uses only recorded facts (no grounding)', async () => 
   assert.ok(facts.find(f => f.id === 'p_home').value === 64 && facts.find(f => f.id === 'away_back_to_back').value === 'yes');
   assert.equal(validateExplanation({points: [{text: 'Alpha are 64 percent favourites at home.', facts: ['p_home']}]}, facts).points.length, 1);
   assert.match(validateExplanation({points: [{text: 'Alpha shoot 48 percent from the field.', facts: ['p_home']}]}, facts).error, /Number 48/);
+});
+
+test('history covers the current NBA season, labelled by its October start year', () => {
+  assert.deepEqual(recentSeasons(Date.parse('2026-11-27T03:00:00Z')), [2023, 2024, 2025, 2026]);
+  assert.deepEqual(recentSeasons(Date.parse('2027-03-01T00:00:00Z')), [2023, 2024, 2025, 2026]);
+  assert.deepEqual(recentSeasons(Date.parse('2027-10-20T00:00:00Z')), [2024, 2025, 2026, 2027]);
 });
