@@ -35,7 +35,7 @@ export default function MatchCenter({id}:{id:string}){
  const retry=()=>{setCoreState(s=>s==='ok'?'ok':'loading');setFullState(s=>s==='ok'?'ok':'loading');loadAll();};
  // Automatic updates without a reload: stored data is re-read every 60 s while the page is visible, and on return.
  useEffect(()=>{const tick=()=>{if(document.visibilityState==='visible')loadAll(true);};const timer=setInterval(tick,60000);document.addEventListener('visibilitychange',tick);return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};},[loadAll]);
- const savedData:Data|null=full&&core?{...full,...core,updatedAt:Math.max(full.updatedAt??0,core.updatedAt??0)}:full??core;
+ const savedData:Data|null=full&&core?{...full,...core,analysis:full.analysis??core.analysis,updatedAt:Math.max(full.updatedAt??0,core.updatedAt??0)}:full??core;
  const live=useLiveMatch(id);
  // Wall-clock time lives in state so render stays pure; ticks after mount (also keeps SSR and hydration identical).
  const [now,setNow]=useState<number|null>(null);
