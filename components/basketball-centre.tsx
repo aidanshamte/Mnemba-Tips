@@ -46,7 +46,7 @@ export default function BasketballCentre() {
           <tbody>{c.rows.map((r: Row, i: number) => <tr key={r.id}><td>{i + 1}</td><td>{r.name}</td><td>{r.w}</td><td>{r.l}</td><td>{r.pct.toFixed(3).replace(/^0/, '')}</td></tr>)}</tbody></table></div>)}</div></section>}
       {ev?.state === 'evaluated' && <section className="intel-panel" aria-labelledby="bb-eval"><h2 id="bb-eval" className="mt-card-heading">How the model has performed</h2>
         <p className="mt-supporting">Tested on {ev.winner.n.toLocaleString()} games from {ev.testSeasons.join(', ')} that it had not seen (fitted on {ev.trainSeason} only): picked the winner {pct(ev.winner.accuracy)} of the time; Brier score {ev.winner.brier.toFixed(3)}; average miss on the margin {ev.marginMae.toFixed(1)} points and on the total {ev.totalMae.toFixed(1)} points.</p></section>}
-      <p className="mt-supporting">{data.note} Estimates are not guarantees.</p>
+      <p className="mt-supporting">{data.note}</p>
     </>}
   </main></div>;
 }

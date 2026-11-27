@@ -35,7 +35,7 @@ export default function BasketballGame({id}: {id: string}) {
             {p.firstHalf && <li>First-half total <strong>{p.firstHalf.total.expected.toFixed(0)}</strong> · {g.home.abbreviation} leads at half-time {pct(p.firstHalf.homeLeads)}</li>}
             {(p.context?.backToBack?.home || p.context?.backToBack?.away) && <li>Back-to-back: {[p.context.backToBack.home && g.home.abbreviation, p.context.backToBack.away && g.away.abbreviation].filter(Boolean).join(', ')} (context only)</li>}</ul>
           {d.grade && <p className="mt-supporting">Result: {d.grade.winnerCorrect ? 'winner called correctly' : 'winner missed'}; margin off by {Math.abs(d.grade.marginError).toFixed(1)}, total off by {Math.abs(d.grade.totalError).toFixed(1)} points.</p>}
-          <p className="mt-supporting">{p.note} Estimates are not guarantees.</p></> : <p>No pre-game estimate was saved for this game{g.status === 'NS' ? ' yet' : ''}. Estimates need recorded games for both teams and are only saved before tip-off.</p>}
+          <p className="mt-supporting">{p.note}</p></> : <p>No pre-game estimate was saved for this game{g.status === 'NS' ? ' yet' : ''}. Estimates need recorded games for both teams and are only saved before tip-off.</p>}
       </section>
       <PreMatchIntel research={d.research} home={g.home.name} away={g.away.name}/>
       {d.aiExplanation && <section className="intel-panel"><AiExplanation ai={d.aiExplanation}/></section>}

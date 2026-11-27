@@ -601,3 +601,22 @@
 .mt-availability{margin:var(--mt-space-sm) 0 0;padding-left:1.1rem;font:400 .875rem/1.45 var(--mt-font-ui)}
 .mt-cite{font-size:.8125rem;text-decoration:underline;text-underline-offset:2px;color:var(--mt-color-text-secondary);overflow-wrap:anywhere}
 .mt-bb-standings{display:grid;gap:var(--mt-space-md)}@media (min-width:1024px){.mt-bb-standings{grid-template-columns:1fr 1fr}}.mt-bb-standings caption{text-align:left;font:600 .875rem var(--mt-font-ui);padding:var(--mt-space-xs) 0}.match-score-line{font:650 1.625rem/2rem var(--mt-font-ui);margin:var(--mt-space-sm) 0}
+
+/* Prediction card: pick, probability, measured-confidence tier and the home/draw/away split (no paragraphs). */
+.pick-summary{display:grid;gap:var(--mt-space-sm);margin:var(--mt-space-md) var(--mt-space-xl) 0}
+.pick-line{display:flex;align-items:baseline;justify-content:space-between;gap:var(--mt-space-md)}
+.pick-name{font:700 17px/22px var(--mt-font-ui);color:var(--mt-color-text-primary);min-width:0;overflow-wrap:anywhere}
+.pick-pct{font:700 26px/1 var(--mt-font-display);color:var(--mt-color-text-primary);font-variant-numeric:tabular-nums}
+.pick-conf{justify-self:start;font:600 12px/16px var(--mt-font-ui);padding:2px 8px;border-radius:999px;background:var(--mt-color-surface-sunken);color:var(--mt-color-text-secondary)}
+.pick-conf-high{background:var(--mt-color-state-success-subtle);color:var(--mt-color-state-success)}
+.pick-conf-moderate{background:var(--mt-color-state-info-subtle);color:var(--mt-color-state-info)}
+.pick-conf-low{background:var(--mt-color-state-warning-subtle);color:var(--mt-color-state-warning)}
+.pick-bar{display:flex;gap:2px;height:8px;border-radius:999px;overflow:hidden;background:var(--mt-color-surface-sunken)}
+.pick-seg{display:block;min-width:4px;background:var(--mt-color-border-strong)}
+.pick-seg.is-pick{background:var(--mt-color-action-football)}
+.pick-legend{display:flex;justify-content:space-between;font:400 12px/16px var(--mt-font-ui);color:var(--mt-color-text-secondary);font-variant-numeric:tabular-nums}
+.pick-none{margin:var(--mt-space-md) var(--mt-space-xl) 0;font:400 14px/20px var(--mt-font-ui);color:var(--mt-color-text-tertiary)}
+.insight-card .intel-match{padding-bottom:var(--mt-space-sm)}
+.insight-card .intel-match-meta{margin-bottom:var(--mt-space-sm)}
+.insight-card .intel-match-foot{margin-top:var(--mt-space-sm)}
+.mt-more-link{margin:var(--mt-space-md) 0;font:500 14px/20px var(--mt-font-ui)}
