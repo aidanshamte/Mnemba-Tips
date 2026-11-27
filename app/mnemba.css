@@ -639,3 +639,15 @@
 .result-more summary{font:500 13px/18px var(--mt-font-ui);color:var(--mt-color-text-link);cursor:pointer}
 .pick-chance{margin:.125rem 0 0;font-size:.8125rem;color:var(--mt-color-text-tertiary)}
 .pick-alts{margin:.25rem 0 0;font-size:.75rem;color:var(--mt-color-text-tertiary)}
+/* All picks for this day: compact rows (teams, time/status, pick, chance, freshness). */
+.daily-picks{padding:var(--mt-space-md,12px)}
+.daily-picks-count{font-weight:600;color:var(--mt-color-text-tertiary);margin-left:.25rem}
+.daily-picks-list{list-style:none;margin:.5rem 0 0;padding:0;display:grid;gap:.375rem}
+.daily-pick{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.125rem .75rem;padding:.625rem .75rem;border-radius:.625rem;border:1px solid var(--mt-color-border,rgba(0,0,0,.08));color:inherit;text-decoration:none;min-height:2.75rem}
+.daily-pick-teams{display:grid;gap:.125rem;font-size:.875rem;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.daily-pick-when{font-size:.75rem;color:var(--mt-color-text-tertiary);text-align:right;white-space:nowrap}
+.daily-pick-live{color:var(--mt-color-live,#c0392b)}
+.daily-pick-market{grid-column:1/-1;display:flex;justify-content:space-between;gap:.5rem;font-size:.875rem}
+.daily-pick-market strong{font-variant-numeric:tabular-nums}
+.daily-pick-meta{grid-column:1/-1;font-size:.75rem;color:var(--mt-color-text-tertiary)}
+.daily-picks-more{margin-top:.5rem;width:100%;min-height:2.75rem}
