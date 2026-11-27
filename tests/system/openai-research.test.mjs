@@ -179,3 +179,19 @@ test('priority: major competitions and imminent lineups first, small leagues kee
   const plan = P.planBatches([mk('Liga A', 'X', 20), mk('Liga B', 'X', 21), mk('Liga C', 'Y', 22)].map(f => ({f, score: 0.2})), 5);
   assert.equal(plan[0].batch.length, 2, 'small competitions of one country share a request (shared national sources)');
 });
+
+test('an unparsed paid answer is recorded for diagnosis and counted as a failed attempt so the planner learns', async () => {
+  const prose = {id: 'resp_x', status: 'completed', output: [{type: 'web_search_call', action: {type: 'search', sources: []}}, {type: 'message', content: [{type: 'output_text', text: 'I could not find team news for these games.'}]}], usage: {input_tokens: 8000, output_tokens: 600}};
+  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '1'}, route(async () => Response.json(prose)));
+  try {
+    await w.service.saveFixtures([2, 3, 4].map(i => normalizeFixture('api-football', apiFixture(7900 + i, 'NS', '2026-11-28T15:00:00Z', 60 + i, 70 + i))));
+    const r = await researchUpcoming(w.service);
+    assert.equal(r.requests, 1); assert.equal(r.unparsed, 1); assert.ok(r.usd > 0, 'the paid request is still counted');
+    const req = (await w.store.all("SELECT payload FROM football_cache WHERE id LIKE 'openai:req:%'")).map(x => JSON.parse(x.payload).data ?? JSON.parse(x.payload))[0];
+    assert.match(req.unparsed.text, /could not find/); assert.equal(req.unparsed.status, 'completed');
+    const stats = (await w.store.cache('openai:batch-stats')).data, total = Object.values(stats).reduce((n, x) => n + x.requests, 0);
+    assert.equal(total, 1); assert.equal(Object.values(stats)[0].unparsed, 1); assert.equal(Object.values(stats)[0].enriched, 0);
+    const comp = Object.values((await w.store.cache('openai:competition-stats')).data)[0];
+    assert.equal(comp.availability.requests, 1); assert.equal(comp.availability.outcome_unparsed, 3); assert.equal(comp.availability.enriched ?? 0, 0);
+  } finally { w.sqlite.close(); }
+});
