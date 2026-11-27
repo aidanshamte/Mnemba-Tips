@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {competitionRank, orderByCompetition, FEATURED_COMPETITIONS, REGIONAL_COMPETITIONS} from '../../lib/football/featured-competitions.mjs';
-import {featuredFixtures, featuredPool, FEATURED_LIMIT} from '../../lib/football/featured.mjs';
+import {featuredFixtures, featuredPool} from '../../lib/football/featured.mjs';
 import {database, apiFixture} from '../football-db.mjs';
 import {IntelligenceService} from '../../lib/football/intelligence.mjs';
 import {normalizeFixture} from '../../lib/football/providers.mjs';
@@ -26,12 +26,11 @@ test('ordering: favourites, then featured, then regional, then the rest; nothing
   assert.deepEqual(competitionRank('competition:x:none'), [3, 0]);
 });
 
-test('carousel: favourite/featured leagues first, at most two per league while others exist, no duplicates', () => {
+test('carousel: every pick kept; favourite/featured leagues first, leagues interleaved, no duplicates', () => {
   const fx = (id, league) => ({id, competitionCanonical: league, competition: {id: league, name: league}});
   const pool = [fx('a', TZ), fx('b', PL), fx('c', PL), fx('d', PL), fx('e', 'competition:x:one'), fx('b', PL), fx('f', LALIGA)];
   const out = featuredFixtures(pool);
-  assert.deepEqual(out.map(f => f.id), ['b', 'c', 'f', 'a', 'e']);
-  assert.equal(out.length, FEATURED_LIMIT);
+  assert.deepEqual(out.map(f => f.id), ['b', 'f', 'a', 'e', 'c', 'd'], 'one per league first, then the rest; none dropped');
   assert.equal(featuredFixtures(pool, ['competition:x:one'])[0].id, 'e');
   // With only one league available the carousel still fills up.
   assert.equal(featuredFixtures([fx('1', PL), fx('2', PL), fx('3', PL)]).length, 3);
