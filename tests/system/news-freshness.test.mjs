@@ -21,3 +21,15 @@ test('a successful scheduled news sync refreshes the public freshness marker', a
     assert.equal((await service.read(new URLSearchParams({view: 'news'}))).freshness.stale, true, 'stale again when no run arrives within the cadence');
   } finally { sqlite.close(); }
 });
+
+test('the news view honours a limit so the home page fetches only the stories it shows', async () => {
+  const {store, sqlite} = database();
+  try {
+    await store.init(); const service = new IntelligenceService(store); await service.initialize();
+    for (let i = 0; i < 9; i++) { const a = {id: `news:l-${i}`, url: `https://example.org/story-${i}`, headline: `Distinct headline number ${i} about club ${i}`, summary: 'Summary.', publisher: 'Example', publishedAt: Date.parse('2026-11-20T09:00:00Z') + i * 60000, category: 'news'};
+      await store.upsert('news_articles', {id: a.id, canonical_url: a.url, headline: a.headline, publisher: a.publisher, published_at: a.publishedAt, category: a.category, payload: JSON.stringify(a), updated_at: a.publishedAt}); }
+    assert.equal((await service.read(new URLSearchParams({view: 'news', limit: '6'}))).articles.length, 6);
+    assert.equal((await service.read(new URLSearchParams({view: 'news'}))).articles.length, 9, 'no limit: unchanged behaviour');
+    assert.equal((await service.read(new URLSearchParams({view: 'news', limit: 'x'}))).articles.length, 9, 'an invalid limit is ignored');
+  } finally { sqlite.close(); }
+});
