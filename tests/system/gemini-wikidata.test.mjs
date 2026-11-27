@@ -45,7 +45,7 @@ async function world(env, fetcher) {
 
 test('generation sends no search tool, sends the key only as a header, validates, and respects the daily budget', async () => {
   const seen = [];
-  const reply = {points: [{text: 'Persita Tangerang lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'Persita Tangerang have 5 wins in recent form.', facts: ['away_wins']}], caveat: 'Estimates can be wrong.'};
+  const reply = {points: [{text: 'Persita Tangerang have 5 wins in recent form against 3 for Borneo FC.', facts: ['away_wins', 'home_wins']}, {text: 'Persita Tangerang concede 1.1 goals per match.', facts: ['away_conceded']}], caveat: 'Team news is unknown.', lean: 'away'};
   const fetcher = async (url, init) => { seen.push({url: String(url), init}); return Response.json({candidates: [{content: {parts: [{text: JSON.stringify(reply)}]}}], usageMetadata: {promptTokenCount: 300, candidatesTokenCount: 60}}); };
   const w = await world(ENV, fetcher);
   try {
@@ -64,7 +64,7 @@ test('generation sends no search tool, sends the key only as a header, validates
 });
 
 test('disabled module makes no request; scheduled explanations are stored per forecast and not regenerated', async () => {
-  let calls = 0; const fetcher = async () => { calls++; return Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}]})}]}}]}); };
+  let calls = 0; const fetcher = async () => { calls++; return Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}, {text: 'The home side have 3 wins in recent form.', facts: ['home_wins']}], lean: 'away'})}]}}]}); };
   const off = await world({}, fetcher);
   try { assert.equal((await explainUpcoming(off.service)).state, 'disabled'); assert.equal(calls, 0); } finally { off.sqlite.close(); }
   const w = await world({...ENV, GEMINI_DAILY_REQUEST_LIMIT: '10'}, fetcher);
@@ -124,7 +124,7 @@ test('end to end: a verified link is added to the canonical identity and the med
 });
 
 test('the scheduled ai-explain stage records an outcome (numeric error counts are not failure lists) and includes NBA', async () => {
-  const fetcher = async () => Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side lead the estimate at 43 percent.', facts: ['p_away']}, {text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}]})}]}}]});
+  const fetcher = async () => Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'The away side have 5 wins in recent form.', facts: ['away_wins']}, {text: 'The home side have 3 wins in recent form.', facts: ['home_wins']}], lean: 'away'})}]}}]});
   const w = await world({...ENV, GEMINI_DAILY_REQUEST_LIMIT: '10'}, fetcher);
   try {
     const f = normalizeFixture('api-football', apiFixture(9902, 'NS', '2026-11-26T18:00:00Z', 10, 20)); await w.service.saveFixtures([f]);
@@ -134,4 +134,25 @@ test('the scheduled ai-explain stage records an outcome (numeric error counts ar
     assert.equal(r.ok, 1); assert.equal(typeof r.errors, 'number');
     assert.ok(r.basketball && !r.basketball.error, 'NBA explanations ran in the same stage');
   } finally { w.sqlite.close(); }
+});
+
+test('Gemini is evidence-first: model outputs are withheld and the verdict compares its own lean with the model', async () => {
+  const {independentVerdict} = await import('../../lib/football/gemini-intelligence.mjs');
+  let prompt = ''; const lean = {v: 'home'};
+  const fetcher = async (url, init) => { prompt = JSON.parse(init.body).contents[0].parts[0].text; return Response.json({candidates: [{content: {parts: [{text: JSON.stringify({points: [{text: 'Borneo FC have 3 wins in recent form against 5 for Persita Tangerang.', facts: ['home_wins', 'away_wins']}, {text: 'Borneo FC concede 1.6 goals per match.', facts: ['home_conceded']}], lean: lean.v, factors: [{factor: 'form', favours: 'away', strength: 1, facts: ['away_wins']}]})}]}}]}); };
+  const w = await world(ENV, fetcher);
+  try {
+    const r = await generateExplanation(w.service, F, FORECAST);
+    assert.equal(r.state, 'ok');
+    assert.doesNotMatch(prompt, /p_home|p_draw|p_away|xg_home|xg_away|probability|expected goals/i, 'no model output in the prompt');
+    assert.match(prompt, /home_wins/);
+    assert.equal(r.lean, 'home'); assert.equal(r.modelFavourite, 'away'); assert.equal(r.verdict, 'contradicts', 'model favours the away side (43%), Gemini leans home');
+    lean.v = 'none'; assert.equal((await generateExplanation(w.service, F, FORECAST)).verdict, 'insufficient');
+  } finally { w.sqlite.close(); }
+  const facts = [{id: 'p_home', value: 50}, {id: 'p_draw', value: 25}, {id: 'p_away', value: 25}];
+  assert.equal(independentVerdict('home', [], facts).verdict, 'supports');
+  assert.equal(independentVerdict('home', [{favours: 'away', strength: 2}], facts).verdict, 'mixed', 'strong counter-evidence makes agreement mixed');
+  assert.equal(independentVerdict('draw', [], facts).verdict, 'mixed');
+  assert.equal(independentVerdict('away', [], facts).verdict, 'contradicts');
+  assert.equal(independentVerdict('home', [], []).verdict, 'insufficient');
 });

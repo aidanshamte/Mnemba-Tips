@@ -71,7 +71,7 @@ test('one batched request researches several fixtures, counts billed searches an
     const fx = [1, 2, 3].map(i => normalizeFixture('api-football', apiFixture(7700 + i, 'NS', '2026-11-27T19:00:00Z', 10 + i, 20 + i)));
     const r = await researchBatch(w.service, fx);
     assert.equal(r.state, 'ok'); assert.equal(calls.length, 1, 'one request for three fixtures');
-    assert.deepEqual(calls[0].tools, [{type: 'web_search', search_context_size: 'low'}]); assert.equal(calls[0].max_tool_calls, 3); assert.equal(calls[0].store, false);
+    assert.deepEqual(calls[0].tools, [{type: 'web_search', search_context_size: 'medium'}]); assert.equal(calls[0].text.format.type, 'json_schema'); assert.equal(calls[0].text.format.strict, true); assert.equal(r.record.schema, true); assert.equal(r.record.answer.parse, 'json'); assert.equal(r.record.diagnosis.enriched, 3); assert.equal(calls[0].max_tool_calls, 3); assert.equal(calls[0].store, false);
     assert.deepEqual(calls[0].include, ['web_search_call.action.sources'], 'search sources are requested so citations can be verified');
     assert.equal(r.record.searches, 2); assert.ok(r.record.actualUsd < r.record.estimatedUsd, 'reservation covered the actual cost');
     assert.ok(Math.abs(await spent(w.store) - r.record.actualUsd) < 1e-6, 'ledger holds the actual cost, not the reservation');
@@ -194,4 +194,40 @@ test('an unparsed paid answer is recorded for diagnosis and counted as a failed 
     const comp = Object.values((await w.store.cache('openai:competition-stats')).data)[0];
     assert.equal(comp.availability.requests, 1); assert.equal(comp.availability.outcome_unparsed, 3); assert.equal(comp.availability.enriched ?? 0, 0);
   } finally { w.sqlite.close(); }
+});
+
+test('response contract: schema rejection falls back once unbilled; refusals and truncated answers are recorded and recovered', async () => {
+  const {readAnswer, salvageFixtures, diagnose, RESEARCH_SCHEMA} = await import('../../lib/football/openai-research.mjs');
+  // Strict schema rules: every object closes additional properties and requires all of its keys.
+  const walk = n => { if (n?.type === 'object') { assert.equal(n.additionalProperties, false); assert.deepEqual(n.required, Object.keys(n.properties)); Object.values(n.properties).forEach(walk); } if (n?.items) walk(n.items); };
+  walk(RESEARCH_SCHEMA);
+  const calls = [];
+  const w = await world(ENV, route(async (url, init) => {
+    const body = JSON.parse(init.body); calls.push(body);
+    if (body.text) return Response.json({error: {message: "Invalid parameter: 'text.format' of type 'json_schema' is not supported with this tool."}}, {status: 400});
+    return Response.json(responseFor(body.input.match(/id=([^ ]+)/g).map(x => x.slice(3))));
+  }));
+  try {
+    const fx = [normalizeFixture('api-football', apiFixture(7711, 'NS', '2026-11-27T19:00:00Z', 11, 21))];
+    const r = await researchBatch(w.service, fx);
+    assert.equal(calls.length, 2, 'one rejected (unprocessed) request, then one prompt-contract request'); assert.ok(!calls[1].text);
+    assert.equal(r.state, 'ok'); assert.equal(r.record.schema, false);
+    assert.ok(Math.abs(await spent(w.store) - r.record.actualUsd) < 1e-6, 'the rejected request cost nothing');
+    assert.ok((await w.store.cache('openai:schema-unsupported')).data.message);
+    await researchBatch(w.service, fx); assert.equal(calls.length, 3, 'the rejection is remembered: no schema attempt next time');
+  } finally { w.sqlite.close(); }
+  // Refusal, empty, prose, truncated JSON (sanitized from production shapes).
+  const msg = content => ({status: 'completed', output: [{type: 'message', content}]});
+  assert.equal(readAnswer(msg([{type: 'refusal', refusal: 'I cannot help with that.'}])).refusal, 'I cannot help with that.');
+  assert.equal(readAnswer(msg([])).parse, 'empty');
+  assert.equal(readAnswer(msg([{type: 'output_text', text: 'I could not find any injury news for these games.'}])).parse, 'malformed');
+  const truncated = '{"fixtures":[{"id":"a","teams":{"home":{"news":"reported","source_url":"x"}},"availability":[{"team":"home","player":"P \\"Q\\" R","status":"injured"}]},{"id":"b","availability":[{"team":"aw';
+  assert.deepEqual(salvageFixtures(truncated).map(x => x.id), ['a'], 'complete objects recovered; the cut-off one is dropped, never completed');
+  assert.equal(readAnswer(msg([{type: 'output_text', text: truncated}])).parse, 'salvaged');
+  assert.equal(readAnswer(msg([{type: 'output_text', text: '```json\n{"fixtures":[{"id":"a"}]}\n```'}])).parse, 'extracted');
+  // Diagnosis names the reason a paid request produced nothing usable.
+  const nf = {sides: {home: 'not_found', away: 'not_found'}, outcome: 'not_found', rejectedCounts: {}};
+  assert.match(diagnose([nf, nf], {missingIds: 0}).reason, /no team news/);
+  assert.match(diagnose([{...nf, rejectedCounts: {uncited: 2}}], {missingIds: 0}).reason, /uncited 2/);
+  assert.match(diagnose([nf], {missingIds: 1}).reason, /fixture ids/);
 });

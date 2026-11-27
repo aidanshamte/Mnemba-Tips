@@ -11,13 +11,13 @@ const F = {home: {name: 'Home FC'}, away: {name: 'Away FC'}, competition: {name:
 const FC = {probabilities: [0.5, 0.3, 0.2], expectedGoals: [1.5, 1.0], factors: {homeForm: {games: 10, wins: 5, draws: 3, losses: 2}, awayForm: {games: 10, wins: 2, draws: 3, losses: 5}}};
 const RESEARCH = {lineup: {status: 'predicted', home: {formation: '4-3-3'}, away: {formation: '3-5-2'}}, availability: [{team: 'away', player: 'Keeper One', status: 'injured', detail: 'goalkeeper, knee'}, {team: 'home', player: 'Mid Two', status: 'doubtful'}], verifiedAt: 1};
 
-test('Gemini factors need cited evidence; unsupported factors are dropped; verdict defaults to insufficient', () => {
+test('Gemini factors need cited evidence; unsupported factors are dropped; lean defaults to none', () => {
   const facts = factPack(F, FC, RESEARCH, {home: {rest: 6, last14: 2}, away: {rest: 3, last14: 4}});
   assert.ok(facts.some(f => f.id === 'away_absent' && f.value === 1) && facts.some(f => f.id === 'away_rest_days' && f.value === 3));
-  const v = validateExplanation({points: [{text: 'Away FC report 1 injured player.', facts: ['away_absent']}], verdict: 'supports',
+  const v = validateExplanation({points: [{text: 'Away FC report 1 injured player.', facts: ['away_absent']}], lean: 'home',
     factors: [{factor: 'goalkeeper', favours: 'home', strength: 2, facts: ['away_availability']}, {factor: 'tactics', favours: 'home', strength: 3, facts: []}, {factor: 'made_up', favours: 'home', strength: 1, facts: ['away_absent']}]}, facts);
-  assert.deepEqual(v.factors.map(f => f.factor), ['goalkeeper']); assert.equal(v.verdict, 'supports');
-  assert.equal(validateExplanation({points: [{text: 'Away FC report 1 injured player.', facts: ['away_absent']}]}, facts).verdict, 'insufficient');
+  assert.deepEqual(v.factors.map(f => f.factor), ['goalkeeper']); assert.equal(v.lean, 'home');
+  assert.equal(validateExplanation({points: [{text: 'Away FC report 1 injured player.', facts: ['away_absent']}]}, facts).lean, 'none');
   assert.equal(researchFeatures(RESEARCH).gkAbsentDiff, -1, 'away goalkeeper absent');
   assert.equal(tacticalScore([{factor: 'formation', favours: 'home', strength: 2}, {factor: 'rest', favours: 'away', strength: 3}]), 2, 'only tactical factors count');
 });
