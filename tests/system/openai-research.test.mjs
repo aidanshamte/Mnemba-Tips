@@ -231,3 +231,20 @@ test('response contract: schema rejection falls back once unbilled; refusals and
   assert.match(diagnose([{...nf, rejectedCounts: {uncited: 2}}], {missingIds: 0}).reason, /uncited 2/);
   assert.match(diagnose([nf], {missingIds: 1}).reason, /fixture ids/);
 });
+
+test('low-yield backoff: after six barren paid requests, at most one exploratory request per six hours', async () => {
+  let n = 0;
+  const w = await world({...ENV, OPENAI_MAX_REQUESTS_PER_RUN: '1'}, route(async (url, init) => { n++; const ids = JSON.parse(init.body).input.match(/id=([^ ]+)/g).map(x => x.slice(3)); return Response.json(responseFor(ids)); }));
+  try {
+    await w.service.saveFixtures([2, 3, 4].map(i => normalizeFixture('api-football', apiFixture(7900 + i, 'NS', '2026-11-28T15:00:00Z', 60 + i, 70 + i))));
+    // Production shape: six hourly requests, every team not_found.
+    for (let i = 0; i < 6; i++) await w.store.putCache(`openai:req:${NOW - (6 - i) * 3600000}:x${i}`, {at: NOW - (6 - i) * 3600000, diagnosis: {fixtures: 5, enriched: 0, teamsReported: 0, teamsNoneReported: 0, teamsNotFound: 10}}, 864e5);
+    const r = await researchUpcoming(w.service);
+    assert.equal(n, 0, 'no paid request while the approach is not producing anything'); assert.equal(r.stopped, 'low-yield backoff'); assert.equal(r.backoffUntil, NOW - 3600000 + 6 * 3600000);
+    w.advance(5 * 3600000 + 60000);
+    const r2 = await researchUpcoming(w.service);
+    assert.equal(n, 1, 'one exploratory request once the backoff has elapsed'); assert.equal(r2.requests, 1);
+    // That request found news, so the next run is not held back.
+    w.advance(3600000); const r3 = await researchUpcoming(w.service); assert.notEqual(r3.stopped, 'low-yield backoff');
+  } finally { w.sqlite.close(); }
+});
