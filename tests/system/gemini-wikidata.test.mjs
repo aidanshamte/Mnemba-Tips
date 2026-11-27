@@ -47,6 +47,7 @@ test('generation sends no search tool, sends the key only as a header, validates
     assert.equal(r.state, 'ok');
     const body = JSON.parse(seen[0].init.body);
     assert.equal(body.tools, undefined, 'no Google Search grounding'); assert.equal(body.generationConfig.responseMimeType, 'application/json');
+    assert.equal(body.generationConfig.thinkingConfig.thinkingLevel, 'low'); assert.ok(body.generationConfig.maxOutputTokens >= 2048, 'thinking tokens share the output limit');
     assert.doesNotMatch(seen[0].url, /test-key-not-real/, 'key never in the URL');
     assert.equal(new Headers(seen[0].init.headers).get('x-goog-api-key'), 'test-key-not-real');
     assert.equal(Number((await w.store.one("SELECT COUNT(*) n FROM http_response_cache WHERE source_id='gemini'")).n), 0, 'responses not stored in the HTTP cache');
