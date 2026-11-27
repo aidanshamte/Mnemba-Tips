@@ -25,6 +25,7 @@ test('essential match read: stored fixture, freshness, estimate and recommendati
     const e = await w.service.read(new URLSearchParams({view: 'match', id: w.f.id}));
     assert.equal(e.essential, true); assert.equal(e.fixture.id, w.f.id); assert.ok(e.updatedAt > 0); assert.ok(e.analysis); assert.ok('recommendation' in e);
     for (const k of ['rosters', 'table', 'form', 'details', 'news', 'sources']) assert.equal(k in e, false, `${k} is loaded separately`);
+    for (const k of ['archive', 'distribution', 'markets']) assert.equal(k in e.analysis, false, `analysis.${k} is a Details payload`);
     assert.equal(seen.some(q => /field_claims|season_id/.test(q)), false, 'no claim-history or season scans on the essential path');
     assert.deepEqual(await w.service.read(new URLSearchParams({view: 'match', id: 'api-football:missing'})), {unavailable: true});
     assert.ok(publicViews.has('match'));
