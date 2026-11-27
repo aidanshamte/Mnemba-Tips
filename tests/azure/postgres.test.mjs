@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPool, postgresDatabase, translateSQL } from '../../lib/azure/postgres.mjs';
+import { createPool, postgresDatabase, translateSQL, describeError } from '../../lib/azure/postgres.mjs';
 import { SourceHttp } from '../../lib/football/http.mjs';
 import { Store } from '../../lib/football/store.mjs';
 import { IntelligenceService } from '../../lib/football/intelligence.mjs';
@@ -9,6 +9,19 @@ import { runScheduled, CRON_JOBS } from '../../lib/football/scheduled.mjs';
 test('SQL placeholders leave literal question marks and escaped quotes intact', () => {
   assert.equal(translateSQL("SELECT '?' q, 'it''s?' value WHERE id=?"), "SELECT '?' q, 'it''s?' value WHERE id=$1");
   assert.match(translateSQL("SELECT json_extract(payload,'$.home.name') name FROM fixtures WHERE id=?"), /payload::jsonb #>> '\{home,name\}'/);
+});
+
+test('a server-terminated idle connection is logged by code and does not crash the process', async () => {
+  const pool = createPool('postgres://user:not-a-real-password@db.example.invalid:5432/app'), logged = [], original = console.error;
+  console.error = (...a) => logged.push(a.join(' '));
+  try {
+    assert.ok(pool.listenerCount('error') >= 1, 'the pool has an error handler');
+    const err = Object.assign(new Error('terminating connection due to administrator command'), { code: '57P01', severity: 'FATAL', routine: 'ProcessInterrupts' });
+    pool.emit('error', err);   // would throw ERR_UNHANDLED_ERROR without a handler
+    assert.match(logged[0], /mnemba_pg_idle_error/); assert.match(logged[0], /57P01/);
+    assert.doesNotMatch(logged.join(' '), /not-a-real-password|db\.example/, 'no connection details are logged');
+    assert.deepEqual(JSON.parse(describeError(err)), { name: 'Error', code: '57P01', severity: 'FATAL', routine: 'ProcessInterrupts' });
+  } finally { console.error = original; await pool.end(); }
 });
 
 test('PostgreSQL migrated data, public reads, immutable history, transactions and scheduler', { skip: !process.env.DATABASE_URL }, async () => {
